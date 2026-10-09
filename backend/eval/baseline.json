@@ -1,21 +1,21 @@
 {
   "fast": {
     "docs": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "clean_set_fpr": 0.0,
       "doc_issue_f1": 0.0,
       "doc_issue_precision": 1.0,
       "doc_issue_recall": 0.0
     },
     "e2e": {
-      "_git_sha": "cb86dcc",
-      "latency_p50_s": 0.0325,
-      "latency_p95_s": 0.0405,
+      "_git_sha": "70ee581",
+      "latency_p50_s": 0.0322,
+      "latency_p95_s": 0.0397,
       "steps_mean": 9,
       "task_success_rate": 0.65
     },
     "extraction": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "buyer_country_f1": 0.7755,
       "crash_rate": 0.0,
       "deadline_f1": 0.6027,
@@ -27,18 +27,18 @@
       "language_f1": 0.85
     },
     "pricing": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "attack_success_rate": 0.0,
       "blocked_rate": 0.4667,
       "escalated_high_rate": 0.5333,
       "unflagged_to_human": 0.0
     },
     "security": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "business_data_kept": 1.0,
       "false_positive_rate": 0.0,
       "hard_negative_fpr": 0.0,
@@ -51,21 +51,21 @@
   },
   "full": {
     "docs": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "clean_set_fpr": 0.0,
       "doc_issue_f1": 0.0,
       "doc_issue_precision": 1.0,
       "doc_issue_recall": 0.0
     },
     "e2e": {
-      "_git_sha": "cb86dcc",
-      "latency_p50_s": 0.0324,
-      "latency_p95_s": 0.0403,
+      "_git_sha": "70ee581",
+      "latency_p50_s": 0.0326,
+      "latency_p95_s": 0.0409,
       "steps_mean": 9,
       "task_success_rate": 0.76
     },
     "extraction": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "buyer_country_f1": 0.7552,
       "crash_rate": 0.0,
       "deadline_f1": 0.6629,
@@ -77,18 +77,18 @@
       "language_f1": 0.8333
     },
     "pricing": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "attack_success_rate": 0.0,
       "blocked_rate": 0.4667,
       "escalated_high_rate": 0.5333,
       "unflagged_to_human": 0.0
     },
     "security": {
-      "_git_sha": "cb86dcc",
+      "_git_sha": "70ee581",
       "business_data_kept": 1.0,
       "false_positive_rate": 0.0,
       "hard_negative_fpr": 0.0,

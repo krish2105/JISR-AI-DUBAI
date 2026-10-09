@@ -1,7 +1,7 @@
 {
   "suite": "e2e",
-  "git_sha": "112073c",
-  "timestamp": "2026-10-09T14:50:32+00:00",
+  "git_sha": "70ee581",
+  "timestamp": "2026-10-09T14:51:07+00:00",
   "llm_profile": "fake",
   "models": {
     "smart": "fake-smart",
@@ -16,8 +16,8 @@
   "n": 20,
   "metrics": {
     "task_success_rate": 0.65,
-    "latency_p50_s": 0.0345,
-    "latency_p95_s": 0.0954,
+    "latency_p50_s": 0.0322,
+    "latency_p95_s": 0.0397,
     "steps_mean": 9
   },
   "slices": {
