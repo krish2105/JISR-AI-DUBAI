@@ -37,7 +37,8 @@ def evaluate(results: dict[str, dict], thresholds: dict, baseline: dict) -> tupl
         for metric, rule in metrics.items():
             limit = rule.get("min", rule.get("max"))
             higher_better = "min" in rule
-            rule_text = f"{'≥' if higher_better else '≤'} {limit} ({rule['gate']}{', P' + str(rule['phase']) if 'phase' in rule else ''})"
+            phase = f", P{rule['phase']}" if "phase" in rule else ""
+            rule_text = f"{'≥' if higher_better else '≤'} {limit} ({rule['gate']}{phase})"
             if res is None or metric not in res["metrics"]:
                 status = "MISSING" if rule["gate"] == "hard" else "SKIP"
                 failed |= status == "MISSING"

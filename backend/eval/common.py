@@ -123,7 +123,11 @@ def git_sha() -> str:
     try:
         sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=REPO, capture_output=True,
                              text=True, check=True).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=REPO, capture_output=True, text=True).stdout
+        # The eval's own outputs do not make the SOURCE dirty, so they are excluded from the check.
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "--", ".", ":!backend/eval/results", ":!docs/EVAL_REPORT.md",
+             ":!backend/eval/baseline.json"],
+            cwd=REPO, capture_output=True, text=True).stdout
         return f"{sha}-dirty" if dirty.strip() else sha
     except (OSError, subprocess.CalledProcessError):
         return "unknown"
