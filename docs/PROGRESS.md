@@ -2,6 +2,30 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 4 — Quote agent ✅ (2026-10-09)
+
+**Built**
+- **Deterministic bilingual RFQ parser** (`app/tools/rfq_rules.py`): quantities in many formats ("1.2k", number words, Arabic-Indic digits, "qty 120", "– 400 pcs", table rows), units (EN/AR), Incoterms (any case, C&F/CNF), GCC places → destination country (Indian origins ignored), deadlines (EN/AR), language incl. Gulf code-switching, buyer name.
+- **Hybrid grounded extraction** (`app/tools/rfq.py`): model extraction reconciled against the text: quantities not written are dropped, unwritten Incoterms replaced, gaps filled, everything reported; rules-only fallback when the model fails.
+- **Live FX** (`app/tools/fx.py`): ECB USD/INR via Frankfurter × CBUAE peg 3.6725, 6 h cache, stale fallback flagged; every quote stores rate, source, rate date and fetch time. Fixed labelled demo rate for tests/offline/replay.
+- **Pricing v2** (`app/tools/pricing.py`): Incoterm scope table with separate charge lines (inland, export clearance, ocean freight by CBM, insurance, destination delivery, import clearance, import duty from the tariff master), volume tiers, owner margin floor never crossed automatically, pricing flags. Catalogue matching by product nouns (fixed "brass trays priced as lamps").
+- **Pricing policies**: P-MARGIN-001, P-DISC-001, P-PRICE-001 (flags reach the owner with the rule and reason).
+- Data `synthetic-v3`: 30 hand-written held-out enquiries; 46 unanswerable country labels fixed.
+- Dashboard: quote shows Incoterm, charge lines, FX rate with date, review flags.
+
+**Tested** (real output; report commit `dfd45fe`, profile `fake` = deterministic parser)
+- `make test` → **179 passed** (parser formats/fields, buyer-facing description cleanliness, grounding drops hallucinated quantities, model-failure fallback, fixed and live FX incl. stale fallback (mocked network), every Incoterm's charges add up, margin floor and discount tiers, unpriced flag, pricing policy trigger/non-trigger).
+- `make eval` → **Gate: PASSED**. Extraction F1 on **hand-written held-out: 0.976** (first shot 0.970, DECISIONS Q9); template test split 1.000 (overstates real accuracy). **E2E task success 1.000** (was 0.757). Pricing invariants across all Incoterms 1.000. Security gates unchanged (all pass).
+- Browser: CIF quote with live ECB-based FX (1 INR = 0.037967 AED, 2026-10-09) and four charge lines; a dangling-bracket description bug was found there and fixed.
+
+**Known gaps (planned)**
+- Real-model extraction is untested until an API key is added (`--profile prod` / `dev`); the grounding layer is ready for it.
+- Hand-written misses kept unfixed: numbered lists ("1) … – 400 pcs"), pipe tables, a single Arabic greeting word in an English message.
+- Logistics costs are demo estimates; replace with forwarder quotes before quoting real buyers.
+- Duty is shown before any CEPA preference: the CEPA analysis comes in Phase 5.
+
+**Next: Phase 5, knowledge base + CEPA Duty + Docs agents** (5a–5f): tariff tree and rules-of-origin index from the official files, Arabic analyser, hybrid retrieval + RRF + reranker, agentic RAG with claim-level grounding, corrective loop, a hand-built retrieval evaluation set.
+
 ## Phase 3 — Security core ✅ (2026-10-09)
 
 **Built**
