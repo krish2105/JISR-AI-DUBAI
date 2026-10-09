@@ -7,8 +7,8 @@ Why this file exists:
     in their event payload return placeholder results and are replaced in later phases:
         quote  -> Phase 4 (real extraction, pricing rules, live FX)
         duty   -> Phase 5 (cited CEPA analysis)
-        docs   -> Phase 5/6 (document pack + consistency checker)
-        trust  -> Phase 6 (sanctions-list signals)
+        docs   -> Phase 5/6 (cited document pack + deterministic consistency checker)
+        trust  -> Phase 6 (buyer trust signals incl. a UN sanctions-list name check)
     The guard and redactor are real but basic (v0); Phase 3 hardens them.
 
 How a node works (beginner notes):
@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from langchain_core.runnables import RunnableConfig
 
 from app.agents.state import PendingAction, RunState
-from app.agents.trade_agents import analyse_duty, build_doc_pack
+from app.agents.trade_agents import analyse_duty, build_doc_pack, check_draft_documents
 from app.db.models import Approval
 from app.db.session import session_scope
 from app.governance.audit import append_audit
@@ -37,11 +37,11 @@ from app.profile import get_business_profile
 from app.runs.emitter import RunEmitter
 from app.security.classifier import classify, extra_flags
 from app.security.injection_guard import scan_rules
+from app.tools.buyer_trust import assess as assess_buyer
+from app.tools.buyer_trust import needs_review
 from app.tools.fx import get_inr_to_aed
 from app.tools.pricing import price_quote
 from app.tools.rfq import extract_rfq
-
-FREE_MAIL_DOMAINS = {"gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "proton.me"}
 
 
 @dataclass
@@ -225,31 +225,49 @@ async def duty(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepR
 
 @agent_step("docs")
 async def docs(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
-    """Docs agent: cited document pack + HS candidates per line (consistency checks arrive in Phase 6)."""
+    """Docs agent: cited document pack, a draft document set, and the deterministic consistency check."""
     pack = await asyncio.to_thread(build_doc_pack, state.duty or {})
+    findings: list[dict] = []
+    if state.quote and state.quote.get("lines"):
+        await em.emit("docs", "tool_call", {"tool": "doc_checker.check_document_set", "stage": "draft"})
+        draft, findings = await asyncio.to_thread(check_draft_documents, state.rfq, state.quote, state.duty or {})
+        pack["draft"] = draft
+        await em.emit("docs", "tool_result", {"tool": "doc_checker.check_document_set", "findings": len(findings),
+                                              "types": [f["type"] for f in findings]},
+                      risk="high" if any(f["severity"] == "high" for f in findings) else "low")
     cited = sum(1 for d in pack.get("documents", []) if d.get("citation"))
-    return StepResult(updates={"docs": pack, "doc_issues": []},
-                      summary={"why": f"Document pack: {len(pack.get('documents', []))} documents, {cited} with cited "
-                                      "requirements; HS codes are candidates for human confirmation.",
-                               "documents": len(pack.get("documents", [])), "needs_human_check": True},
-                      risk="medium" if pack.get("status") != "prepared" else "low")
+    impact = dict(state.impact)
+    impact["risks_caught"] = impact.get("risks_caught", 0) + len(findings)
+    why = (f"Document pack: {len(pack.get('documents', []))} documents, {cited} with cited requirements. "
+           + (f"{len(findings)} consistency issue(s) found before anything is issued."
+              if findings else "Draft invoice, packing list and certificate are consistent."))
+    high = any(f["severity"] == "high" for f in findings)
+    return StepResult(updates={"docs": pack, "doc_issues": findings, "impact": impact},
+                      summary={"why": why, "documents": len(pack.get("documents", [])), "issues": len(findings),
+                               "needs_human_check": True},
+                      risk="high" if high else ("medium" if findings or pack.get("status") != "prepared" else "low"))
 
 
 @agent_step("trust")
 async def trust(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
-    """Buyer trust SIGNALS for human review (never a verdict). Phase 6 adds sanctions-list matching."""
-    signals = []
-    for domain in re.findall(r"\[EMAIL_\d+\]@([\w.-]+)", state.raw_message_redacted):
-        if domain.lower() in FREE_MAIL_DOMAINS:
-            signals.append({"signal": "free_mail_domain", "evidence": domain, "risk": "medium"})
-    if not re.search(r"\[EMAIL_\d+\]@", state.raw_message_redacted):
-        signals.append({"signal": "no_business_email", "evidence": "no email address given", "risk": "low"})
+    """Buyer trust SIGNALS for human review (never a verdict): email domain, payment and bank-change requests,
+    pressure, licence, destination, order size and a UN sanctions-list name check."""
+    await em.emit("trust", "tool_call", {"tool": "buyer_trust.assess"})
+    signals = await asyncio.to_thread(
+        assess_buyer, state.raw_message_redacted,
+        buyer_name=state.rfq.buyer_name if state.rfq else "", buyer_country=(state.rfq.buyer_country or "")
+        if state.rfq else "", quote_total_aed=(state.quote or {}).get("total_aed"),
+        injection_flags=state.injection_flags)
     impact = dict(state.impact)
-    impact["risks_caught"] = impact.get("risks_caught", 0) + sum(1 for s in signals if s["risk"] != "low")
+    impact["risks_caught"] = impact.get("risks_caught", 0) + sum(1 for s in signals if s["risk"] in ("medium", "high"))
+    review = needs_review(signals)
+    risk = "high" if any(s["risk"] == "high" for s in signals) else ("medium" if review else "low")
     return StepResult(
         updates={"buyer_signals": signals, "impact": impact},
-        summary={"why": "Signals are for human review, not verdicts.", "signals": signals, "stub": True},
-        risk="medium" if any(s["risk"] == "medium" for s in signals) else "low",
+        summary={"why": ("Review the buyer before quoting on credit or shipping." if review else
+                         "No warning signals; signals are for human review, not verdicts."),
+                 "signals": signals, "needs_review": review},
+        risk=risk,
     )
 
 
@@ -308,7 +326,8 @@ async def governance(state: RunState, em: RunEmitter, config: RunnableConfig) ->
     wait for our own lock (SQLite allows one writer at a time).
     """
     engine = get_policy_engine()
-    ctx = PolicyContext(injection_flags=state.injection_flags)
+    ctx = PolicyContext(injection_flags=state.injection_flags,
+                        buyer_signals=[s["signal"] for s in state.buyer_signals])
     events: list[tuple[str, dict, str]] = []          # (kind, payload, risk) to emit after commit
     held, blocked = 0, 0
     async with session_scope() as db:

@@ -20,10 +20,15 @@ Mistake types (one field each):
 
 HS codes: 8-digit codes that exist in the Dubai Customs tariff master (old-code column). They are
 consistent TEST FIXTURES for cross-document checks, not classification advice.
+
+v4 (Phase 6): 20 more sets (doc_041-060) carry BENIGN FORMAT NOISE applied after planting: dotted HS codes,
+6-digit codes on the certificate, quantities like "500 pcs", amounts like "52,840.00", lower-case currency.
+Clean noisy sets must give no findings (false alarms on formatting are what make checkers unusable).
 """
 
 import copy
 import random
+import re
 
 # (description, HS code from the tariff master, unit price AED range, net kg per unit)
 GOODS = [
@@ -113,6 +118,40 @@ def _plant(rng: random.Random, ds: dict, mistake: str) -> dict:
     raise ValueError(mistake)
 
 
+def _dotted(code: str) -> str:
+    """'62142010' -> '6214.20.10' (how codes are often printed)."""
+    return f"{code[:4]}.{code[4:6]}.{code[6:]}" if len(code) == 8 else code
+
+
+def _format_noise(rng: random.Random, ds: dict, issues: list[dict]) -> None:
+    """Harmless formatting differences, as real documents from different systems have them, including a different
+    line ORDER on the packing list and the certificate (gold field indices are remapped to the new order)."""
+    inv, pl = ds["invoice"], ds["packing_list"]
+    order = list(range(len(pl["lines"])))
+    rng.shuffle(order)                                   # new position j holds old line order[j]
+    pl["lines"] = [pl["lines"][k] for k in order]
+    coo_codes = ds["certificate_of_origin"].get("hs_codes")
+    if coo_codes:
+        ds["certificate_of_origin"]["hs_codes"] = [coo_codes[k] for k in order]
+    new_pos = {old: new for new, old in enumerate(order)}
+    for issue in issues:
+        m = re.match(r"(packing_list|certificate_of_origin)\.line\[(\d+)\](.*)", issue["field"])
+        if m:
+            issue["field"] = f"{m.group(1)}.line[{new_pos[int(m.group(2))]}]{m.group(3)}"
+    for ln in inv["lines"]:
+        ln["hs_code"] = _dotted(ln["hs_code"])
+        ln["amount"] = f"{ln['amount']:,.2f}"
+    inv["total"] = f"AED {inv['total']:,.2f}"
+    ccy = inv["currency"]
+    inv["currency"] = rng.choice([ccy.lower(), f"{ccy} ", ccy.title()])     # same currency, different spelling
+    for ln in pl["lines"]:
+        ln["quantity"] = f"{ln['quantity']} pcs"
+        ln["net_kg"] = f"{ln['net_kg']} kg"
+    coo = ds["certificate_of_origin"]
+    if coo.get("present"):
+        coo["hs_codes"] = [c[:6] if rng.random() < 0.5 else _dotted(c) for c in coo["hs_codes"]]
+
+
 def generate_docsets(seed: int = 20261009) -> list[dict]:
     """20 clean sets + 20 sets with 1-2 planted mistakes (every mistake type appears at least twice)."""
     rng = random.Random(seed + 1)
@@ -135,5 +174,16 @@ def generate_docsets(seed: int = 20261009) -> list[dict]:
             "split": "test" if idx > 32 else ("dev" if idx > 24 else "train"),
             "documents": copy.deepcopy(ds),
             "labels": {"issues": issues, "clean": not issues},
+        })
+    noise_rng = random.Random(seed + 2)
+    for idx in range(41, 61):                            # v4: format-noise sets
+        ds = _clean_set(noise_rng, idx)
+        issues = [_plant(noise_rng, ds, MISTAKES[(idx // 2) % len(MISTAKES)])] if idx % 2 == 0 else []
+        _format_noise(noise_rng, ds, issues)
+        rows.append({
+            "id": f"doc_{idx:03d}",
+            "split": "test" if idx > 52 else ("dev" if idx > 46 else "train"),
+            "documents": copy.deepcopy(ds),
+            "labels": {"issues": issues, "clean": not issues, "format_noise": True},
         })
     return rows

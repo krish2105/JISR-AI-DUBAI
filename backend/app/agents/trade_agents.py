@@ -28,6 +28,7 @@ from app.rag.citations import find_article, first_chunk_of, resolve
 from app.rag.index import index_exists
 from app.rag.ingest_psr import rule_for
 from app.rag.retriever import classify_hs, get_retriever
+from app.tools.doc_checker import check_document_set
 
 
 def _evidence_for(components: dict) -> list[str]:
@@ -197,3 +198,53 @@ def build_doc_pack(duty: dict) -> dict:
            "verified": False} for ln in duty["lines"]]
     return {"status": "prepared", "documents": documents, "hs": hs, "needs_human_check": True,
             "note": "HS codes are ranked candidates from the tariff; a human confirms before documents are issued."}
+
+
+# ---------------------------------------------------------------------------------------
+# Phase 6: draft document set + consistency check
+# ---------------------------------------------------------------------------------------
+
+
+def draft_document_set(rfq, quote: dict, duty: dict) -> dict:
+    """The quote-stage document set Jisr would prepare: invoice and packing list from the quote and the seller's
+    catalogue (its HS code is what the seller's own system holds), certificate-of-origin draft from the duty
+    agent's cited classification. A disagreement between the two is exactly the mistake that costs preferences."""
+    profile = get_business_profile()
+    duty_lines = {ln["description"]: ln for ln in (duty or {}).get("lines", [])}
+    inv_lines, pl_lines, coo_codes = [], [], []
+    for ln in quote.get("lines", []):
+        entry = profile.match(ln["description"])
+        top = (duty_lines.get(ln["description"], {}).get("hs_candidates") or [{}])[0]
+        classified = (top.get("best_line") or "")[:8]
+        seller_hs = (entry.hs_hint if entry and entry.hs_hint else None) or classified
+        inv_lines.append({"description": ln["description"], "hs_code": seller_hs, "quantity": ln["quantity"],
+                          "unit_price": ln["unit_price_aed"], "amount": ln["total_aed"]})
+        packed_kg = round(float(ln["quantity"]) * (entry.kg if entry else profile.default_kg), 2)
+        pl_lines.append({"description": ln["description"], "hs_code": seller_hs, "quantity": ln["quantity"],
+                         "gross_kg": packed_kg})
+        coo_codes.append(classified or seller_hs)
+    return {
+        "invoice": {"seller": profile.seller_name, "buyer": getattr(rfq, "buyer_name", None),
+                    "currency": profile.quote_currency, "incoterm": quote.get("incoterm"), "lines": inv_lines,
+                    "total": quote.get("goods_total_aed")},
+        "quote_currency": profile.quote_currency,
+        "packing_list": {"lines": pl_lines},
+        "certificate_of_origin": {"present": True, "status": "draft", "hs_codes": coo_codes},
+        "cepa_preference_claimed": (duty or {}).get("status") == "analysed",
+        "shipping": {"port_of_loading": profile.logistics.origin_port, "transshipment_port": None,
+                     "through_bill_of_lading": None},
+        "export_declaration": {"shipping_bill_no": None, "status": "to file at shipment"},
+    }
+
+
+def check_draft_documents(rfq, quote: dict, duty: dict) -> tuple[dict, list[dict]]:
+    """Draft set + consistency findings; treaty references are resolved to cited passages when the KB exists."""
+    draft = draft_document_set(rfq, quote, duty)
+    findings = check_document_set(draft, stage="draft")
+    if findings and index_exists():
+        kb = get_retriever().kb
+        for f in findings:
+            m = re.search(r"Article (\d+\.\d+)", f.get("rule_ref") or "")
+            cid = find_article(kb, m.group(1)) if m else None
+            f["citation"] = resolve(kb, cid) if cid else None
+    return draft, findings

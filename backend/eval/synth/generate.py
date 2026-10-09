@@ -7,7 +7,8 @@ Usage (from the repo root):  make data
 Outputs:
     data/synthetic/enquiries.jsonl    300 labelled buyer enquiries (EN / AR / mixed)
     data/synthetic/adversarial.jsonl  30 hand-written attacks (red-team)
-    data/synthetic/docsets.jsonl      40 export document sets, 20 with planted mistakes
+    data/synthetic/docsets.jsonl      60 export document sets, 30 with planted mistakes (20 with format noise)
+    data/synthetic/trust.jsonl        80 enquiries labelled with buyer-trust signals (incl. hard negatives)
     data/synthetic/adversarial_dev.jsonl  40 dev attacks + 20 benign lookalikes (guard development only)
     data/synthetic/pii.jsonl          90 messages labelled with personal data to hide and business data to keep
     data/synthetic/enquiries_handwritten.jsonl  30 hand-written enquiries (test only; never used for tuning)
@@ -27,10 +28,12 @@ from eval.synth.docsets import generate_docsets
 from eval.synth.enquiries import generate_enquiries
 from eval.synth.enquiries_handwritten import generate_handwritten
 from eval.synth.pii import generate_pii
+from eval.synth.trust import generate_trust
 
 # v2 (Phase 3): + adversarial_dev, + pii. v3 (Phase 4): + enquiries_handwritten; enquiry country labels set to
 # None where no place is written (46 rows; labels must be answerable from the text).
-DATASET_VERSION = "synthetic-v3"
+# v4 (Phase 6): + trust (80 rows); docsets + 20 format-noise sets (60 rows).
+DATASET_VERSION = "synthetic-v4"
 SEED = 20261009
 OUT = Path(__file__).resolve().parents[3] / "data" / "synthetic"
 
@@ -52,6 +55,7 @@ def main() -> None:
         "adversarial_dev": generate_adversarial_dev(),
         "pii": generate_pii(SEED),
         "enquiries_handwritten": generate_handwritten(),
+        "trust": generate_trust(SEED),
     }
     # The retrieval set is built from the local knowledge-base index (official sources); keep the committed file
     # when the index is not available on this machine.

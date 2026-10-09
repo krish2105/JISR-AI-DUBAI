@@ -1,5 +1,5 @@
 {
-  "version": "synthetic-v3",
+  "version": "synthetic-v4",
   "seed": 20261009,
   "files": {
     "enquiries.jsonl": {
@@ -29,15 +29,15 @@
       }
     },
     "docsets.jsonl": {
-      "rows": 40,
-      "sha256": "8f9f12cc2b1716349f4222db6eea76df7c802e6c19c3f58944673709bcf3d6f7",
+      "rows": 60,
+      "sha256": "dfdf6c5b4b4ebc763aadaa5f82e3fc60e0656dfbf75141144fb2fefeb2154974",
       "by_split": {
-        "train": 24,
-        "dev": 8,
-        "test": 8
+        "train": 30,
+        "dev": 14,
+        "test": 16
       },
       "by_language": {
-        "n/a": 40
+        "n/a": 60
       }
     },
     "adversarial_dev.jsonl": {
@@ -75,6 +75,19 @@
         "en": 14,
         "ar": 10,
         "mixed": 6
+      }
+    },
+    "trust.jsonl": {
+      "rows": 80,
+      "sha256": "a9aa53d50a9b518ec8b368b01058fc2fb5c7bc636bafe56acf271889c09652df",
+      "by_split": {
+        "train": 40,
+        "dev": 16,
+        "test": 24
+      },
+      "by_language": {
+        "en": 40,
+        "ar": 40
       }
     },
     "retrieval_eval.jsonl": {

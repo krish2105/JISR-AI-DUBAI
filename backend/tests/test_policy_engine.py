@@ -83,3 +83,19 @@ def test_unknown_action_gets_safe_default():
     decision = ENGINE.evaluate(action("something_new"), CLEAN)
     assert decision.effect == "require_approval"
     assert decision.rule_ids == ["DEFAULT"]
+
+
+# P-TRUST-001 ------------------------------------------------------------------------
+
+@pytest.mark.parametrize("signal", ["possible_sanctions_match", "bank_change_request", "third_party_payment"])
+def test_risky_buyer_signal_makes_actions_high_risk(signal):
+    """Trigger: a high-risk buyer signal raises any action to high risk with owner approval."""
+    decision = ENGINE.evaluate(action("send_message"), PolicyContext(buyer_signals=[signal]))
+    assert "P-TRUST-001" in decision.rule_ids and decision.risk == "high"
+    assert decision.effect == "require_approval"
+
+
+def test_benign_buyer_signals_do_not_trigger_trust_rule():
+    """Non-trigger: ordinary signals (free mail, urgency) do not raise the trust rule."""
+    ctx = PolicyContext(buyer_signals=["free_mail_domain", "pressure_urgency", "business_email_domain"])
+    assert "P-TRUST-001" not in ENGINE.evaluate(action("send_message"), ctx).rule_ids

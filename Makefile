@@ -6,7 +6,7 @@
 BACKEND := backend
 UV := uv --directory $(BACKEND)
 
-.PHONY: kb help setup test test-backend test-postgres test-frontend lint fmt run db up down data eval eval-fast eval-gate eval-baseline demo replay record build clean
+.PHONY: sanctions kb help setup test test-backend test-postgres test-frontend lint fmt run db up down data eval eval-fast eval-gate eval-baseline demo replay record build clean
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -50,6 +50,9 @@ down: ## Stop Docker services
 
 kb: ## Build the knowledge-base index from data/kb_sources (first build ~30 min on CPU; later builds reuse vectors)
 	$(UV) run python -m app.rag.index
+
+sanctions: ## Download the UN Security Council Consolidated List (XML) for the buyer trust signal (git-ignored)
+	python3 scripts/download_sanctions.py
 
 data: ## Regenerate the synthetic evaluation datasets (deterministic) in data/synthetic/
 	$(UV) run python -m eval.synth.generate

@@ -22,6 +22,7 @@ from eval.synth.enquiries import generate_enquiries
 from eval.synth.enquiries_handwritten import generate_handwritten
 from eval.synth.generate import SEED
 from eval.synth.pii import generate_pii
+from eval.synth.trust import generate_trust
 
 
 def _rows(name: str) -> list[dict]:
@@ -37,15 +38,17 @@ def test_committed_datasets_match_the_generator_and_manifest():
     manifest = json.loads((DATA / "MANIFEST.json").read_text())
     for name, rows in (("enquiries", generate_enquiries(SEED)), ("adversarial", generate_adversarial()),
                        ("docsets", generate_docsets(SEED)), ("adversarial_dev", generate_adversarial_dev()),
-                       ("pii", generate_pii(SEED)), ("enquiries_handwritten", generate_handwritten())):
+                       ("pii", generate_pii(SEED)), ("enquiries_handwritten", generate_handwritten()),
+                       ("trust", generate_trust(SEED))):
         text = "".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n" for r in rows)
         assert hashlib.sha256(text.encode()).hexdigest() == manifest["files"][f"{name}.jsonl"]["sha256"], name
 
 
 def test_dataset_sizes_languages_and_splits():
-    """300 enquiries (EN/AR/mixed), 30 attacks, 40 doc sets; splits roughly 60/20/20."""
+    """300 enquiries (EN/AR/mixed), 30 attacks, 60 doc sets (20 with format noise); splits roughly 60/20/20."""
     enquiries, attacks, docs = _rows("enquiries"), _rows("adversarial"), _rows("docsets")
-    assert len(enquiries) == 300 and len(attacks) == 30 and len(docs) == 40
+    assert len(enquiries) == 300 and len(attacks) == 30 and len(docs) == 60
+    assert sum(bool(d["labels"].get("format_noise")) for d in docs) == 20
     assert Counter(r["language"] for r in enquiries) == {"en": 150, "ar": 105, "mixed": 45}
     assert Counter(r["split"] for r in enquiries) == {"train": 180, "dev": 60, "test": 60}
     assert sum(r["hard_negative"] for r in enquiries) == 10
@@ -54,11 +57,17 @@ def test_dataset_sizes_languages_and_splits():
 
 
 def test_every_mistake_type_is_planted_and_half_the_sets_are_clean():
-    """Each of the 9 mistake types appears at least twice; exactly 20 sets are clean."""
+    """Each of the 9 mistake types appears at least twice; exactly 30 of 60 sets are clean."""
     docs = _rows("docsets")
     planted = Counter(i["type"] for d in docs for i in d["labels"]["issues"])
     assert set(planted) == set(MISTAKES) and min(planted.values()) >= 2
-    assert sum(d["labels"]["clean"] for d in docs) == 20
+    assert sum(d["labels"]["clean"] for d in docs) == 30
+
+
+def test_trust_set_has_planted_signals_and_hard_negatives():
+    rows = _rows("trust")
+    assert len(rows) == 80 and {r["language"] for r in rows} == {"en", "ar"}
+    assert sum(bool(r["absent"]) for r in rows) == 20 and sum(bool(r["signals"]) for r in rows) >= 35
 
 
 def test_easy_english_labels_are_literally_in_the_text():

@@ -38,6 +38,7 @@ class Condition(BaseModel):
     action_type_in: list[str] | None = None
     run_has_flags: bool | None = None
     payload_flags_any: list[str] | None = None      # any of these codes in payload["pricing_flags"]
+    buyer_signals_any: list[str] | None = None      # any of these buyer-trust signals was raised in the run
 
 
 class Rule(BaseModel):
@@ -54,6 +55,7 @@ class PolicyContext(BaseModel):
     """Facts about the run that rules may look at (never free text the model wrote)."""
 
     injection_flags: list[str] = Field(default_factory=list)
+    buyer_signals: list[str] = Field(default_factory=list)      # signal names from the Buyer Trust tool
 
 
 class Decision(BaseModel):
@@ -90,6 +92,8 @@ class PolicyEngine:
             present = set(action.payload.get("pricing_flags") or [])
             if not present & set(cond.payload_flags_any):
                 return False
+        if cond.buyer_signals_any is not None and not set(ctx.buyer_signals) & set(cond.buyer_signals_any):
+            return False
         return True
 
     def evaluate(self, action: PendingAction, ctx: PolicyContext) -> Decision:

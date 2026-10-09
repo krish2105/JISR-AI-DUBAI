@@ -9,6 +9,7 @@
 #   action_type_in: [..]     the action's type is one of these
 #   run_has_flags: true      the inbound message was flagged by the injection guard
 #   payload_flags_any: [..]  the action carries any of these pricing flags (set by the deterministic pricing tool)
+#   buyer_signals_any: [..]  the Buyer Trust tool raised any of these signals in the run
 #
 # Every rule has a trigger test and a non-trigger test in tests/test_policy_engine.py.
 
@@ -57,3 +58,10 @@ rules:
       payload_flags_any: [unpriced_item, incoterm_not_stated, incoterm_unknown, fx_stale]
     effect: require_approval
     risk: medium
+
+  - id: P-TRUST-001
+    description: A possible sanctions-list match, a bank-detail change or a third-party payment request makes every action high risk; the owner reviews the buyer first.
+    when:
+      buyer_signals_any: [possible_sanctions_match, bank_change_request, third_party_payment]
+    effect: require_approval
+    risk: high
