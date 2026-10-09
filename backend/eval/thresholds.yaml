@@ -3,6 +3,8 @@
 # Each metric: min (higher is better) or max (lower is better), and a gate:
 #   hard    CI fails now if the threshold is breached.
 #   target  reported as TARGET until the named phase delivers it; that phase flips it to hard.
+#   regression: false   exempts a metric from the baseline-regression rule (used for wall-clock timings,
+#                       which vary with machine load; they keep their absolute limit).
 # On top of these, the gate fails on any regression worse than `regression_margin` versus
 # eval/baseline.json (same mode: fast or full).
 
@@ -34,4 +36,4 @@ pricing:
 
 e2e:
   task_success_rate:          {min: 0.90, gate: target, phase: 9}
-  latency_p95_s:              {max: 120, gate: hard}     # v3 success criterion: under 2 minutes
+  latency_p95_s:              {max: 120, gate: hard, regression: false}   # v3: under 2 minutes; timing noise exempt

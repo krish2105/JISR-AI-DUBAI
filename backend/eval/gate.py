@@ -48,7 +48,7 @@ def evaluate(results: dict[str, dict], thresholds: dict, baseline: dict) -> tupl
             ok = value >= limit if higher_better else value <= limit
             status = "PASS" if ok else ("FAIL" if rule["gate"] == "hard" else "TARGET")
             base = baseline.get(mode, {}).get(suite, {}).get(metric)
-            if base is not None:
+            if base is not None and rule.get("regression", True):
                 worse = (base - value) if higher_better else (value - base)
                 if worse > margin:
                     prefix = "FAIL + " if status == "FAIL" else ""

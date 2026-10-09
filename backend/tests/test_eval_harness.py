@@ -152,3 +152,14 @@ def test_gate_fails_when_a_hard_suite_is_missing():
     thresholds = {"redteam": {"attack_success_rate": {"max": 0.0, "gate": "hard"}}}
     rows, failed = evaluate({}, thresholds, {})
     assert failed and rows[0][4] == "MISSING"
+
+
+def test_timing_metrics_can_opt_out_of_regression():
+    """Wall-clock metrics keep their absolute limit but ignore baseline noise."""
+    thresholds = {"regression_margin": 0.02,
+                  "e2e": {"latency_p95_s": {"max": 120, "gate": "hard", "regression": False}}}
+    baseline = {"full": {"e2e": {"latency_p95_s": 0.04}}}
+    rows, failed = evaluate({"e2e": _result({"latency_p95_s": 0.09})}, thresholds, baseline)
+    assert not failed and rows[0][4] == "PASS"
+    _, too_slow = evaluate({"e2e": _result({"latency_p95_s": 130})}, thresholds, baseline)
+    assert too_slow
