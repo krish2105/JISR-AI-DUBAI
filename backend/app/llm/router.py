@@ -15,6 +15,8 @@ Backends:
     anthropic -> AnthropicBackend: official `anthropic` SDK (structured outputs, adaptive
                  thinking with an explicit effort level, server-side refusal fallbacks).
     litellm   -> LiteLLMBackend: free-tier non-Claude providers for development only.
+    replay    -> ReplayBackend: answers from a recorded "cassette" file, so a demo recorded
+                 on Claude can be replayed with no network (make replay).
 
 Typical use (inside an async function):
     router = get_router()
@@ -43,7 +45,7 @@ from app.config import Settings, get_settings
 # --------------------------------------------------------------------------------------
 
 Role = Literal["smart", "worker", "fast", "judge", "stt"]
-Provider = Literal["fake", "anthropic", "litellm"]
+Provider = Literal["fake", "anthropic", "litellm", "replay"]
 
 # How sensitive the data in a request is. Free-tier providers may only see "synthetic".
 DataClass = Literal["synthetic", "anonymised", "real"]
@@ -285,6 +287,66 @@ class LiteLLMBackend:
         )
 
 
+def cassette_key(req: LLMRequest) -> str:
+    """Stable key for a request: same role, purpose, prompts and schema -> same key."""
+    material = json.dumps(
+        {
+            "role": req.role,
+            "purpose": req.purpose,
+            "system": req.system,
+            "prompt": req.prompt,
+            "schema": req.output_schema.__name__ if req.output_schema else None,
+        },
+        sort_keys=True,
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+class ReplayBackend:
+    """
+    Answers from a cassette: a JSONL file of recorded responses (see LLMRouter recording).
+
+    Why: the finals need a demo that works with no network. Record the demo once on
+    Claude (`LLM_RECORD=true`), then run with `LLM_PROFILE=replay` and every agent gets
+    exactly the answers Claude gave, instantly and offline.
+    """
+
+    def __init__(self, cassette_path: Path | None) -> None:
+        self.cassette_path = cassette_path
+        self._entries: dict[str, dict] | None = None
+
+    def _load(self) -> dict[str, dict]:
+        """Read the cassette file once (later lines win if a key repeats)."""
+        if self._entries is None:
+            self._entries = {}
+            if self.cassette_path and Path(self.cassette_path).exists():
+                for line in Path(self.cassette_path).read_text(encoding="utf-8").splitlines():
+                    if line.strip():
+                        entry = json.loads(line)
+                        self._entries[entry["key"]] = entry
+        return self._entries
+
+    async def complete(self, cfg: RoleConfig, req: LLMRequest, max_tokens: int) -> LLMResponse:
+        """Return the recorded answer for this exact request, or fail clearly."""
+        entry = self._load().get(cassette_key(req))
+        if entry is None:
+            raise LLMBackendError(
+                f"No recorded answer for purpose={req.purpose!r} in cassette {self.cassette_path}. "
+                "Re-record the demo with LLM_RECORD=true."
+            )
+        parsed = req.output_schema.model_validate(entry["parsed"]) if req.output_schema else None
+        return LLMResponse(
+            text=entry["text"],
+            parsed=parsed,
+            provider="replay",
+            model=f"replay:{entry['model']}",
+            input_tokens=entry.get("input_tokens", 0),
+            output_tokens=entry.get("output_tokens", 0),
+            stop_reason=entry.get("stop_reason"),
+        )
+
+
 # --------------------------------------------------------------------------------------
 # The router
 # --------------------------------------------------------------------------------------
@@ -312,12 +374,17 @@ class LLMRouter:
         self.profiles = profiles or load_profiles()
         if self.settings.llm_profile not in self.profiles:
             raise ValueError(f"Unknown LLM profile {self.settings.llm_profile!r}")
-        # Backends can be injected (tests); otherwise create the standard three.
-        self.backends: dict[str, Backend] = backends or {
-            "fake": FakeBackend(),
-            "anthropic": AnthropicBackend(self.settings),
-            "litellm": LiteLLMBackend(),
-        }
+        # Backends can be injected (tests); otherwise create the standard ones.
+        if backends is None:
+            from app.llm.fake_scripts import DEMO_SCRIPTS  # imported here to avoid a circular import
+
+            backends = {
+                "fake": FakeBackend(DEMO_SCRIPTS),
+                "anthropic": AnthropicBackend(self.settings),
+                "litellm": LiteLLMBackend(),
+                "replay": ReplayBackend(self.settings.llm_cassette),
+            }
+        self.backends: dict[str, Backend] = backends
 
     def config_for(self, role: Role) -> RoleConfig:
         """Return the model configuration for a role in the active profile."""
@@ -343,7 +410,32 @@ class LLMRouter:
         response.latency_ms = round((time.perf_counter() - started) * 1000, 2)
 
         self._log_call(cfg, req, response)
+        if self.settings.llm_record:
+            self._record(req, response)
         return response
+
+    def _record(self, req: LLMRequest, resp: LLMResponse) -> None:
+        """Append this answer to the cassette so it can be replayed offline later.
+
+        Real (non-anonymised) customer data is never recorded: cassettes are demo assets.
+        """
+        if req.data_class == "real" or self.settings.llm_cassette is None:
+            return
+        path = Path(self.settings.llm_cassette)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "key": cassette_key(req),
+            "role": req.role,
+            "purpose": req.purpose,
+            "text": resp.text,
+            "parsed": resp.parsed.model_dump(mode="json") if isinstance(resp.parsed, BaseModel) else resp.parsed,
+            "model": resp.model,
+            "input_tokens": resp.input_tokens,
+            "output_tokens": resp.output_tokens,
+            "stop_reason": resp.stop_reason,
+        }
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     def _log_call(self, cfg: RoleConfig, req: LLMRequest, resp: LLMResponse) -> None:
         """Append one JSON line per call. Only metadata: no prompt or answer text (no PII)."""

@@ -4,19 +4,33 @@ main.py — The FastAPI application: the backend's front door.
 Why this file exists:
     It creates the web app, allows the dashboard (Next.js on :3000) to call it, and
     exposes `/health` so humans, Docker and the hosting platform can check it is alive.
-    Feature routes (runs, approvals, audit, ...) are added in Phase 1 under `app/api/`.
+    Feature routes live in `app/api/` (runs + live events, approvals, audit, demo samples).
+    On start-up it creates any missing database tables.
 
 Run it:
     make run            (or: uv run uvicorn app.main:app --reload --port 8000)
     open http://localhost:8000/health
 """
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
+from app.api import approvals, audit, demo, runs
 from app.config import get_settings
+from app.db.session import get_engine, init_db
 from app.llm.router import get_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Runs once at start-up (create tables) and once at shutdown (close DB connections)."""
+    await init_db()
+    yield
+    await get_engine().dispose()
 
 
 def create_app() -> FastAPI:
@@ -26,6 +40,7 @@ def create_app() -> FastAPI:
         title="Jisr AI",
         version=__version__,
         description="Governed multi-agent system for India-to-UAE SME trade.",
+        lifespan=lifespan,
     )
 
     # Let the browser dashboard call this API from its own origin(s).
@@ -35,6 +50,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    for module in (runs, approvals, audit, demo):
+        app.include_router(module.router)
 
     @app.get("/health", tags=["system"])
     def health() -> dict:

@@ -2,28 +2,36 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
-## Phase 0 — Scaffold ✅ (2026-10-09)
+## Phase 1 — Vertical slice ✅ (2026-10-09)
 
 **Built**
-- Repo with `CLAUDE.md` (project memory), `docs/PLAN.md` (approved plan), `docs/DECISIONS.md` (planning decisions, 5 research corrections, engineering decisions), `docs/CLAIMS_REGISTER.md` (seeded; CEPA origin rule corrected to ≥40% + CTC), strategy docs in `docs/strategy/`.
-- Backend (Python 3.12, uv): `app/config.py` (typed settings), `app/main.py` (FastAPI + CORS + `/health`).
-- **LLM router** `app/llm/router.py` + `profiles.yaml`: roles `smart/worker/fast/judge/stt`; profiles `fake/dev/prod`; backends `fake` (deterministic, schema-validated), `anthropic` (official SDK: explicit effort, `messages.parse` structured output, server-side refusal fallback, typed error chain, refusal → escalate), `litellm` (free tiers, dev only). Free-tier data guard (synthetic only). Metadata-only JSONL call log.
-- `Makefile` (`help setup test lint fmt run db up down eval demo replay clean`), `backend/Dockerfile`, `docker-compose.yml` (pgvector/pg17 + API), `.env.example`, `.gitignore`, `README.md`, KB and sanctions download checklists in `data/`.
+- **Contracts frozen** (`docs/CONTRACTS.md`): `RunEvent` (13 kinds), REST routes, `RunState`.
+- **Agent graph** (LangGraph): ingest → guard → supervisor → quote → duty → docs → trust → outreach → governance, with a conditional shortcut to governance for bank-change attacks. Quote does RFQ extraction through the LLM router plus stub pricing. Outreach drafts EN/AR through the router. Duty, docs and trust are honest placeholders marked `stub`.
+- **Governance v0**: `policies.yaml` + deterministic `policy_engine.py` (P-BANK-001 block, P-OUT-001 approval, P-INJ-001 high risk; strongest effect wins; safe default). Approval queue with approve/edit/reject. **Hash-chained audit log** per org with `verify_chain`. A simulated channel "sends" approved messages.
+- **Security v0**: redactor (email/phone/IBAN tokens; raw messages never stored) and injection guard (EN + AR patterns). Hardened in Phase 3.
+- **Live events**: persisted events, an in-process bus, an SSE endpoint with resume (`?after=` and `Last-Event-ID`).
+- **Offline replay**: `replay` LLM profile + `make record` cassette. The whole pipeline (governance, approvals, audit) still runs for real; only model answers are replayed.
+- **Dashboard** (Next.js 16): pearl light / midnight dark tokens with a no-flash theme toggle, `/en` + `/ar` static routes with true RTL, the live 2D agent graph (mirrors in Arabic), timeline with stub badges, counters, quote table, inline approval card, `/approvals` inbox, `/audit` with chain-verified badge, landing page with the bridge illustration (static fallback for the Phase 7 3D hero).
+- `make demo`, `make replay`, `make record`, `make build`.
 
 **Tested** (real output)
-- `make test` → `20 passed` (health, profiles validity, judge ≠ worker, Claude ids/effort, fake determinism and schema validation, free-tier trigger + non-trigger tests, log has no prompt text, max-token clamp, Claude kwargs/fallbacks/structured output, text-only extraction, refusal raised).
-- `make lint` → `All checks passed!`
-- `make run` → `GET /health` 200 `{"status":"ok", "llm_profile":"fake", ...}`.
-- `make up` (OrbStack) → db healthy, API `/health` 200 from the container.
-- `make eval`, `make demo`, `make replay` are honest placeholders until Phases 1–2.
+- `make test` → backend `54 passed` (policy trigger/non-trigger per rule, audit tamper + delete detection, per-org chains, UTC timestamps, redaction, guard on EN/AR/hostile samples, full slice EN/AR/hostile, approve/reject/edit, no double decision, cross-org 404s, SSE incl. resume, replay identical outputs, real data never recorded). Clean with `-W error::ResourceWarning`. Frontend `tsc` and `eslint` clean.
+- `npm run build` → all pages prerendered statically for `en` and `ar`.
+- **Browser check** (in-app browser): English run → graph lights up → quote → approve → "sent via simulator" → `done`. Arabic + dark theme hostile run → governance node red, attack shortcut highlighted, "3 risks caught", blocked. Audit page "Chain verified · 8 entries". Theme persists across reloads via cookie.
+- Offline: API with `LLM_PROFILE=replay` ran all three samples from the cassette (`replay:fake-worker`), hostile still blocked.
 
-**Notes**
-- Docker runtime on this Mac is **OrbStack**: start it (`orbctl start`) before `make db` / `make up`.
-- Not yet verified against live providers (no API keys used in Phase 0, by design).
+**Bugs found and fixed in the browser check**
+1. Timeline showed "+19800s": SQLite returned naive datetimes, read by the browser as IST. Fixed with a `UTCDateTime` column type (+ test).
+2. Quote line total ≠ unit × qty (11,968.20 vs 23.94 × 500). Fixed: round the unit price first (+ to-the-cent test). Exactly the kind of error the Phase 6 consistency checker must catch.
+3. SQLite "database is locked" when governance emitted events inside its own write transaction. Fixed: commit first, then emit; WAL mode.
+4. React dev warning for the theme script. Fixed: Client Component `InlineScript` per the Next 16 docs.
 
-**Next: Phase 1, the vertical slice**
-- Freeze contracts: `RunState`, `RunEvent` SSE schema, REST routes.
-- Stub agents in a LangGraph flow with a Postgres checkpointer and `interrupt()` for approval.
-- Approval inbox + hash-chained audit entry (v0).
-- Next.js shell: pearl/midnight tokens, theme toggle, EN/AR RTL, `/demo` with a live SSE timeline and a 2D agent graph (the 3D graph later reuses the same events).
-- First replay recording so `make demo` and `make replay` work.
+**Known gaps (planned)**
+- Agent "why" explanations are English even in the Arabic UI (rendered with `dir="auto"`). Bilingual explanations come with the real agents (Phases 4–9).
+- The cassette currently holds `fake` answers. Run `LLM_PROFILE=prod make record` once an Anthropic key is in `.env`.
+- No auth yet (demo org via `X-Org-Id`); real auth before the pilot (Phase 10).
+- Postgres path tested in Phase 0 (`make up`), not yet with the Phase 1 tables; it is exercised in Phase 2.
+
+**Next: Phase 2, data and eval first**
+- Synthetic generator: 300 enquiries (EN/AR/mixed), 30 adversarial, 40 document sets with seeded mistakes, labels.
+- Golden set + `make eval` harness printing a metrics table (and the CI regression gate skeleton).

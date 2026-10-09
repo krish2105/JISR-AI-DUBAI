@@ -9,15 +9,22 @@ Entry for the **Create AI Agents Championship** (Dubai Chamber of Digital Econom
 *Best Business AI Agent*. Plan: [docs/PLAN.md](docs/PLAN.md) · Decisions: [docs/DECISIONS.md](docs/DECISIONS.md) ·
 Progress: [docs/PROGRESS.md](docs/PROGRESS.md).
 
-> Status: **Phase 0 (scaffold)**. The agents, dashboard and demo arrive in the next phases.
+> Status: **Phase 1 (vertical slice)**. Enquiry → agents → governance → approval → audit works end to end
+> in a bilingual dashboard. Specialist agents marked "stub" are deepened in later phases.
 
 ## Quick start
 
 ```bash
-make setup      # install backend dependencies, create .env
-make test       # run the offline test suite (fake model, no keys needed)
-make run        # API on http://localhost:8000  ->  open /health
+make setup      # install backend + dashboard dependencies, create .env
+make test       # offline tests + frontend type-check and lint (fake model, no keys needed)
+make demo       # API :8000 + dashboard :3000, opens http://localhost:3000/en/demo
+make replay     # the same demo fully offline (model answers from replay/demo.cassette.jsonl)
 ```
+
+In the demo: run the English or Arabic enquiry, watch the agent graph and timeline, then approve the
+draft (sent through a simulator). Run the hostile sample to see the policy engine block a bank-detail
+change. `/approvals` is the inbox, `/audit` shows the hash-chain check. Toggle the theme (moon/sun)
+and the language (العربية / English) in the top bar.
 
 Optional: `make db` starts Postgres + pgvector in Docker; `make up` runs DB and API in containers (start OrbStack or Docker Desktop first).
 
@@ -28,14 +35,18 @@ Optional: `make db` starts Postgres + pgvector in Docker; `make up` runs DB and 
 | `fake` (default) | tests, CI, offline replay | deterministic fake, no network |
 | `dev` | development on **synthetic data only** (enforced in code) | free tiers via LiteLLM |
 | `prod` | hosted demo, pilot, finals | Claude Opus 5.5 (planning, grounding, judge), Sonnet 5.5 (agents), Haiku 5.5 (fast tasks) |
+| `replay` | finals fallback, no network | answers recorded by `make record` |
 
 All model calls go through [backend/app/llm/router.py](backend/app/llm/router.py).
+
+Contracts between backend and dashboard: [docs/CONTRACTS.md](docs/CONTRACTS.md).
 
 ## Layout
 
 ```
 backend/   FastAPI app, agents, governance, RAG (Python 3.12, uv)
-frontend/  Next.js dashboard with light/dark themes, Arabic RTL and 3D views (Phase 1+)
+frontend/  Next.js 16 dashboard: light/dark themes, English + Arabic (RTL), live agent graph (3D views later)
+replay/    recorded demo cassette + event streams for offline replay
 docs/      plan, decisions, progress, strategy, and later eval and submission docs
 data/      synthetic data, official knowledge-base sources, public sanctions lists
 ```

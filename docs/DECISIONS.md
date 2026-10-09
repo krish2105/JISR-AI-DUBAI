@@ -35,3 +35,16 @@ Each entry: date, decision, why, and what would make us revisit it.
 | E4 | The router refuses any request whose `data_class` is not `synthetic` when the target provider is marked `free_tier`. | Enforces "no real data on free tiers" in code, not by convention. |
 | E5 | The router writes a JSONL call log (role, provider, model, tokens, latency, request hash) with **no prompt or response text**. | Cost/latency metrics for `make eval` without logging PII. |
 | E6 | Python 3.12 managed with `uv`; ruff for lint; pytest + pytest-asyncio. SQLite fallback until Phase 1 wires Postgres. | Reproducible, fast installs; one-command setup. |
+
+## 2026-10-09 — Phase 1 decisions
+
+| # | Decision | Why |
+|---|---|---|
+| E7 | Contracts (RunEvent, REST routes, RunState) frozen in `docs/CONTRACTS.md`. | Lets frontend/3D work proceed in parallel against a stable interface. |
+| E8 | Approval routes are `POST /approvals/{id}/approve` and `/reject` (v3 sketched `{id}:approve`). | Clearer in FastAPI and browser tooling. |
+| E9 | Phase 1 graph is a fixed LangGraph chain with a conditional branch after the supervisor; the run **ends** at `needs_approval` and the governance layer performs approved actions outside the graph (no checkpointer yet). | The approval gate stays deterministic and outside the model loop. A Postgres checkpointer + `interrupt()` arrive with the planning supervisor (Phase 9) if re-entry is needed. |
+| E10 | Offline replay = a **cassette** of recorded model answers (`replay/demo.cassette.jsonl`) served by a `replay` LLM profile. The whole system (governance, approvals, audit) still runs for real; only model calls are replayed. Real (non-anonymised) data is never recorded. | A replayed demo behaves exactly like a live one, including approvals, with no network. |
+| E11 | Tables are created with `create_all` in Phase 1; Alembic migrations come once the schema settles. SQLite runs in WAL mode with a busy timeout; all timestamps go through a `UTCDateTime` column type. | Zero-setup local runs; SQLite returned naive datetimes, which made the browser read UTC as local time (bug found in the browser check). |
+| E12 | Frontend: Next.js 16 (App Router, cacheComponents) with the **language in the URL** (`/en`, `/ar`, a `proxy.ts` redirect) and the theme in a cookie applied by an inline boot script. No next-intl/next-themes. | Both languages are prerendered statically with the right `lang`/`dir`. The theme never flashes and never causes hydration mismatches (per the Next 16 "preventing flash" guide). Fewer dependencies. |
+| E13 | Pricing: round the **unit** price first, then line total = unit × qty, then quote total = Σ lines. | Found in the browser check: 23.94 × 500 must equal the printed line total (11,970.00), as on a real invoice. |
+| E14 | Small token-based UI primitives instead of the shadcn/ui CLI for now; shadcn components are added when a phase needs dialogs or data tables. | Full control of tokens in both themes; less generated code to maintain. |

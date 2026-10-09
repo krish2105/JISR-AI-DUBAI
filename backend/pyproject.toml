@@ -14,6 +14,10 @@ dependencies = [
     "pyyaml>=6.0",              # reads LLM profiles and (later) policy YAML files
     "anthropic>=0.70",          # official Claude SDK (prod profile)
     "litellm>=1.50",            # non-Claude free-tier providers (dev profile only)
+    "langgraph>=0.6",           # agent graph (supervisor + workers)
+    "sqlalchemy[asyncio]>=2.0", # database access (async)
+    "aiosqlite>=0.20",          # SQLite driver (zero-setup fallback)
+    "psycopg[binary]>=3.2",     # Postgres driver (Docker / Neon)
 ]
 
 [dependency-groups]
@@ -36,7 +40,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"           # lets us write `async def test_...` without decorators
 
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]

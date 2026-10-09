@@ -1,0 +1,23 @@
+# business_profile.yaml — the seller's configurable profile (DEMO values, fictional company).
+#
+# Why: Jisr must not be hard-wired to one company. The pilot business gets its own profile;
+# the hosted demo uses this fictional one. Phase 4 replaces the stub pricing with real rules
+# (Incoterm costs, live FX with timestamp, margin floors) and moves this into the database.
+
+seller_name: "Jaipur Heritage Crafts (demo)"
+home_currency: INR
+quote_currency: AED
+default_margin_pct: 22          # added on top of unit cost
+quote_validity_days: 15
+
+# STUB exchange rate for Phase 1 only. Phase 4 fetches a live rate and stores its source and time.
+fx_stub_inr_to_aed: 0.0436
+
+# Unit costs in INR, matched by keyword in the item description (English and Arabic).
+catalogue:
+  - {keywords: [brass, diya, lamp, "مصباح", "فانوس"],             unit_cost_inr: 450,  hs_hint: "9405"}
+  - {keywords: [runner, table runner, "مفرش"],                      unit_cost_inr: 380,  hs_hint: "6302"}
+  - {keywords: [gift box, box, wooden, "صندوق", "خشبي"],            unit_cost_inr: 520,  hs_hint: "4420"}
+  - {keywords: [pashmina, shawl, stole, "وشاح", "باشمينا"],          unit_cost_inr: 1200, hs_hint: "6214"}
+  - {keywords: [cushion, cover, "وسادة"],                            unit_cost_inr: 290,  hs_hint: "6304"}
+default_unit_cost_inr: 500

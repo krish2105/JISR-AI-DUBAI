@@ -34,8 +34,13 @@ class Settings(BaseSettings):
     # "dev" on laptops, "prod" for the hosted demo / pilot, "test" inside pytest.
     app_env: Literal["dev", "test", "prod"] = "dev"
 
-    # Which block of `llm/profiles.yaml` to use: fake (no network), dev (free tiers), prod (Claude).
-    llm_profile: Literal["fake", "dev", "prod"] = "fake"
+    # Which block of `llm/profiles.yaml` to use: fake (no network), dev (free tiers),
+    # prod (Claude), replay (answers from a recorded cassette, no network).
+    llm_profile: Literal["fake", "dev", "prod", "replay"] = "fake"
+
+    # Cassette file for recording (LLM_RECORD=true) and for the replay profile.
+    llm_cassette: Path | None = REPO_ROOT / "replay" / "demo.cassette.jsonl"
+    llm_record: bool = False
 
     # Postgres in Docker for real runs; SQLite file as a zero-setup fallback.
     database_url: str = f"sqlite:///{REPO_ROOT / 'jisr.db'}"
@@ -48,6 +53,12 @@ class Settings(BaseSettings):
 
     # Hard ceiling on output tokens for a single LLM call (protects the demo budget).
     llm_max_output_tokens: int = 16000
+
+    # Pause between agent steps so humans can follow the live demo (0 in tests).
+    demo_step_delay_ms: int = 450
+
+    # Organisation used when a request does not name one (the public no-login demo org).
+    default_org_id: str = "demo"
 
     # Allowed browser origins for the dashboard (comma-separated in the env var).
     cors_origins: str = "http://localhost:3000"

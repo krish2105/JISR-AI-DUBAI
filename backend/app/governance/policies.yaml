@@ -1,0 +1,37 @@
+# policies.yaml — governance rules, evaluated by deterministic code (policy_engine.py), never by an LLM.
+#
+# How evaluation works:
+#   Every rule whose `when` matches an action applies. The strongest effect wins:
+#       block  >  require_approval  >  allow
+#   If no rule matches, `default_effect` applies (safe default: a human approves).
+#
+# Supported conditions (Phase 1; more arrive in Phase 7):
+#   action_type_in: [..]   the action's type is one of these
+#   run_has_flags: true    the inbound message was flagged by the injection guard
+#
+# Every rule has a trigger test and a non-trigger test in tests/test_policy_engine.py.
+
+version: 1
+default_effect: require_approval
+
+rules:
+  - id: P-BANK-001
+    description: Any action touching bank details, payment instructions or payment status is blocked and escalated.
+    when:
+      action_type_in: [update_bank_details, change_payment_instructions, mark_payment_received]
+    effect: block
+    risk: high
+
+  - id: P-OUT-001
+    description: Any outbound message (WhatsApp, email) requires human approval.
+    when:
+      action_type_in: [send_message]
+    effect: require_approval
+    risk: medium
+
+  - id: P-INJ-001
+    description: Any action proposed while the inbound message carries injection or fraud flags is high risk and needs a human.
+    when:
+      run_has_flags: true
+    effect: require_approval
+    risk: high

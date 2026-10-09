@@ -42,9 +42,9 @@ class TinyRFQ(BaseModel):
 
 
 def test_every_profile_defines_every_role():
-    """fake, dev and prod must each map all five roles to a model."""
+    """Every profile (fake, dev, prod, replay) must map all five roles to a model."""
     profiles = load_profiles()
-    assert set(profiles) == {"fake", "dev", "prod"}
+    assert set(profiles) == {"fake", "dev", "prod", "replay"}
     for name, roles in profiles.items():
         assert set(roles) == ROLES, f"profile {name} is missing roles"
 

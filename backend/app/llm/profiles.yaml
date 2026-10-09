@@ -5,7 +5,7 @@
 # free tiers to Claude is one setting: LLM_PROFILE=prod.
 #
 # Fields per role:
-#   provider:  fake | anthropic | litellm
+#   provider:  fake | anthropic | litellm | replay
 #   model:     the provider's model id (Claude ids are exact; never add date suffixes)
 #   effort:    Claude only: low | medium | high | xhigh | max (Opus 5.5 defaults to medium, so we set it)
 #   free_tier: true means "only synthetic data may be sent here" (enforced by the router)
@@ -32,6 +32,14 @@ dev:
   fast:   {provider: litellm, model: groq/llama-3.1-8b-instant,        free_tier: true}
   judge:  {provider: litellm, model: gemini/gemini-2.5-flash,          free_tier: true}
   stt:    {provider: litellm, model: groq/whisper-large-v3,            free_tier: true}
+
+# Offline replay of a recorded demo (LLM_CASSETTE points at the recording). No network.
+replay:
+  smart:  {provider: replay, model: replay-smart}
+  worker: {provider: replay, model: replay-worker}
+  fast:   {provider: replay, model: replay-fast}
+  judge:  {provider: replay, model: replay-judge}
+  stt:    {provider: replay, model: replay-stt}
 
 # Paid Claude for the hosted demo, the pilot and the finals.
 prod:

@@ -6,26 +6,33 @@
 BACKEND := backend
 UV := uv --directory $(BACKEND)
 
-.PHONY: help setup test lint fmt run db up down eval demo replay clean
+.PHONY: help setup test test-backend test-frontend lint fmt run db up down eval demo replay record build clean
 
 help: ## Show this list of commands
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
-setup: ## Install backend dependencies (frontend joins in Phase 1)
+setup: ## Install backend and frontend dependencies, create .env
 	$(UV) sync --python 3.12
+	cd frontend && npm install
 	@test -f .env || (cp .env.example .env && echo "Created .env from .env.example")
 
-test: ## Run all backend tests (offline, fake model)
+test: test-backend test-frontend ## Run every test and check (offline, fake model)
+
+test-backend: ## Backend unit, policy, API and replay tests
 	$(UV) run pytest -q
 
-lint: ## Check code style (ruff)
+test-frontend: ## Frontend type-check and lint
+	cd frontend && npx tsc --noEmit && npm run lint
+
+lint: ## Check code style (ruff + eslint)
 	$(UV) run ruff check .
+	cd frontend && npm run lint
 
 fmt: ## Auto-fix code style
 	$(UV) run ruff check . --fix
 	$(UV) run ruff format .
 
-run: ## Start the API on http://localhost:8000 (auto-reloads on code changes)
+run: ## Start only the API on http://localhost:8000 (auto-reloads on code changes)
 	$(UV) run uvicorn app.main:app --reload --port 8000
 
 db: ## Start Postgres + pgvector in Docker
@@ -40,11 +47,17 @@ down: ## Stop Docker services
 eval: ## Run the evaluation harness (arrives in Phase 2)
 	@echo "make eval: the evaluation harness is built in Phase 2 (see docs/PLAN.md). Nothing to evaluate yet."
 
-demo: ## Open the one-click demo (arrives in Phase 1)
-	@echo "make demo: the vertical-slice demo is built in Phase 1 (see docs/PLAN.md)."
+demo: ## Start API + dashboard and open http://localhost:3000/en/demo
+	./scripts/dev.sh
 
-replay: ## Offline replay of a recorded run (arrives in Phase 1/12)
-	@echo "make replay: offline replay is built from Phase 1 event recordings (see docs/PLAN.md)."
+replay: ## Same as demo, fully offline: model answers come from replay/demo.cassette.jsonl
+	LLM_PROFILE=replay ./scripts/dev.sh
+
+record: ## Re-record the demo cassette (use LLM_PROFILE=prod to record real Claude answers)
+	$(UV) run python ../scripts/record_demo.py
+
+build: ## Production build of the dashboard
+	cd frontend && npm run build
 
 clean: ## Remove caches and local trace files
 	rm -rf $(BACKEND)/.pytest_cache $(BACKEND)/.ruff_cache traces

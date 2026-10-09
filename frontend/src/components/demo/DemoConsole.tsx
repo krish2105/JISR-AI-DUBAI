@@ -1,0 +1,143 @@
+"use client";
+
+/**
+ * DemoConsole.tsx — The /demo page: pick an enquiry, watch the agents, approve the result.
+ *
+ * Layout: samples on the side; counters, live agent graph, timeline and results in the
+ * main area. The current run id is kept in the URL (?run=...) so a refresh or a shared
+ * link shows the same run (its events are replayed from the API).
+ */
+
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, Play, ShieldAlert } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
+import { api, type Sample } from "@/lib/api";
+import { deriveRunView } from "@/lib/runView";
+import { useRunEvents } from "@/lib/useRunEvents";
+import { setUrlParam, useUrlParam } from "@/lib/useUrlParam";
+import { Badge, Button, Card, CardHeader, cx } from "@/components/ui/primitives";
+import { AgentGraph2D } from "./AgentGraph2D";
+import { Counters } from "./Counters";
+import { ResultPanel } from "./ResultPanel";
+import { Timeline } from "./Timeline";
+
+export function DemoConsole() {
+  const { t, locale } = useI18n();
+  const [samples, setSamples] = useState<Sample[]>([]);
+  const runId = useUrlParam("run");                       // the URL is the source of truth
+  const [custom, setCustom] = useState("");
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const stream = useRunEvents(runId);
+  const view = useMemo(() => deriveRunView(stream.events), [stream.events]);
+  const running = runId !== null && !view.governanceFinished && !stream.done;
+
+  // Load the sample enquiries once.
+  useEffect(() => {
+    api.samples().then(setSamples).catch(() => setError(t.common.error));
+  }, [t.common.error]);
+
+  async function start(body: { sample_id?: string; message?: string }) {
+    setStarting(true);
+    setError(null);
+    try {
+      const { run_id } = await api.startRun({ ...body, channel: "whatsapp" });
+      setUrlParam("run", run_id);
+    } catch {
+      setError(t.common.error);
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+      {/* ---------- Side: inputs ---------- */}
+      <aside className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{t.demo.title}</h1>
+          <p className="mt-1 text-sm text-ink-2">{t.demo.subtitle}</p>
+        </div>
+
+        <Card>
+          <CardHeader title={t.demo.samples} />
+          <div className="space-y-2 p-3">
+            {samples.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                disabled={starting || running}
+                onClick={() => start({ sample_id: s.id })}
+                className={cx(
+                  "w-full rounded-xl border px-3 py-2.5 text-start text-sm transition disabled:opacity-50",
+                  s.hostile ? "border-risk/30 bg-risk-soft hover:border-risk" : "border-line bg-surface hover:border-accent hover:bg-accent-soft",
+                )}
+              >
+                <span className="flex items-center gap-2 font-medium text-ink">
+                  {s.hostile ? <ShieldAlert className="h-4 w-4 text-risk" aria-hidden /> : <Play className="h-4 w-4 text-accent" aria-hidden />}
+                  {locale === "ar" ? s.label_ar : s.label}
+                </span>
+                <span dir="auto" className="mt-1 line-clamp-2 block text-xs text-ink-3">
+                  {s.hostile ? t.demo.hostileHint : s.message}
+                </span>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title={t.demo.custom} />
+          <div className="space-y-2 p-3">
+            <textarea
+              dir="auto"
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              placeholder={t.demo.customPlaceholder}
+              rows={4}
+              className="w-full rounded-lg border border-line bg-muted p-2.5 text-sm text-ink placeholder:text-ink-3"
+            />
+            <Button className="w-full" disabled={!custom.trim() || starting || running} onClick={() => start({ message: custom })}>
+              <Play className="h-4 w-4" aria-hidden /> {t.demo.runCustom}
+            </Button>
+          </div>
+        </Card>
+        {error && <p className="text-sm text-risk">{error}</p>}
+      </aside>
+
+      {/* ---------- Main: the run ---------- */}
+      <section className="min-w-0 space-y-4">
+        <Counters view={runId ? view : null} />
+
+        <Card>
+          <CardHeader
+            title={t.demo.graph}
+            aside={
+              runId && (
+                <div className="flex items-center gap-2 text-xs">
+                  {running && (
+                    <span className="inline-flex items-center gap-1 text-accent">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> {t.demo.running}
+                    </span>
+                  )}
+                  {view.finalStatus && <Badge tone={view.finalStatus === "blocked" ? "risk" : "ok"}>{t.status[view.finalStatus] ?? view.finalStatus}</Badge>}
+                  <code className="text-ink-3"><bdi>{runId}</bdi></code>
+                </div>
+              )
+            }
+          />
+          <div className="px-2 py-4 sm:px-6">
+            <AgentGraph2D view={view} />
+          </div>
+        </Card>
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          <Card className="min-w-0">
+            <CardHeader title={t.demo.timeline} />
+            <Timeline events={stream.events} />
+          </Card>
+          <div className="min-w-0">{runId && <ResultPanel runId={runId} view={view} />}</div>
+        </div>
+      </section>
+    </div>
+  );
+}

@@ -1,0 +1,159 @@
+/*
+ * globals.css — Jisr design tokens and base styles.
+ *
+ * Why: every colour, radius and shadow is a CSS variable ("token"). Components only use
+ * tokens (via Tailwind classes like bg-surface, text-ink), never raw hex values. Switching
+ * theme just swaps the variables, and the 3D scenes (later phases) read the SAME variables
+ * through useThemeTokens(), so 2D and 3D always match.
+ *
+ * Themes: "pearl" light is the default (projector-friendly); "midnight" dark is set by
+ * <html data-theme="dark">. The inline script in the root layout applies the saved choice
+ * before the first paint, so there is no flash.
+ */
+
+@import "tailwindcss";
+
+/* `dark:` utilities follow our data-theme attribute instead of the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------- Pearl (light, default) ---------- */
+:root {
+  --bg: #faf8f5;            /* pearl page background */
+  --surface: #ffffff;       /* raised cards */
+  --muted: #f2eee8;         /* sunken areas, table stripes */
+  --line: rgba(27, 31, 42, 0.09);
+
+  --ink: #1b1f2a;           /* main text */
+  --ink-2: #4a5060;         /* secondary text (AA on --bg) */
+  --ink-3: #6f7584;         /* hints, captions */
+
+  --accent: #0f766e;        /* deep teal: the one primary accent */
+  --accent-ink: #ffffff;    /* text on accent */
+  --accent-soft: color-mix(in oklab, var(--accent) 12%, white);
+  --sand: #c98b2b;          /* saffron-sand highlight (India x UAE) */
+  --sand-soft: color-mix(in oklab, var(--sand) 14%, white);
+
+  --ok: #2f7d5b;
+  --warn: #b07a1e;
+  --risk: #b4454f;
+  --ok-soft: color-mix(in oklab, var(--ok) 12%, white);
+  --warn-soft: color-mix(in oklab, var(--warn) 14%, white);
+  --risk-soft: color-mix(in oklab, var(--risk) 12%, white);
+
+  --glass-bg: rgba(255, 255, 255, 0.66);
+  --glass-border: rgba(27, 31, 42, 0.07);
+  --shadow-1: 0 1px 2px rgba(27, 31, 42, 0.04), 0 8px 30px rgba(27, 31, 42, 0.06);
+  --shadow-2: 0 2px 6px rgba(27, 31, 42, 0.05), 0 20px 60px rgba(27, 31, 42, 0.09);
+
+  --radius-card: 14px;
+  color-scheme: light;
+}
+
+/* ---------- Midnight (dark) ---------- */
+:root[data-theme="dark"] {
+  --bg: #0b1220;
+  --surface: #121b2e;
+  --muted: #0f1727;
+  --line: rgba(226, 232, 240, 0.1);
+
+  --ink: #e8ecf3;
+  --ink-2: #b3bccd;
+  --ink-3: #8790a3;
+
+  --accent: #2bb5a3;
+  --accent-ink: #062320;
+  --accent-soft: color-mix(in oklab, var(--accent) 18%, var(--surface));
+  --sand: #e0a84a;
+  --sand-soft: color-mix(in oklab, var(--sand) 18%, var(--surface));
+
+  --ok: #4fb88a;
+  --warn: #e0a84a;
+  --risk: #f07178;
+  --ok-soft: color-mix(in oklab, var(--ok) 18%, var(--surface));
+  --warn-soft: color-mix(in oklab, var(--warn) 18%, var(--surface));
+  --risk-soft: color-mix(in oklab, var(--risk) 18%, var(--surface));
+
+  --glass-bg: rgba(18, 27, 46, 0.72);
+  --glass-border: rgba(226, 232, 240, 0.08);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 30px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 20px 60px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+/* Expose tokens to Tailwind: bg-surface, text-ink-2, border-line, bg-accent-soft, ... */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-sand: var(--sand);
+  --color-sand-soft: var(--sand-soft);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-risk: var(--risk);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn-soft: var(--warn-soft);
+  --color-risk-soft: var(--risk-soft);
+  --radius-card: var(--radius-card);
+  --shadow-card: var(--shadow-1);
+  --shadow-lift: var(--shadow-2);
+  --font-sans: var(--font-geist-sans), var(--font-plex-arabic), system-ui, sans-serif;
+  --font-arabic: var(--font-plex-arabic), var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Arabic: its own font, roomier line height, never negative letter-spacing. */
+:root[dir="rtl"] body {
+  font-family: var(--font-arabic);
+  line-height: 1.7;
+  letter-spacing: 0;
+}
+
+/* Frosted glass panel for overlays and the 3D inspector (later). */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-1);
+}
+
+/* Theme toggle shows the icon for the theme you would switch TO, chosen purely in CSS
+   so the server-rendered HTML never mismatches the saved theme. */
+.theme-icon-light { display: inline-flex; }
+.theme-icon-dark { display: none; }
+:root[data-theme="dark"] .theme-icon-light { display: none; }
+:root[data-theme="dark"] .theme-icon-dark { display: inline-flex; }
+
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+  }
+}

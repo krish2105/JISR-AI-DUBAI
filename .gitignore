@@ -16,7 +16,7 @@ node_modules/
 out/
 
 # Local data that must never be committed
-jisr.db
+jisr.db*
 traces/
 data/pilot_raw/
 data/kb_sources/*
@@ -28,3 +28,4 @@ data/sanctions_public/*
 .DS_Store
 .idea/
 .vscode/
+!**/.env.local.example

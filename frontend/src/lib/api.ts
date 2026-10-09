@@ -1,0 +1,90 @@
+/**
+ * api.ts — Typed client for the Jisr API (FastAPI on :8000 by default).
+ *
+ * Why: one place that knows the API's URL and the shapes of its responses. The types
+ * mirror the frozen backend contracts (docs/CONTRACTS.md): RunEvent, runs, approvals, audit.
+ */
+
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export type Risk = "low" | "medium" | "high";
+
+export type EventKind =
+  | "run_started" | "agent_started" | "agent_finished" | "plan" | "tool_call" | "tool_result"
+  | "retrieval_attempt" | "policy_decision" | "approval_needed" | "approval_decided"
+  | "blocked" | "error" | "done";
+
+/** One step of a run, exactly as the backend streams it. */
+export type RunEvent = {
+  run_id: string;
+  seq: number;
+  ts: string;
+  agent: string;
+  kind: EventKind;
+  payload: Record<string, unknown>;
+  risk: Risk | null;
+};
+
+export type Sample = {
+  id: string; label: string; label_ar: string; channel: string; message: string; hostile: boolean;
+};
+
+export type QuoteLine = {
+  description: string; quantity: number; unit: string; unit_price_aed: number; unit_price_inr: number;
+  total_aed: number; total_inr: number; catalogue_match: boolean;
+};
+
+export type Quote = {
+  lines: QuoteLine[]; incoterm: string | null; margin_pct: number; fx_inr_to_aed: number; fx_source: string;
+  total_inr: number; total_aed: number; validity_days: number;
+};
+
+export type RunDetail = {
+  id: string; status: string; channel: string; sample_id: string | null; created_at: string;
+  message_redacted: string;
+  state: { quote?: Quote | null; drafts?: { language: string; text: string }[]; impact?: Record<string, number> };
+  approvals: { id: string; title: string; status: string; risk: Risk }[];
+};
+
+export type Approval = {
+  id: string; run_id: string; created_at: string; action_type: string; title: string;
+  payload: { text?: string; language?: string; channel?: string; edited_by_human?: boolean };
+  reason: string; evidence: string[]; risk: Risk; rule_id: string; status: "pending" | "approved" | "rejected";
+  decided_by: string | null; decided_at: string | null; decision_note: string | null;
+};
+
+export type AuditEntry = {
+  id: number; ts: string; actor: string; action: string; run_id: string | null;
+  details: Record<string, unknown>; hash: string; prev_hash: string;
+};
+
+export type ChainReport = { ok: boolean; entries: number; broken_at_id: number | null; reason: string | null };
+
+/** fetch() wrapper: JSON in/out, throws on HTTP errors with the API's message. */
+async function call<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error((detail as { detail?: string }).detail ?? `HTTP ${res.status}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  samples: () => call<Sample[]>("/demo/samples"),
+  startRun: (body: { sample_id?: string; message?: string; channel?: string }) =>
+    call<{ run_id: string }>("/runs", { method: "POST", body: JSON.stringify(body) }),
+  run: (id: string) => call<RunDetail>(`/runs/${id}`),
+  approvals: (status: "pending" | "all" = "pending") => call<Approval[]>(`/approvals?status=${status}`),
+  approve: (id: string, body: { note?: string; edited_text?: string } = {}) =>
+    call<Approval>(`/approvals/${id}/approve`, { method: "POST", body: JSON.stringify(body) }),
+  reject: (id: string, body: { note?: string } = {}) =>
+    call<Approval>(`/approvals/${id}/reject`, { method: "POST", body: JSON.stringify(body) }),
+  audit: (limit = 100) => call<AuditEntry[]>(`/audit?limit=${limit}`),
+  verifyAudit: () => call<ChainReport>("/audit/verify"),
+  eventsUrl: (runId: string) => `${API_URL}/runs/${runId}/events`,
+};
