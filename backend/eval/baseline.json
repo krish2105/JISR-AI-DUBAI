@@ -1,21 +1,21 @@
 {
   "fast": {
     "docs": {
-      "_git_sha": "372e353",
+      "_git_sha": "cb86dcc",
       "clean_set_fpr": 0.0,
       "doc_issue_f1": 0.0,
       "doc_issue_precision": 1.0,
       "doc_issue_recall": 0.0
     },
     "e2e": {
-      "_git_sha": "372e353",
-      "latency_p50_s": 0.0299,
-      "latency_p95_s": 0.0334,
+      "_git_sha": "cb86dcc",
+      "latency_p50_s": 0.0325,
+      "latency_p95_s": 0.0405,
       "steps_mean": 9,
       "task_success_rate": 0.65
     },
     "extraction": {
-      "_git_sha": "372e353",
+      "_git_sha": "cb86dcc",
       "buyer_country_f1": 0.7755,
       "crash_rate": 0.0,
       "deadline_f1": 0.6027,
@@ -27,43 +27,45 @@
       "language_f1": 0.85
     },
     "pricing": {
-      "_git_sha": "372e353",
+      "_git_sha": "cb86dcc",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "372e353",
+      "_git_sha": "cb86dcc",
       "attack_success_rate": 0.0,
-      "blocked_rate": 0.2667,
-      "escalated_high_rate": 0.2667,
-      "unflagged_to_human": 0.4667
+      "blocked_rate": 0.4667,
+      "escalated_high_rate": 0.5333,
+      "unflagged_to_human": 0.0
     },
     "security": {
-      "_git_sha": "372e353",
-      "false_positive_rate": 0.0167,
-      "hard_negative_fpr": 0.3333,
-      "injection_category_recall": 0.475,
-      "injection_detection_recall": 0.5333,
+      "_git_sha": "cb86dcc",
+      "business_data_kept": 1.0,
+      "false_positive_rate": 0.0,
+      "hard_negative_fpr": 0.0,
+      "injection_category_recall": 0.95,
+      "injection_detection_recall": 1.0,
+      "pii_case_recall": 1.0,
       "pii_redaction_recall": 1.0,
       "quantity_preservation": 1.0
     }
   },
   "full": {
     "docs": {
-      "_git_sha": "372e353",
+      "_git_sha": "cb86dcc",
       "clean_set_fpr": 0.0,
       "doc_issue_f1": 0.0,
       "doc_issue_precision": 1.0,
       "doc_issue_recall": 0.0
     },
     "e2e": {
-      "_git_sha": "372e353",
-      "latency_p50_s": 0.03,
-      "latency_p95_s": 0.0316,
-      "steps_mean": 8.9667,
-      "task_success_rate": 0.7567
+      "_git_sha": "cb86dcc",
+      "latency_p50_s": 0.0324,
+      "latency_p95_s": 0.0403,
+      "steps_mean": 9,
+      "task_success_rate": 0.76
     },
     "extraction": {
-      "_git_sha": "372e353",
+      "_git_sha": "cb86dcc",
       "buyer_country_f1": 0.7552,
       "crash_rate": 0.0,
       "deadline_f1": 0.6629,
@@ -75,22 +77,26 @@
       "language_f1": 0.8333
     },
     "pricing": {
-      "_git_sha": "372e353",
+      "_git_sha": "cb86dcc",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "372e353",
+      "_git_sha": "cb86dcc",
       "attack_success_rate": 0.0,
-      "blocked_rate": 0.2667,
-      "escalated_high_rate": 0.2667,
-      "unflagged_to_human": 0.4667
+      "blocked_rate": 0.4667,
+      "escalated_high_rate": 0.5333,
+      "unflagged_to_human": 0.0
     },
     "security": {
-      "_git_sha": "372e353",
-      "false_positive_rate": 0.0067,
-      "hard_negative_fpr": 0.2,
-      "injection_category_recall": 0.475,
-      "injection_detection_recall": 0.5333,
+      "_git_sha": "cb86dcc",
+      "business_data_kept": 1.0,
+      "false_positive_rate": 0.0,
+      "hard_negative_fpr": 0.0,
+      "injection_category_recall": 0.95,
+      "injection_detection_recall": 1.0,
+      "injection_detection_recall_dev": 1.0,
+      "lookalike_fpr_dev": 0.0,
+      "pii_case_recall": 1.0,
       "pii_redaction_recall": 1.0,
       "quantity_preservation": 1.0
     }

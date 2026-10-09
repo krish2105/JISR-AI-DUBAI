@@ -1,7 +1,7 @@
 {
   "suite": "extraction",
-  "git_sha": "372e353",
-  "timestamp": "2026-10-09T14:36:25+00:00",
+  "git_sha": "112073c",
+  "timestamp": "2026-10-09T14:50:30+00:00",
   "llm_profile": "fake",
   "models": {
     "smart": "fake-smart",
@@ -10,7 +10,7 @@
     "judge": "fake-judge",
     "stt": "fake-stt"
   },
-  "dataset_version": "synthetic-v1",
+  "dataset_version": "synthetic-v2",
   "split": "test",
   "fast": true,
   "n": 60,
