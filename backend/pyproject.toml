@@ -47,3 +47,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Synthetic data files contain long literal messages; wrapping them would change the test data.
+"eval/synth/*" = ["E501"]

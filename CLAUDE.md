@@ -14,4 +14,7 @@
 - Contracts frozen in Phase 1 (`RunEvent` SSE schema, REST routes, `RunState`) are shared by backend, frontend and 3D sessions: change them only with a DECISIONS.md entry.
 - Frontend: light (pearl) default + dark (midnight) toggle on every page, Arabic RTL. 3D (React Three Fiber) is lazy-loaded with a static fallback, respects reduced motion, and never runs on approvals/audit/settings.
 - After each phase: run `make test` and `make eval`, update `docs/PROGRESS.md`, commit, then stop and report.
+- Every quality number comes from `backend/eval/results/` (never typed by hand). Changing `eval/thresholds.yaml` or
+  `eval/baseline.json` needs a line in `docs/DECISIONS.md`. When a phase delivers a target, flip it to `gate: hard`.
+- Never tune prompts or code on the `test` split; the 30 adversarial cases are test-only.
 - Use parallel sessions/subagents only for independent work (e.g. frontend/3D vs RAG), never for edits to the same files.

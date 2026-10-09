@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: jisr_local_only   # local development password, never used in hosting
       POSTGRES_DB: jisr
     ports:
-      - "5432:5432"
+      - "55432:5432"    # host port 55432: avoids clashing with locally installed Postgres servers (5432, 5433)
     volumes:
       - jisr_pg:/var/lib/postgresql/data   # keeps data between restarts
     healthcheck:

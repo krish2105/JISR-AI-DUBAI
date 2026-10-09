@@ -9,7 +9,7 @@ Entry for the **Create AI Agents Championship** (Dubai Chamber of Digital Econom
 *Best Business AI Agent*. Plan: [docs/PLAN.md](docs/PLAN.md) · Decisions: [docs/DECISIONS.md](docs/DECISIONS.md) ·
 Progress: [docs/PROGRESS.md](docs/PROGRESS.md).
 
-> Status: **Phase 1 (vertical slice)**. Enquiry → agents → governance → approval → audit works end to end
+> Status: **Phase 2 (data + evaluation)** on top of the Phase 1 vertical slice. Enquiry → agents → governance → approval → audit works end to end
 > in a bilingual dashboard. Specialist agents marked "stub" are deepened in later phases.
 
 ## Quick start
@@ -20,6 +20,17 @@ make test       # offline tests + frontend type-check and lint (fake model, no k
 make demo       # API :8000 + dashboard :3000, opens http://localhost:3000/en/demo
 make replay     # the same demo fully offline (model answers from replay/demo.cassette.jsonl)
 ```
+
+Quality is measured, not claimed:
+
+```bash
+make eval-fast  # test split, ~5 s: metrics + quality gate (what CI runs)
+make eval       # all suites, all splits -> docs/EVAL_REPORT.md, then the gate
+make test-postgres  # backend tests on Postgres 17 + pgvector (after `make db`)
+```
+
+See [docs/EVAL_REPORT.md](docs/EVAL_REPORT.md) for the current numbers (bad ones included) and
+[data/synthetic/README.md](data/synthetic/README.md) for how the evaluation data was built.
 
 In the demo: run the English or Arabic enquiry, watch the agent graph and timeline, then approve the
 draft (sent through a simulator). Run the hostile sample to see the policy engine block a bank-detail

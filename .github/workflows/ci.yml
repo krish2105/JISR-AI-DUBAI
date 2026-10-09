@@ -1,0 +1,74 @@
+# ci.yml — checks on every push and pull request, plus a nightly full evaluation.
+#
+# Jobs:
+#   backend   lint + unit/policy/API tests on SQLite AND on Postgres 17 + pgvector
+#   frontend  type-check, lint, production build
+#   eval      `make eval-fast` (test split) on PRs, full `make eval` nightly, then the quality gate.
+#             The gate fails the build on any hard-threshold breach or regression vs eval/baseline.json.
+# Evals run on the offline `fake` model profile, so no secrets are needed. To evaluate real models,
+# add GROQ_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY as repository secrets and set EVAL_PROFILE.
+
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 2 * * *"      # nightly full eval, 02:00 UTC
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env: {POSTGRES_USER: jisr, POSTGRES_PASSWORD: jisr_local_only, POSTGRES_DB: jisr_test}
+        ports: ["55432:5432"]
+        options: --health-cmd "pg_isready -U jisr" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv --directory backend sync --frozen --python 3.12
+      - run: uv --directory backend run ruff check .
+      - name: Tests (SQLite)
+        run: uv --directory backend run pytest -q
+      - name: Tests (Postgres)
+        env: {TEST_DATABASE_URL: "postgresql+psycopg://jisr:jisr_local_only@localhost:55432/jisr_test"}
+        run: uv --directory backend run pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: frontend}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json}
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run build
+
+  eval:
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv --directory backend sync --frozen --python 3.12
+      - name: Run evaluation
+        env: {EVAL_PROFILE: fake}
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            uv --directory backend run python -m eval.run
+          else
+            uv --directory backend run python -m eval.run --fast
+          fi
+      - name: Quality gate
+        run: uv --directory backend run python -m eval.gate --summary "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: |
+            backend/eval/results/
+            docs/EVAL_REPORT.md

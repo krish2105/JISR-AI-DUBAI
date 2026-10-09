@@ -57,3 +57,14 @@ Each entry: date, decision, why, and what would make us revisit it.
 | R7 | The duty/origin calculator takes the **price basis** (FOB vs Ex-Works) as an input: VA threshold is 5 points lower on Ex-Works; HS 71 must use FOB. | Annex 3B Rule 1. Resolves the 40% vs 35% question: both are right on different bases. |
 | R8 | KB downloads go through `scripts/download_kb_sources.py`: official hosts only, type sniffing, size cap, SHA-256 + final URL + fetch time per file, curl fallback that keeps TLS verification. Sites that block scripts are captured as dated snapshots (`download_mode=snapshot`); unreachable ones are `manual`. | Every cited fact must be traceable to an unchanged original. |
 | R9 | Tariff retrieval indexes **both** Arabic and English descriptions and displays the original text. | The official tariff master has at least one EN/AR mismatch (94052100); Arabic prevails by law. |
+
+## 2026-10-09 — Phase 2 decisions (data and evaluation)
+
+| # | Decision | Why |
+|---|---|---|
+| E15 | Synthetic data is **template-generated with labels by construction** (seeded, byte-reproducible, checked by a test); attacks are hand-written. No model writes or labels evaluation data. | Avoids grading the model on its own output; every number is reproducible. |
+| E16 | Eval lives in `backend/eval/` (suites, results, thresholds, gate, baseline); datasets in `data/synthetic/`. Six suites: extraction, security, redteam, docs, pricing, e2e. Results follow a fixed contract (git SHA, profile, models, dataset version, split). | One yardstick for every phase; `docs/EVAL_REPORT.md` is generated, never hand-edited. |
+| E17 | Gate = **hard** thresholds now (PII redaction 1.0, quantity preservation ≥ 0.98, attack success 0, pricing invariants 1.0, clean-set FPR ≤ 0.05, crash rate 0, p95 latency ≤ 120 s) + **targets** that become hard in their phase (extraction F1 ≥ 0.90 in P4, injection recall 1.0 / FPR ≤ 0.02 in P3, doc-issue recall ≥ 0.90 in P6, task success ≥ 0.90 in P9) + **no regression > 0.02** vs `eval/baseline.json`. | Gating stubs on product targets would block all work; gating on regressions keeps quality from slipping. Proven by deliberately breaking the redactor and the extractor: the gate failed (make exit 2). |
+| E18 | Extraction is scored with micro-F1 over items (quantity equal + ≥ 60% of gold words, EN or AR) and fields (country, Incoterm, structured deadline, language). | Field-level, bilingual and reproducible; documented in `eval/suites/extraction.py`. |
+| E19 | Docker Postgres is published on host port **55432** (not 5432/5433). Tests can run on Postgres with `TEST_DATABASE_URL` / `make test-postgres`. | Two local Postgres servers on this Mac already use 5432 and 5433 and silently answered instead of Docker. |
+| E20 | `doc_checker.check_document_set()` contract frozen now as a stub, so Phase 6 is measured from day one. | Honest baseline: recall 0.0 is reported, not hidden. |

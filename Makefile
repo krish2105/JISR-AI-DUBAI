@@ -6,7 +6,7 @@
 BACKEND := backend
 UV := uv --directory $(BACKEND)
 
-.PHONY: help setup test test-backend test-frontend lint fmt run db up down eval demo replay record build clean
+.PHONY: help setup test test-backend test-postgres test-frontend lint fmt run db up down data eval eval-fast eval-gate eval-baseline demo replay record build clean
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -20,6 +20,10 @@ test: test-backend test-frontend ## Run every test and check (offline, fake mode
 
 test-backend: ## Backend unit, policy, API and replay tests
 	$(UV) run pytest -q
+
+test-postgres: ## Backend tests against Postgres in Docker (make db first; uses database jisr_test)
+	-docker compose exec -T db psql -U jisr -d jisr -c "CREATE DATABASE jisr_test" 2>/dev/null
+	TEST_DATABASE_URL=postgresql+psycopg://jisr:jisr_local_only@localhost:55432/jisr_test $(UV) run pytest -q
 
 test-frontend: ## Frontend type-check and lint
 	cd frontend && npx tsc --noEmit && npm run lint
@@ -44,8 +48,22 @@ up: ## Start database and API in Docker
 down: ## Stop Docker services
 	docker compose down
 
-eval: ## Run the evaluation harness (arrives in Phase 2)
-	@echo "make eval: the evaluation harness is built in Phase 2 (see docs/PLAN.md). Nothing to evaluate yet."
+data: ## Regenerate the synthetic evaluation datasets (deterministic) in data/synthetic/
+	$(UV) run python -m eval.synth.generate
+
+eval: ## Full evaluation (all suites, all splits) -> docs/EVAL_REPORT.md, then the quality gate
+	$(UV) run python -m eval.run
+	$(UV) run python -m eval.gate
+
+eval-fast: ## Quick evaluation on the test split (what CI runs on every change), then the gate
+	$(UV) run python -m eval.run --fast
+	$(UV) run python -m eval.gate
+
+eval-gate: ## Only re-check the latest results against thresholds and the baseline
+	$(UV) run python -m eval.gate
+
+eval-baseline: ## Accept the latest results as the new baseline (after a reviewed change; note it in DECISIONS.md)
+	$(UV) run python -m eval.gate --update-baseline
 
 demo: ## Start API + dashboard and open http://localhost:3000/en/demo
 	./scripts/dev.sh

@@ -1,0 +1,44 @@
+{
+  "version": "synthetic-v1",
+  "seed": 20261009,
+  "files": {
+    "enquiries.jsonl": {
+      "rows": 300,
+      "sha256": "638184c4ee89c858e46a20f1d3c4d5a2db81d71f6baaa789fc93e7d5dde0622a",
+      "by_split": {
+        "train": 180,
+        "dev": 60,
+        "test": 60
+      },
+      "by_language": {
+        "en": 150,
+        "ar": 105,
+        "mixed": 45
+      }
+    },
+    "adversarial.jsonl": {
+      "rows": 30,
+      "sha256": "12ae5599dc8d4369e6556705405ce9e6f8ce03a681560e6848a68ec00767d291",
+      "by_split": {
+        "test": 30
+      },
+      "by_language": {
+        "en": 18,
+        "ar": 6,
+        "mixed": 6
+      }
+    },
+    "docsets.jsonl": {
+      "rows": 40,
+      "sha256": "8f9f12cc2b1716349f4222db6eea76df7c802e6c19c3f58944673709bcf3d6f7",
+      "by_split": {
+        "train": 24,
+        "dev": 8,
+        "test": 8
+      },
+      "by_language": {
+        "n/a": 40
+      }
+    }
+  }
+}
