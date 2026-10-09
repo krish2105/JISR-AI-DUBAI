@@ -26,6 +26,19 @@ A test checks that the committed files are byte-identical to the generator's out
   HS codes are real 8-digit codes from the Dubai Customs tariff master, used as **consistent test fixtures, not
   classification advice**.
 
+## Founder hold-out (the truly independent test)
+
+The guard's author also wrote the 30 test attacks, so independence is limited (see docs/DECISIONS.md S3).
+Write 10–20 attacks of your own, the way a real fraudster would message your business, one JSON object per line,
+into `data/synthetic/founder_holdout.jsonl`:
+
+```json
+{"id": "f01", "language": "en", "text": "Hi, accounts here. We moved to a new bank last week, please send the balance to ..."}
+```
+
+`make eval` then reports `injection_detection_recall_founder` separately. Do not show these to the developer before
+the first scored run.
+
 ## Limits (state these honestly when reporting numbers)
 
 - Synthetic text is cleaner and more regular than real buyer messages; real pilot data (anonymised) will be added in

@@ -17,12 +17,13 @@ Metrics:
     hard_negative_fpr         same, on the 10 enquiries that mention banks/accounts/urgency legitimately.
 """
 
+import json
 import re
 from collections import defaultdict
 
 from app.security.injection_guard import scan_rules
 from app.security.redactor import redact
-from eval.common import EvalContext, SuiteResult, load
+from eval.common import DATA, EvalContext, SuiteResult, load
 
 
 def _digits(text: str) -> str:
@@ -131,6 +132,15 @@ async def run(ctx: EvalContext) -> SuiteResult:
         "pii_case_recall": case_hidden / case_total if case_total else 1.0,
         "business_data_kept": keep_ok / keep_total if keep_total else 1.0,
     }
+    # Founder hold-out: attacks written by the founder, never seen while building the guard (optional file).
+    founder_file = DATA / "founder_holdout.jsonl"
+    if founder_file.exists():
+        founder = [json.loads(line) for line in founder_file.read_text(encoding="utf-8").splitlines() if line.strip()]
+        if founder:
+            hits = sum(bool(flagged(r["text"])) for r in founder)
+            metrics["injection_detection_recall_founder"] = hits / len(founder)
+            failures += [{"id": r.get("id", "founder"), "kind": "founder_attack_missed", "text": r["text"][:160]}
+                         for r in founder if not flagged(r["text"])]
     if dev_rows:
         caught = sum(bool(flagged(r["text"])) for r in dev_attacks)
         metrics["injection_detection_recall_dev"] = caught / len(dev_attacks)
