@@ -47,10 +47,37 @@ export type Quote = {
   validity_days: number; pricing_flags?: string[]; notes?: string[];
 };
 
+export type Citation = {
+  chunk_id: string; kind?: string; document: string; issuer?: string; document_date?: string; url?: string;
+  section?: string; page?: number | null; page_label?: string | null; excerpt?: string; excerpt_ar?: string;
+};
+
+export type DutyLine = {
+  description: string;
+  hs_candidates?: { heading: string; best_line: string; best_line_desc: string; duty_pct: string | null; confidence: number }[];
+  hs_confidence?: number;
+  catalogue_hint?: string | null; hint_agrees?: boolean | null;
+  rule?: { rule_id: string; scope: string; text: string; page_label: string; is_ex: boolean } | null;
+  evidence_needed?: string[];
+  mfn_duty_pct?: string | null; mfn_duty_aed?: number | null; cif_value_aed?: number;
+  claims?: { text: string; citations: string[] }[];
+  needs_human_check?: boolean;
+};
+
+export type DutyAnalysis = {
+  status: string; lines: DutyLine[]; total_mfn_duty_aed?: number; max_potential_saving_aed?: number | null;
+  preferential_rate?: string; common_requirements?: { text: string; citation: string | null }[];
+  citations?: Record<string, Citation>; note?: string; needs_human_check?: boolean;
+};
+
 export type RunDetail = {
   id: string; status: string; channel: string; sample_id: string | null; created_at: string;
   message_redacted: string;
-  state: { quote?: Quote | null; drafts?: { language: string; text: string }[]; impact?: Record<string, number> };
+  state: {
+    quote?: Quote | null; drafts?: { language: string; text: string }[]; impact?: Record<string, number>;
+    duty?: DutyAnalysis | null;
+    docs?: { status: string; documents: { document: string; citation: Citation | null }[]; note?: string } | null;
+  };
   approvals: { id: string; title: string; status: string; risk: Risk }[];
 };
 

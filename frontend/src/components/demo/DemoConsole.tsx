@@ -21,6 +21,13 @@ import { Counters } from "./Counters";
 import { ResultPanel } from "./ResultPanel";
 import { Timeline } from "./Timeline";
 
+/** The duty agent reports its "up to" saving in its finished event (no extra fetch needed). */
+function savingFromEvents(events: { agent: string; kind: string; payload: Record<string, unknown> }[]): number | null {
+  const e = events.find((ev) => ev.agent === "duty" && ev.kind === "agent_finished");
+  const v = e?.payload.saving_upto_aed;
+  return typeof v === "number" ? v : null;
+}
+
 export function DemoConsole() {
   const { t, locale } = useI18n();
   const [samples, setSamples] = useState<Sample[]>([]);
@@ -106,7 +113,7 @@ export function DemoConsole() {
 
       {/* ---------- Main: the run ---------- */}
       <section className="min-w-0 space-y-4">
-        <Counters view={runId ? view : null} />
+        <Counters view={runId ? view : null} savingUpTo={runId ? savingFromEvents(stream.events) : null} />
 
         <Card>
           <CardHeader

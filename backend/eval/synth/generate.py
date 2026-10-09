@@ -53,6 +53,16 @@ def main() -> None:
         "pii": generate_pii(SEED),
         "enquiries_handwritten": generate_handwritten(),
     }
+    # The retrieval set is built from the local knowledge-base index (official sources); keep the committed file
+    # when the index is not available on this machine.
+    from app.rag.index import index_exists
+
+    if index_exists():
+        from eval.synth.retrieval import generate_retrieval
+
+        datasets["retrieval_eval"] = generate_retrieval(SEED)
+    elif (OUT / "retrieval_eval.jsonl").exists():
+        print("retrieval_eval: index not built here; keeping the committed file")
     manifest = {"version": DATASET_VERSION, "seed": SEED, "files": {}}
     for name, rows in datasets.items():
         sha = write_jsonl(OUT / f"{name}.jsonl", rows)
@@ -63,6 +73,10 @@ def main() -> None:
             "by_language": dict(Counter(r.get("language", "n/a") for r in rows)),
         }
         print(f"{name:<12} {len(rows):>4} rows  splits={manifest['files'][f'{name}.jsonl']['by_split']}")
+    if "retrieval_eval" not in datasets and (OUT / "retrieval_eval.jsonl").exists():
+        old = json.loads((OUT / "MANIFEST.json").read_text(encoding="utf-8")).get("files", {})
+        if "retrieval_eval.jsonl" in old:
+            manifest["files"]["retrieval_eval.jsonl"] = old["retrieval_eval.jsonl"]
     (OUT / "MANIFEST.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Wrote {OUT} ({DATASET_VERSION})")
 

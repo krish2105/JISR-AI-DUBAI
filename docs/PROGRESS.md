@@ -2,6 +2,31 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 5 — Knowledge base + CEPA Duty + Docs agents ✅ (2026-10-09)
+
+**Built**
+- **Official sources** (`scripts/download_kb_sources.py`, `data/kb_sources/`): 19 documents + 1 snapshot from official hosts with SHA-256; the CEPA **Final Agreement** (UAE MoET) replaces the Abu Dhabi pre-final copy (negotiator notes found in it); gaps recorded (no official Annex 2B → savings are "up to").
+- **Index** (`make kb`, `app/rag/`): UAE tariff tree from the Dubai Customs master (EN+AR, 28,300 nodes), **137 Annex 3B rules** parsed into components (WO/CC/CTH/CTSH/SO/VA%, Ex scopes, ranges), CEPA chunked by ARTICLE and ANNEX, guides by page; multilingual-e5-large vectors (16,075) with a text-hash embedding cache (re-ingest in 41 s).
+- **Retrieval**: exact codes, BM25 (EN Snowball + Arabic light stemmer), vectors, RRF, bge-reranker; seller-words→tariff-wording glossary (EN/AR).
+- **Agentic RAG**: deterministic planner (hs / psr / duty / procedure; bare product phrases → HS), rule-table search for product groups, corrective loop (rewrite with an AR→EN trade lexicon, widen), grading threshold **calibrated on dev** (`eval/calibrate.py`), budgets, **grounding in code** (claims must cite retrieved passages; every number must appear in a cited passage).
+- **CEPA Duty agent**: per line HS top-3 with confidence, catalogue HS hint as a labelled prior (disagreement → human check), cited MFN duty and Annex 3B rule, FOB/Ex-Works basis, origin evidence to hold, "up to AED X" saving. **Docs agent**: cited document pack (invoice/packing list, CEPA CoO, shipping bill).
+- Dashboard: **DutyCard** with sources (document, issuer, date, page), "≤ AED X" counter.
+- Eval: retrieval suite with ablation, per-language slices, dev/test split; hand-labelled seller-phrase HS set (`data/gold/hs_products.jsonl`).
+
+**Tested** (real output, test split, `retrieval_20261009-175554.json`)
+- `make test` → **211 passed**, incl. 11 real-KB tests that pin treaty facts (they skip where no index is built), plus frontend type-check and lint.
+- `make eval` → **Gate: PASSED** (8 new retrieval gates, optional where no KB). Grounded claims **1.000**, numbers verbatim **1.000**, false refusals **0.025**, correct refusals **0.750**; agentic recall@5 **0.825**; HS seller-phrase top-1 **0.868** / top-3 **0.962** (uncovered goods 0.733).
+- Ablation recall@5: BM25 0.600 → vector 0.688 → RRF 0.675 → +rerank 0.725 → agentic 0.825. Arabic questions over Arabic text are strong (0.889); **Arabic questions over the English treaty are weak (0.667 agentic)**.
+- First-shot test run exposed a grounding bug (grounded 0.367); fixed after diagnosis on dev only (DECISIONS K13). E2E 300 runs: success 1.000, p95 1.8 s (warm caches).
+- Browser: "brass diya lamps" → 9405.50 non-electrical luminaires (was 8539 vapour lamps), runners → 6302.51 table linen, cited 5% MFN, CTH + VA 40% (Annex 3B-9 / 3B-6), "≤ AED 736".
+
+**Known gaps**
+- Annex 2B (UAE preferential schedule) not available officially → no real saving can be claimed yet.
+- Cross-lingual retrieval (Arabic question → English treaty text) and "no tariff line fits" detection are weak.
+- HS labels and the retrieval set need an advisor's sample review.
+
+**Next: Phase 6, Document Consistency Checker + Buyer Trust signals.**
+
 ## Phase 4 — Quote agent ✅ (2026-10-09)
 
 **Built**

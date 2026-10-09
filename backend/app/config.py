@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     # Hard ceiling on output tokens for a single LLM call (protects the demo budget).
     llm_max_output_tokens: int = 16000
 
+    # Use the local knowledge base (data/kb_index, built by `make kb`). Unit tests switch it off.
+    kb_enabled: bool = True
+
     # Exchange rates: "fixed" (demo/tests/replay, deterministic) or "live" (ECB via Frankfurter x AED peg).
     fx_provider: Literal["fixed", "live"] = "fixed"
     fx_cache_hours: float = 6.0

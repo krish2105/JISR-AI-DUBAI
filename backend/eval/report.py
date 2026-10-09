@@ -41,11 +41,14 @@ def build() -> str:
         out.append(f"\n## {suite}  (n = {res['n']})\n")
         out.append("| metric | value |\n|---|---|")
         out += [f"| {k} | {v:.3f} |" for k, v in res["metrics"].items()]
-        if res["slices"]:
-            out.append("\n| slice | " + " | ".join(next(iter(res["slices"].values())).keys()) + " |")
-            out.append("|---|" + "---|" * len(next(iter(res["slices"].values()))))
-            out += [f"| {name} | " + " | ".join(f"{v:.3f}" for v in vals.values()) + " |"
-                    for name, vals in res["slices"].items()]
+        groups: dict[tuple, list] = {}                     # one table per set of slice columns
+        for name, vals in res["slices"].items():
+            groups.setdefault(tuple(vals), []).append((name, vals))
+        for columns, items in groups.items():
+            out.append("\n| slice | " + " | ".join(columns) + " |")
+            out.append("|---|" + "---|" * len(columns))
+            out += [f"| {name} | " + " | ".join(f"{v:.3f}" if isinstance(v, float) else str(v) for v in vals.values())
+                    + " |" for name, vals in items]
         if res["failures"]:
             out.append("\n**Worst failures (error analysis):**\n")
             for f in res["failures"]:

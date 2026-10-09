@@ -14,6 +14,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { api, type Approval, type RunDetail } from "@/lib/api";
 import type { RunView } from "@/lib/runView";
 import { ApprovalCard } from "@/components/approvals/ApprovalCard";
+import { DutyCard } from "./DutyCard";
 import { Badge, Card, CardHeader } from "@/components/ui/primitives";
 
 const aed = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -117,6 +118,8 @@ export function ResultPanel({ runId, view }: { runId: string; view: RunView }) {
           </div>
         </Card>
       )}
+
+      {run?.state.duty && <DutyCard duty={run.state.duty} docs={run.state.docs} />}
 
       {approvals.map((a) => (
         <ApprovalCard key={a.id} approval={a} />

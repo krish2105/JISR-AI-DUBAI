@@ -76,6 +76,19 @@
         "ar": 10,
         "mixed": 6
       }
+    },
+    "retrieval_eval.jsonl": {
+      "rows": 154,
+      "sha256": "236010e76dbfc4f25ab016245ba40f5273fd69f2bdbca2f21c6a8fa2568d7503",
+      "by_split": {
+        "dev": 62,
+        "test": 92
+      },
+      "by_language": {
+        "en": 70,
+        "ar": 55,
+        "cross": 29
+      }
     }
   }
 }

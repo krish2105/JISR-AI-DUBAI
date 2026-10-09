@@ -34,3 +34,6 @@ data/sanctions_public/*
 .idea/
 .vscode/
 !**/.env.local.example
+
+# knowledge-base index built from git-ignored sources (make kb)
+data/kb_index/

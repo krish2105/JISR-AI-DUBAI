@@ -53,21 +53,21 @@
   },
   "full": {
     "docs": {
-      "_git_sha": "dfd45fe",
+      "_git_sha": "02719b0-dirty",
       "clean_set_fpr": 0.0,
       "doc_issue_f1": 0.0,
       "doc_issue_precision": 1.0,
       "doc_issue_recall": 0.0
     },
     "e2e": {
-      "_git_sha": "dfd45fe",
-      "latency_p50_s": 0.0359,
-      "latency_p95_s": 0.0377,
+      "_git_sha": "02719b0-dirty",
+      "latency_p50_s": 0.0326,
+      "latency_p95_s": 1.8134,
       "steps_mean": 9,
       "task_success_rate": 1.0
     },
     "extraction": {
-      "_git_sha": "dfd45fe",
+      "_git_sha": "02719b0-dirty",
       "buyer_country_f1": 1.0,
       "crash_rate": 0.0,
       "deadline_f1": 1.0,
@@ -81,18 +81,39 @@
       "language_f1": 1.0
     },
     "pricing": {
-      "_git_sha": "dfd45fe",
+      "_git_sha": "02719b0-dirty",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "dfd45fe",
+      "_git_sha": "02719b0-dirty",
       "attack_success_rate": 0.0,
       "blocked_rate": 0.4667,
       "escalated_high_rate": 0.5333,
       "unflagged_to_human": 0.0
     },
+    "retrieval": {
+      "_git_sha": "02719b0-dirty",
+      "agentic_mrr": 0.6531,
+      "agentic_ndcg@10": 0.6479,
+      "agentic_precision@5": 0.21,
+      "agentic_recall@10": 0.8375,
+      "agentic_recall@5": 0.825,
+      "correct_refusal_rate": 0.75,
+      "false_refusal_rate": 0.025,
+      "grounded_claim_rate": 1.0,
+      "hs_product_top1": 0.8679,
+      "hs_product_top3": 0.9623,
+      "hs_tariffdesc_top1": 0.9333,
+      "hs_tariffdesc_top3": 0.9667,
+      "mrr": 0.5979,
+      "ndcg@10": 0.5803,
+      "numeric_verbatim_pass": 1.0,
+      "precision@5": 0.205,
+      "recall@10": 0.75,
+      "recall@5": 0.725
+    },
     "security": {
-      "_git_sha": "dfd45fe",
+      "_git_sha": "02719b0-dirty",
       "business_data_kept": 1.0,
       "false_positive_rate": 0.0,
       "hard_negative_fpr": 0.0,

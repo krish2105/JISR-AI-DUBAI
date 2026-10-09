@@ -38,3 +38,14 @@ pricing:
 e2e:
   task_success_rate:          {min: 0.90, gate: hard}     # met in Phase 4 (1.000); trajectory checks arrive in P9
   latency_p95_s:              {max: 120, gate: hard, regression: false}   # v3: under 2 minutes; timing noise exempt
+
+# Phase 5 (DECISIONS K11/K13). Test split only. `optional`: needs the local knowledge base (`make kb`); SKIP in CI.
+retrieval:
+  grounded_claim_rate:        {min: 0.95, gate: hard, optional: true}   # every surviving claim cites a passage
+  numeric_verbatim_pass:      {min: 1.00, gate: hard, optional: true}   # every number appears in a cited passage
+  false_refusal_rate:         {max: 0.10, gate: hard, optional: true}
+  correct_refusal_rate:       {min: 0.70, gate: hard, optional: true}   # 0.750 now: the weak side
+  agentic_recall@5:           {min: 0.75, gate: hard, optional: true}
+  recall@5:                   {min: 0.65, gate: hard, optional: true}   # rrf_rerank pipeline
+  hs_product_top1:            {min: 0.80, gate: hard, optional: true}   # seller phrases, hand-labelled
+  hs_product_top3:            {min: 0.90, gate: hard, optional: true}

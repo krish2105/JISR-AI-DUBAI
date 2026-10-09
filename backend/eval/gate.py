@@ -40,7 +40,8 @@ def evaluate(results: dict[str, dict], thresholds: dict, baseline: dict) -> tupl
             phase = f", P{rule['phase']}" if "phase" in rule else ""
             rule_text = f"{'≥' if higher_better else '≤'} {limit} ({rule['gate']}{phase})"
             if res is None or metric not in res["metrics"]:
-                status = "MISSING" if rule["gate"] == "hard" else "SKIP"
+                # `optional` suites need local assets (e.g. the knowledge base): absent there = SKIP, not FAIL
+                status = "MISSING" if rule["gate"] == "hard" and not rule.get("optional") else "SKIP"
                 failed |= status == "MISSING"
                 rows.append((suite, metric, "—", rule_text, status))
                 continue

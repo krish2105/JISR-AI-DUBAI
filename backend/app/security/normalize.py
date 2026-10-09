@@ -19,7 +19,7 @@ ZERO_WIDTH = re.compile(r"[​-‏‪-‮⁠-⁤﻿]")
 TASHKEEL = re.compile(r"[ؐ-ًؚ-ٰٟۖ-ۭ]")
 TATWEEL = "ـ"
 ALEF_FORMS = str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ٱ": "ا", "ى": "ي", "ة": "ه"})
-ARABIC_INDIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
+ARABIC_INDIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")   # used by RAG grounding too
 # Common "leet" substitutions, applied only inside words that also contain letters.
 LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "ate", "@": "a", "$": "s"})
 # Runs of single characters separated by spaces/dots: "i g n o r e" or "i.g.n.o.r.e"

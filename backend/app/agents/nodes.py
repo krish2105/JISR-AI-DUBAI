@@ -17,6 +17,7 @@ How a node works (beginner notes):
     `agent_step` wraps every node so it always emits `agent_started` / `agent_finished`.
 """
 
+import asyncio
 import json
 import re
 import uuid
@@ -26,6 +27,7 @@ from dataclasses import dataclass, field
 from langchain_core.runnables import RunnableConfig
 
 from app.agents.state import PendingAction, RunState
+from app.agents.trade_agents import analyse_duty, build_doc_pack
 from app.db.models import Approval
 from app.db.session import session_scope
 from app.governance.audit import append_audit
@@ -192,35 +194,45 @@ async def quote(state: RunState, em: RunEmitter, config: RunnableConfig) -> Step
 
 @agent_step("duty")
 async def duty(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
-    """Placeholder: the cited CEPA Duty Optimiser arrives in Phase 5. It never guesses rates."""
-    analysis = {
-        "status": "not_implemented",
-        "needs_human_check": True,
-        "indicative_saving_aed": None,
-        "note": "CEPA analysis with official citations arrives in Phase 5. No rate is guessed.",
-    }
-    return StepResult(updates={"duty": analysis},
-                      summary={"why": analysis["note"], "stub": True, "needs_human_check": True})
+    """CEPA Duty agent: HS candidates, cited MFN duty and Annex 3B rule, evidence needed, 'up to' saving."""
+    if not state.rfq or not state.quote or not state.quote.get("lines"):
+        return StepResult(updates={"duty": {"status": "no_lines", "needs_human_check": True}},
+                          summary={"why": "No priced lines to analyse.", "needs_human_check": True}, risk="medium")
+    await em.emit("duty", "tool_call", {"tool": "kb.classify_hs+rules", "lines": len(state.quote["lines"])})
+    analysis = await analyse_duty(state.rfq, state.quote)
+    for ln in analysis.get("lines", []):
+        await em.emit("duty", "retrieval_attempt", {
+            "line": ln["description"], "hs": [c["best_line"] for c in ln.get("hs_candidates", [])][:3],
+            "confidence": ln.get("hs_confidence"), "rule": (ln.get("rule") or {}).get("text"),
+            "removed_claims": len(ln.get("removed_claims", []))})
+    impact = dict(state.impact)
+    if analysis.get("max_potential_saving_aed") is not None:
+        impact["duty_saving_upto_aed"] = analysis["max_potential_saving_aed"]
+    citations = list(analysis.get("citations", {}).values())
+    if analysis["status"] != "analysed":
+        why = analysis["note"]
+    else:
+        rules = sorted({(ln.get("rule") or {}).get("text") for ln in analysis["lines"] if ln.get("rule")})
+        why = (f"CEPA rules {', '.join(rules) or 'not found'}; up to AED {analysis['max_potential_saving_aed']:,.2f} "
+               "MFN duty could be saved if the preferential rate is 0% (rate needs human check).")
+    return StepResult(
+        updates={"duty": analysis, "impact": impact, "citations": state.citations + citations},
+        summary={"why": why, "needs_human_check": True, "citations": len(citations),
+                 "saving_upto_aed": analysis.get("max_potential_saving_aed")},
+        risk="medium",
+    )
 
 
 @agent_step("docs")
 async def docs(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
-    """Placeholder document pack: lists the documents; HS codes are unverified hints only."""
-    profile = get_business_profile()
-    hints = []
-    for item in (state.rfq.items if state.rfq else []):
-        entry = profile.match(item.description)
-        hints.append({"item": item.description, "hs_hint": entry.hs_hint if entry else None,
-                      "verified": False})
-    pack = {
-        "documents": ["Commercial invoice", "Packing list", "Certificate of origin (CEPA) checklist",
-                      "Import requirements checklist (Dubai Customs)"],
-        "hs_hints": hints,
-        "note": "HS codes are unverified catalogue hints until cited classification (Phase 5).",
-    }
+    """Docs agent: cited document pack + HS candidates per line (consistency checks arrive in Phase 6)."""
+    pack = await asyncio.to_thread(build_doc_pack, state.duty or {})
+    cited = sum(1 for d in pack.get("documents", []) if d.get("citation"))
     return StepResult(updates={"docs": pack, "doc_issues": []},
-                      summary={"why": "Document list prepared; consistency checks arrive in Phase 6.",
-                               "documents": len(pack["documents"]), "stub": True})
+                      summary={"why": f"Document pack: {len(pack.get('documents', []))} documents, {cited} with cited "
+                                      "requirements; HS codes are candidates for human confirmation.",
+                               "documents": len(pack.get("documents", [])), "needs_human_check": True},
+                      risk="medium" if pack.get("status") != "prepared" else "low")
 
 
 @agent_step("trust")

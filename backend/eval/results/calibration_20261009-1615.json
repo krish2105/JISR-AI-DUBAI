@@ -1,0 +1,521 @@
+{
+  "suite": "calibration",
+  "git_sha": "02719b0-dirty",
+  "split": "dev",
+  "timestamp": "2026-10-09T16:15:24+00:00",
+  "n": 18,
+  "n_answerable": 12,
+  "n_unanswerable": 6,
+  "chosen": {
+    "threshold": 0.24,
+    "good_answer_rate": 0.9166666666666666,
+    "correct_refusal_rate": 0.8333333333333334,
+    "balanced": 0.875,
+    "plateau": [
+      0.201,
+      0.294
+    ]
+  },
+  "table": [
+    {
+      "threshold": 0.0,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.0,
+      "balanced": 0.5
+    },
+    {
+      "threshold": 0.001,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.0,
+      "balanced": 0.5
+    },
+    {
+      "threshold": 0.002,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.3333333333333333,
+      "balanced": 0.6666666666666666
+    },
+    {
+      "threshold": 0.005,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.3333333333333333,
+      "balanced": 0.6666666666666666
+    },
+    {
+      "threshold": 0.006,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.3333333333333333,
+      "balanced": 0.6666666666666666
+    },
+    {
+      "threshold": 0.01,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.5,
+      "balanced": 0.75
+    },
+    {
+      "threshold": 0.02,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.5,
+      "balanced": 0.75
+    },
+    {
+      "threshold": 0.03,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.5,
+      "balanced": 0.75
+    },
+    {
+      "threshold": 0.035,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.5,
+      "balanced": 0.75
+    },
+    {
+      "threshold": 0.045,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.5,
+      "balanced": 0.75
+    },
+    {
+      "threshold": 0.05,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.6666666666666666,
+      "balanced": 0.8333333333333333
+    },
+    {
+      "threshold": 0.052,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.6666666666666666,
+      "balanced": 0.8333333333333333
+    },
+    {
+      "threshold": 0.063,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.6666666666666666,
+      "balanced": 0.8333333333333333
+    },
+    {
+      "threshold": 0.071,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.6666666666666666,
+      "balanced": 0.8333333333333333
+    },
+    {
+      "threshold": 0.083,
+      "good_answer_rate": 1.0,
+      "correct_refusal_rate": 0.6666666666666666,
+      "balanced": 0.8333333333333333
+    },
+    {
+      "threshold": 0.1,
+      "good_answer_rate": 0.9166666666666666,
+      "correct_refusal_rate": 0.6666666666666666,
+      "balanced": 0.7916666666666666
+    },
+    {
+      "threshold": 0.165,
+      "good_answer_rate": 0.9166666666666666,
+      "correct_refusal_rate": 0.6666666666666666,
+      "balanced": 0.7916666666666666
+    },
+    {
+      "threshold": 0.201,
+      "good_answer_rate": 0.9166666666666666,
+      "correct_refusal_rate": 0.8333333333333334,
+      "balanced": 0.875
+    },
+    {
+      "threshold": 0.276,
+      "good_answer_rate": 0.9166666666666666,
+      "correct_refusal_rate": 0.8333333333333334,
+      "balanced": 0.875
+    },
+    {
+      "threshold": 0.294,
+      "good_answer_rate": 0.9166666666666666,
+      "correct_refusal_rate": 0.8333333333333334,
+      "balanced": 0.875
+    },
+    {
+      "threshold": 0.306,
+      "good_answer_rate": 0.8333333333333334,
+      "correct_refusal_rate": 0.8333333333333334,
+      "balanced": 0.8333333333333334
+    },
+    {
+      "threshold": 0.386,
+      "good_answer_rate": 0.8333333333333334,
+      "correct_refusal_rate": 0.8333333333333334,
+      "balanced": 0.8333333333333334
+    }
+  ],
+  "measured": [
+    {
+      "id": "rq_proc_en_3.8",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.8:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.983,
+          "gold_found": true
+        },
+        {
+          "best": 0.992,
+          "gold_found": true
+        },
+        {
+          "best": 0.982,
+          "gold_found": true
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_ar_3.8",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.8:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.935,
+          "gold_found": true
+        },
+        {
+          "best": 0.887,
+          "gold_found": true
+        },
+        {
+          "best": 0.001,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_en_3.9",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.9:0"
+      ],
+      "attempts": [
+        {
+          "best": 1.0,
+          "gold_found": true
+        },
+        {
+          "best": 0.999,
+          "gold_found": true
+        },
+        {
+          "best": 1.0,
+          "gold_found": true
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_ar_3.9",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.9:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.582,
+          "gold_found": true
+        },
+        {
+          "best": 0.629,
+          "gold_found": true
+        },
+        {
+          "best": 0.03,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_en_3.12",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.12:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.045,
+          "gold_found": true
+        },
+        {
+          "best": 0.083,
+          "gold_found": true
+        },
+        {
+          "best": 0.052,
+          "gold_found": true
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_ar_3.12",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.12:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.201,
+          "gold_found": true
+        },
+        {
+          "best": 0.294,
+          "gold_found": true
+        },
+        {
+          "best": 0.0,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_en_3.15",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.15:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.995,
+          "gold_found": true
+        },
+        {
+          "best": 0.99,
+          "gold_found": true
+        },
+        {
+          "best": 0.993,
+          "gold_found": true
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_ar_3.15",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.15:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.276,
+          "gold_found": true
+        },
+        {
+          "best": 0.386,
+          "gold_found": true
+        },
+        {
+          "best": 0.0,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_en_3.18",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.18:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.931,
+          "gold_found": true
+        },
+        {
+          "best": 0.932,
+          "gold_found": true
+        },
+        {
+          "best": 0.937,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_ar_3.18",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.18:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.535,
+          "gold_found": true
+        },
+        {
+          "best": 0.908,
+          "gold_found": true
+        },
+        {
+          "best": 0.001,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_en_3.35",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.35:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.99,
+          "gold_found": true
+        },
+        {
+          "best": 0.996,
+          "gold_found": true
+        },
+        {
+          "best": 0.989,
+          "gold_found": true
+        }
+      ]
+    },
+    {
+      "id": "rq_proc_ar_3.35",
+      "answerable": true,
+      "gold": [
+        "cepa_final:3.35:0"
+      ],
+      "attempts": [
+        {
+          "best": 0.306,
+          "gold_found": true
+        },
+        {
+          "best": 0.916,
+          "gold_found": true
+        },
+        {
+          "best": 0.001,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_none_en_3",
+      "answerable": false,
+      "gold": [],
+      "attempts": [
+        {
+          "best": 0.001,
+          "gold_found": false
+        },
+        {
+          "best": 0.001,
+          "gold_found": false
+        },
+        {
+          "best": 0.0,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_none_en_5",
+      "answerable": false,
+      "gold": [],
+      "attempts": [
+        {
+          "best": 0.063,
+          "gold_found": false
+        },
+        {
+          "best": 0.165,
+          "gold_found": false
+        },
+        {
+          "best": 0.071,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_none_en_9",
+      "answerable": false,
+      "gold": [],
+      "attempts": [
+        {
+          "best": 0.76,
+          "gold_found": false
+        },
+        {
+          "best": 0.812,
+          "gold_found": false
+        },
+        {
+          "best": 0.691,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_none_ar_12",
+      "answerable": false,
+      "gold": [],
+      "attempts": [
+        {
+          "best": 0.0,
+          "gold_found": false
+        },
+        {
+          "best": 0.0,
+          "gold_found": false
+        },
+        {
+          "best": 0.001,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_none_ar_15",
+      "answerable": false,
+      "gold": [],
+      "attempts": [
+        {
+          "best": 0.035,
+          "gold_found": false
+        },
+        {
+          "best": 0.045,
+          "gold_found": false
+        },
+        {
+          "best": 0.0,
+          "gold_found": false
+        }
+      ]
+    },
+    {
+      "id": "rq_none_ar_16",
+      "answerable": false,
+      "gold": [],
+      "attempts": [
+        {
+          "best": 0.0,
+          "gold_found": false
+        },
+        {
+          "best": 0.006,
+          "gold_found": false
+        },
+        {
+          "best": 0.002,
+          "gold_found": false
+        }
+      ]
+    }
+  ]
+}

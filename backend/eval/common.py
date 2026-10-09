@@ -168,11 +168,12 @@ def write_result(result: SuiteResult, ctx: EvalContext) -> Path:
 
 
 def latest_results() -> dict[str, dict]:
-    """The newest result file of every suite."""
+    """The newest result file of every suite (other files, e.g. calibration_*.json, are not suite results)."""
     latest: dict[str, dict] = {}
     for path in sorted(RESULTS.glob("*_*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
-        latest[data["suite"]] = data
+        if "metrics" in data and "llm_profile" in data:
+            latest[data["suite"]] = data
     return latest
 
 

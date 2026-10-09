@@ -47,7 +47,20 @@ against the live official sites. Files: `sources.csv` (manifest, now 21 rows), `
 - **Classification ambiguity worth demoing:** "brass diya lamps" could fall under 9405 (lamps, Ch. 94 CTH + VA 40%) or 7419
   (articles of copper, Ch. 74 rule). This is exactly the case for top-3 HS suggestions with citations and a human check.
 
+## Gap found in Phase 5: the UAE tariff schedule (CEPA Annex 2B)
+
+The Final Agreement PDF contains Annex 2B only as a placeholder page (p. 217); the schedule itself (the UAE's
+line-by-line preferential rates and staging) is a separate document. The Indian Department of Commerce copy
+(`commerce.gov.in/wp-content/uploads/2022/03/Chapter-2-Annex-2B-Final-UAE-Revised-Market-Access-Offer-2118-Dec-18-2021.pdf`)
+returns 404 since the 2026 site redesign (checked 2026-10-09), and its file name suggests a market-access OFFER
+rather than the signed annex. Until an official Annex 2B is added, Jisr reports the MFN duty (cited) and shows
+duty savings only as **"up to"** the MFN duty a 0% CEPA rate would remove, with the preferential rate marked
+"needs human check".
+
 ## Still to do
+
+- **Obtain the official CEPA Annex 2B (UAE schedule of tariff commitments)** from the UAE Ministry of Economy and
+  Tourism, DGFT or a trade advisor; then add it to `sources.csv` and `make kb`.
 
 - Download the DGFT CoO relevant-documents index from an Indian network (`download_mode=manual`).
 - Optionally save the EN and AR PDFs of Cabinet Resolution 119/2024 manually from uaelegislation.gov.ae.

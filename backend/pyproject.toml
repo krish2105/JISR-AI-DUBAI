@@ -21,6 +21,8 @@ dependencies = [
     "pypdf>=5.0",
     "openpyxl>=3.1",
     "httpx>=0.27",              # HTTP client (live FX rates; later WhatsApp Cloud API)
+    "fastembed>=0.4",
+    "rank-bm25>=0.2.2",
 ]
 
 [dependency-groups]
@@ -55,3 +57,6 @@ select = ["E", "F", "I", "B", "UP"]
 # The injection guard's pattern table is easier to review with one pattern per line.
 "app/security/injection_guard.py" = ["E501"]
 "app/tools/rfq_rules.py" = ["E501"]
+"app/rag/ingest_psr.py" = ["E501"]
+"app/rag/agentic.py" = ["E501"]
+"tests/test_rag.py" = ["E501"]   # fixture passages are quoted official wording

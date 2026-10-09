@@ -37,6 +37,21 @@ draft (sent through a simulator). Run the hostile sample to see the policy engin
 change. `/approvals` is the inbox, `/audit` shows the hash-chain check. Toggle the theme (moon/sun)
 and the language (العربية / English) in the top bar.
 
+### Knowledge base (CEPA duty analysis)
+
+The duty and document agents answer from official sources only: the UAE tariff (Dubai Customs, EN + AR), the
+India–UAE CEPA Final Agreement (Annex 3B origin rules parsed into 137 rules) and customs guides. The originals are
+not committed; build the local index once:
+
+```bash
+python3 scripts/download_kb_sources.py   # official hosts only, SHA-256 recorded
+make kb         # tariff tree + rules + chunks + embeddings -> data/kb_index/ (first build ~30 min on CPU)
+```
+
+`make kb` downloads two models (~2.8 GB, cached in `~/.cache/fastembed`). Without the index the app still runs and
+the duty card says the knowledge base is unavailable; the retrieval eval suite reports SKIP. Sources, corrections and
+gaps (no official Annex 2B yet, so savings are shown as "up to"): [data/kb_sources/SOURCES_REVIEW.md](data/kb_sources/SOURCES_REVIEW.md).
+
 Optional: `make db` starts Postgres + pgvector in Docker; `make up` runs DB and API in containers (start OrbStack or Docker Desktop first).
 
 ## Model profiles

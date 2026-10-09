@@ -55,6 +55,7 @@ def isolated_env(monkeypatch, tmp_path):
     if TEST_DATABASE_URL:
         asyncio.run(_reset_postgres(TEST_DATABASE_URL))
     monkeypatch.setenv("DEMO_STEP_DELAY_MS", "0")
+    monkeypatch.setenv("KB_ENABLED", "false")       # unit tests never depend on the local knowledge base
     _clear_caches()
     yield
     _clear_caches()

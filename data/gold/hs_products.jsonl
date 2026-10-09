@@ -1,0 +1,80 @@
+{"id": "hs_diya_en", "product": "diya", "language": "en", "description": "brass diya lamps", "headings": ["9405", "7419"], "note": "oil lamp: 9405 non-electrical luminaires; 7419 if treated as a copper article", "split": "test"}
+{"id": "hs_diya_ar", "product": "diya", "language": "ar", "description": "مصابيح ديا نحاسية", "headings": ["9405", "7419"], "note": "oil lamp: 9405 non-electrical luminaires; 7419 if treated as a copper article", "split": "test"}
+{"id": "hs_jewel_box_en", "product": "jewel_box", "language": "en", "description": "carved wooden jewellery boxes", "headings": ["4420"], "note": "", "split": "test"}
+{"id": "hs_jewel_box_ar", "product": "jewel_box", "language": "ar", "description": "صناديق مجوهرات خشبية منحوتة", "headings": ["4420"], "note": "", "split": "test"}
+{"id": "hs_pashmina_en", "product": "pashmina", "language": "en", "description": "pashmina shawls", "headings": ["6214", "6117"], "note": "6117 if knitted", "split": "test"}
+{"id": "hs_pashmina_ar", "product": "pashmina", "language": "ar", "description": "شالات باشمينا", "headings": ["6214", "6117"], "note": "6117 if knitted", "split": "test"}
+{"id": "hs_runner_en", "product": "runner", "language": "en", "description": "cotton table runners", "headings": ["6302"], "note": "", "split": "test"}
+{"id": "hs_runner_ar", "product": "runner", "language": "ar", "description": "مفارش طاولة قطنية", "headings": ["6302"], "note": "", "split": "test"}
+{"id": "hs_copper_bottle_en", "product": "copper_bottle", "language": "en", "description": "copper water bottles", "headings": ["7418", "7419"], "note": "", "split": "test"}
+{"id": "hs_copper_bottle_ar", "product": "copper_bottle", "language": "ar", "description": "زجاجات ماء نحاسية", "headings": ["7418", "7419"], "note": "", "split": "test"}
+{"id": "hs_rug_en", "product": "rug", "language": "en", "description": "hand-knotted woollen rugs", "headings": ["5701"], "note": "", "split": "dev"}
+{"id": "hs_rug_ar", "product": "rug", "language": "ar", "description": "سجاد صوفي معقود يدويا", "headings": ["5701"], "note": "", "split": "dev"}
+{"id": "hs_dhurrie_en", "product": "dhurrie", "language": "en", "description": "cotton dhurries", "headings": ["5702", "5705"], "note": "", "split": "test"}
+{"id": "hs_dhurrie_ar", "product": "dhurrie", "language": "ar", "description": "بسط قطنية منسوجة", "headings": ["5702", "5705"], "note": "", "split": "test"}
+{"id": "hs_agarbatti_en", "product": "agarbatti", "language": "en", "description": "agarbatti incense sticks", "headings": ["3307"], "note": "", "split": "test"}
+{"id": "hs_agarbatti_ar", "product": "agarbatti", "language": "ar", "description": "أعواد البخور", "headings": ["3307"], "note": "", "split": "test"}
+{"id": "hs_basmati_en", "product": "basmati", "language": "en", "description": "basmati rice", "headings": ["1006"], "note": "", "split": "dev"}
+{"id": "hs_basmati_ar", "product": "basmati", "language": "ar", "description": "أرز بسمتي", "headings": ["1006"], "note": "", "split": "dev"}
+{"id": "hs_turmeric_en", "product": "turmeric", "language": "en", "description": "turmeric powder", "headings": ["0910"], "note": "", "split": "test"}
+{"id": "hs_turmeric_ar", "product": "turmeric", "language": "ar", "description": "مسحوق الكركم", "headings": ["0910"], "note": "", "split": "test"}
+{"id": "hs_cardamom_en", "product": "cardamom", "language": "en", "description": "green cardamom pods", "headings": ["0908"], "note": "", "split": "dev"}
+{"id": "hs_cardamom_ar", "product": "cardamom", "language": "ar", "description": "حبوب الهيل الأخضر", "headings": ["0908"], "note": "", "split": "dev"}
+{"id": "hs_bedsheet_en", "product": "bedsheet", "language": "en", "description": "cotton bedsheets", "headings": ["6302"], "note": "", "split": "test"}
+{"id": "hs_bedsheet_ar", "product": "bedsheet", "language": "ar", "description": "شراشف أسرة قطنية", "headings": ["6302"], "note": "", "split": "test"}
+{"id": "hs_cushion_en", "product": "cushion", "language": "en", "description": "embroidered cushion covers", "headings": ["6304"], "note": "", "split": "dev"}
+{"id": "hs_cushion_ar", "product": "cushion", "language": "ar", "description": "أغطية وسائد مطرزة", "headings": ["6304"], "note": "", "split": "dev"}
+{"id": "hs_handbag_en", "product": "handbag", "language": "en", "description": "leather handbags", "headings": ["4202"], "note": "", "split": "dev"}
+{"id": "hs_handbag_ar", "product": "handbag", "language": "ar", "description": "حقائب يد جلدية", "headings": ["4202"], "note": "", "split": "dev"}
+{"id": "hs_shoes_en", "product": "shoes", "language": "en", "description": "men's leather shoes", "headings": ["6403"], "note": "", "split": "dev"}
+{"id": "hs_shoes_ar", "product": "shoes", "language": "ar", "description": "أحذية رجالية جلدية", "headings": ["6403"], "note": "", "split": "dev"}
+{"id": "hs_utensils_en", "product": "utensils", "language": "en", "description": "stainless steel kitchen utensils", "headings": ["7323"], "note": "", "split": "test"}
+{"id": "hs_utensils_ar", "product": "utensils", "language": "ar", "description": "أدوات مطبخ من الفولاذ المقاوم للصدأ", "headings": ["7323"], "note": "", "split": "test"}
+{"id": "hs_mugs_en", "product": "mugs", "language": "en", "description": "ceramic coffee mugs", "headings": ["6912", "6911"], "note": "6911 if porcelain", "split": "dev"}
+{"id": "hs_mugs_ar", "product": "mugs", "language": "ar", "description": "أكواب قهوة خزفية", "headings": ["6912", "6911"], "note": "6911 if porcelain", "split": "dev"}
+{"id": "hs_dining_en", "product": "dining", "language": "en", "description": "wooden dining tables", "headings": ["9403"], "note": "", "split": "test"}
+{"id": "hs_dining_ar", "product": "dining", "language": "ar", "description": "طاولات طعام خشبية", "headings": ["9403"], "note": "", "split": "test"}
+{"id": "hs_ghee_en", "product": "ghee", "language": "en", "description": "pure cow ghee", "headings": ["0405"], "note": "", "split": "dev"}
+{"id": "hs_ghee_ar", "product": "ghee", "language": "ar", "description": "سمن بقري", "headings": ["0405"], "note": "", "split": "dev"}
+{"id": "hs_mango_en", "product": "mango", "language": "en", "description": "fresh alphonso mangoes", "headings": ["0804"], "note": "", "split": "test"}
+{"id": "hs_mango_ar", "product": "mango", "language": "ar", "description": "مانجو ألفونسو طازجة", "headings": ["0804"], "note": "", "split": "test"}
+{"id": "hs_buffalo_en", "product": "buffalo", "language": "en", "description": "frozen boneless buffalo meat", "headings": ["0202"], "note": "", "split": "test"}
+{"id": "hs_buffalo_ar", "product": "buffalo", "language": "ar", "description": "لحم جاموس مجمد منزوع العظم", "headings": ["0202"], "note": "", "split": "test"}
+{"id": "hs_tea_en", "product": "tea", "language": "en", "description": "black tea leaves", "headings": ["0902"], "note": "", "split": "dev"}
+{"id": "hs_tea_ar", "product": "tea", "language": "ar", "description": "أوراق الشاي الأسود", "headings": ["0902"], "note": "", "split": "dev"}
+{"id": "hs_tshirt_en", "product": "tshirt", "language": "en", "description": "cotton t-shirts", "headings": ["6109"], "note": "", "split": "test"}
+{"id": "hs_tshirt_ar", "product": "tshirt", "language": "ar", "description": "قمصان تي شيرت قطنية", "headings": ["6109"], "note": "", "split": "test"}
+{"id": "hs_gold_en", "product": "gold", "language": "en", "description": "22 karat gold jewellery", "headings": ["7113"], "note": "", "split": "dev"}
+{"id": "hs_gold_ar", "product": "gold", "language": "ar", "description": "مجوهرات ذهبية", "headings": ["7113"], "note": "", "split": "dev"}
+{"id": "hs_diamond_en", "product": "diamond", "language": "en", "description": "cut and polished diamonds", "headings": ["7102"], "note": "", "split": "test"}
+{"id": "hs_diamond_ar", "product": "diamond", "language": "ar", "description": "ألماس مقطوع ومصقول", "headings": ["7102"], "note": "", "split": "test"}
+{"id": "hs_brass_idol_en", "product": "brass_idol", "language": "en", "description": "brass statues of deities", "headings": ["8306", "7419"], "note": "", "split": "test"}
+{"id": "hs_brass_idol_ar", "product": "brass_idol", "language": "ar", "description": "تماثيل نحاسية", "headings": ["8306", "7419"], "note": "", "split": "test"}
+{"id": "hs_cashew_en", "product": "cashew", "language": "en", "description": "cashew kernels", "headings": ["0801"], "note": "", "split": "dev"}
+{"id": "hs_cashew_ar", "product": "cashew", "language": "ar", "description": "حبات الكاجو", "headings": ["0801"], "note": "", "split": "dev"}
+{"id": "hs_onion_en", "product": "onion", "language": "en", "description": "fresh red onions", "headings": ["0703"], "note": "", "split": "test"}
+{"id": "hs_onion_ar", "product": "onion", "language": "ar", "description": "بصل أحمر طازج", "headings": ["0703"], "note": "", "split": "test"}
+{"id": "hs_paracetamol_en", "product": "paracetamol", "language": "en", "description": "paracetamol tablets in blister packs", "headings": ["3004"], "note": "", "split": "test"}
+{"id": "hs_paracetamol_ar", "product": "paracetamol", "language": "ar", "description": "أقراص باراسيتامول", "headings": ["3004"], "note": "", "split": "test"}
+{"id": "hs_tiles_en", "product": "tiles", "language": "en", "description": "glazed ceramic floor tiles", "headings": ["6907"], "note": "", "split": "test"}
+{"id": "hs_tiles_ar", "product": "tiles", "language": "ar", "description": "بلاط أرضيات خزفي مزجج", "headings": ["6907"], "note": "", "split": "test"}
+{"id": "hs_led_en", "product": "led", "language": "en", "description": "LED light bulbs", "headings": ["8539"], "note": "", "split": "test"}
+{"id": "hs_led_ar", "product": "led", "language": "ar", "description": "لمبات ليد", "headings": ["8539"], "note": "", "split": "test"}
+{"id": "hs_fan_en", "product": "fan", "language": "en", "description": "electric ceiling fans", "headings": ["8414"], "note": "", "split": "test"}
+{"id": "hs_fan_ar", "product": "fan", "language": "ar", "description": "مراوح سقف كهربائية", "headings": ["8414"], "note": "", "split": "test"}
+{"id": "hs_sugar_en", "product": "sugar", "language": "en", "description": "white crystal sugar", "headings": ["1701"], "note": "", "split": "dev"}
+{"id": "hs_sugar_ar", "product": "sugar", "language": "ar", "description": "سكر أبيض", "headings": ["1701"], "note": "", "split": "dev"}
+{"id": "hs_towel_en", "product": "towel", "language": "en", "description": "cotton bath towels", "headings": ["6302"], "note": "", "split": "test"}
+{"id": "hs_towel_ar", "product": "towel", "language": "ar", "description": "مناشف حمام قطنية", "headings": ["6302"], "note": "", "split": "test"}
+{"id": "hs_chilli_en", "product": "chilli", "language": "en", "description": "dried red chillies", "headings": ["0904"], "note": "", "split": "test"}
+{"id": "hs_chilli_ar", "product": "chilli", "language": "ar", "description": "فلفل أحمر مجفف", "headings": ["0904"], "note": "", "split": "test"}
+{"id": "hs_granite_en", "product": "granite", "language": "en", "description": "polished granite slabs", "headings": ["6802"], "note": "", "split": "test"}
+{"id": "hs_yarn_en", "product": "yarn", "language": "en", "description": "cotton yarn for weaving", "headings": ["5205"], "note": "", "split": "test"}
+{"id": "hs_brakepads_en", "product": "brakepads", "language": "en", "description": "brake pads for cars", "headings": ["8708", "6813"], "note": "6813 friction material, 8708 parts of vehicles", "split": "test"}
+{"id": "hs_motorcycle_en", "product": "motorcycle", "language": "en", "description": "motorcycles 150cc", "headings": ["8711"], "note": "", "split": "test"}
+{"id": "hs_notebook_en", "product": "notebook", "language": "en", "description": "paper notebooks for school", "headings": ["4820"], "note": "", "split": "test"}
+{"id": "hs_photo_frame_en", "product": "photo_frame", "language": "en", "description": "wooden photo frames", "headings": ["4414"], "note": "", "split": "dev"}
+{"id": "hs_sandal_oil_en", "product": "sandal_oil", "language": "en", "description": "sandalwood essential oil", "headings": ["3301"], "note": "", "split": "dev"}
+{"id": "hs_jute_bag_en", "product": "jute_bag", "language": "en", "description": "jute shopping bags", "headings": ["4202", "6305"], "note": "4202 shopping bags with outer surface of textile; 6305 packing sacks", "split": "dev"}
+{"id": "hs_bangles_en", "product": "bangles", "language": "en", "description": "glass bangles", "headings": ["7018", "7117"], "note": "", "split": "test"}
+{"id": "hs_curtains_en", "product": "curtains", "language": "en", "description": "cotton curtains", "headings": ["6303"], "note": "", "split": "test"}
