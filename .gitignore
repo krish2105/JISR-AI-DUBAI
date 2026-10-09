@@ -21,6 +21,11 @@ traces/
 data/pilot_raw/
 data/kb_sources/*
 !data/kb_sources/README.md
+!data/kb_sources/sources.csv
+!data/kb_sources/download_status.csv
+!data/kb_sources/SOURCES_REVIEW.md
+# source-pack archives handed over by the founder (kept local)
+*.zip
 data/sanctions_public/*
 !data/sanctions_public/README.md
 

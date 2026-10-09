@@ -48,3 +48,12 @@ Each entry: date, decision, why, and what would make us revisit it.
 | E12 | Frontend: Next.js 16 (App Router, cacheComponents) with the **language in the URL** (`/en`, `/ar`, a `proxy.ts` redirect) and the theme in a cookie applied by an inline boot script. No next-intl/next-themes. | Both languages are prerendered statically with the right `lang`/`dir`. The theme never flashes and never causes hydration mismatches (per the Next 16 "preventing flash" guide). Fewer dependencies. |
 | E13 | Pricing: round the **unit** price first, then line total = unit × qty, then quote total = Σ lines. | Found in the browser check: 23.94 × 500 must equal the printed line total (11,970.00), as on a real invoice. |
 | E14 | Small token-based UI primitives instead of the shadcn/ui CLI for now; shadcn components are added when a phase needs dialogs or data tables. | Full control of tokens in both themes; less generated code to maintain. |
+
+## 2026-10-09 — Knowledge-base sources (founder's source pack reviewed)
+
+| # | Decision | Why |
+|---|---|---|
+| R6 | Primary CEPA text = **UAE MoET "Final Agreement" PDF (2022-03-28)**; the Abu Dhabi Customs copy from the pack is kept as cross-check only and never cited. | The AD Customs PDF is pre-final: its Annex 3B contains negotiator notes. Rule values were verified identical. |
+| R7 | The duty/origin calculator takes the **price basis** (FOB vs Ex-Works) as an input: VA threshold is 5 points lower on Ex-Works; HS 71 must use FOB. | Annex 3B Rule 1. Resolves the 40% vs 35% question: both are right on different bases. |
+| R8 | KB downloads go through `scripts/download_kb_sources.py`: official hosts only, type sniffing, size cap, SHA-256 + final URL + fetch time per file, curl fallback that keeps TLS verification. Sites that block scripts are captured as dated snapshots (`download_mode=snapshot`); unreachable ones are `manual`. | Every cited fact must be traceable to an unchanged original. |
+| R9 | Tariff retrieval indexes **both** Arabic and English descriptions and displays the original text. | The official tariff master has at least one EN/AR mismatch (94052100); Arabic prevails by law. |
