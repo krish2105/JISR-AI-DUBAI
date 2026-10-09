@@ -1,0 +1,72 @@
+{
+  "suite": "e2e",
+  "git_sha": "372e353",
+  "timestamp": "2026-10-09T14:36:38+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v1",
+  "split": "all",
+  "fast": false,
+  "n": 300,
+  "metrics": {
+    "task_success_rate": 0.7567,
+    "latency_p50_s": 0.03,
+    "latency_p95_s": 0.0316,
+    "steps_mean": 8.9667
+  },
+  "slices": {
+    "lang=ar": {
+      "task_success_rate": 0.9238
+    },
+    "lang=en": {
+      "task_success_rate": 0.5667
+    },
+    "lang=mixed": {
+      "task_success_rate": 1.0
+    }
+  },
+  "failures": [
+    {
+      "id": "enq_0025",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    },
+    {
+      "id": "enq_0050",
+      "language": "en",
+      "status": "blocked",
+      "lines": 0,
+      "draft_language": null
+    },
+    {
+      "id": "enq_0051",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    },
+    {
+      "id": "enq_0053",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    },
+    {
+      "id": "enq_0054",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    }
+  ],
+  "notes": []
+}

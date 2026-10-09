@@ -1,0 +1,23 @@
+{
+  "suite": "pricing",
+  "git_sha": "372e353",
+  "timestamp": "2026-10-09T14:36:27+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v1",
+  "split": "all",
+  "fast": false,
+  "n": 300,
+  "metrics": {
+    "pricing_invariant_pass_rate": 1.0
+  },
+  "slices": {},
+  "failures": [],
+  "notes": []
+}

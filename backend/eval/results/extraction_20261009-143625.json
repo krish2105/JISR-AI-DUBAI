@@ -1,0 +1,96 @@
+{
+  "suite": "extraction",
+  "git_sha": "372e353",
+  "timestamp": "2026-10-09T14:36:25+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v1",
+  "split": "test",
+  "fast": true,
+  "n": 60,
+  "metrics": {
+    "extraction_f1": 0.7547,
+    "extraction_precision": 0.8814,
+    "extraction_recall": 0.6598,
+    "items_f1": 0.6796,
+    "buyer_country_f1": 0.7755,
+    "incoterm_f1": 0.8936,
+    "language_f1": 0.85,
+    "deadline_f1": 0.6027,
+    "crash_rate": 0.0
+  },
+  "slices": {
+    "difficulty=easy": {
+      "extraction_f1": 0.8778
+    },
+    "difficulty=hard": {
+      "extraction_f1": 0.6404
+    },
+    "difficulty=medium": {
+      "extraction_f1": 0.7468
+    },
+    "lang=ar": {
+      "extraction_f1": 0.7907
+    },
+    "lang=en": {
+      "extraction_f1": 0.7234
+    },
+    "lang=mixed": {
+      "extraction_f1": 0.766
+    },
+    "split=test": {
+      "extraction_f1": 0.7547
+    }
+  },
+  "failures": [
+    {
+      "id": "enq_0068",
+      "language": "en",
+      "difficulty": "medium",
+      "errors": 5,
+      "error": null,
+      "text": "Hi team,\nRequirement for our Ajman outlet:\n- 600 pcs quilted cotton bedspreads\n- 1500 pcs hand-block printed cotton table runners\n- 100 pcs silk scarves\nTerms: DDP Ajman. Need it within 30 days.\nKindly send quotation wit"
+    },
+    {
+      "id": "enq_0072",
+      "language": "en",
+      "difficulty": "medium",
+      "errors": 5,
+      "error": null,
+      "text": "Hi team,\nRequirement for our Abu Dhabi outlet:\n- 500 pcs hand-block printed cotton table runners\n- 20 pcs carved wooden gift boxes\n- 600 pcs jute tote bags\nTerms: EXW Jaipur. Need it within 15 days.\nKindly send quotation"
+    },
+    {
+      "id": "enq_0116",
+      "language": "en",
+      "difficulty": "hard",
+      "errors": 5,
+      "error": null,
+      "text": "hii pls quote 120 copper water bottles cif riyadh within 15 days.  thx\nahmed.k@outlook.com, +91 980880 9350\n— Desert Rose Trading LLC"
+    },
+    {
+      "id": "enq_0138",
+      "language": "en",
+      "difficulty": "hard",
+      "errors": 5,
+      "error": null,
+      "text": "hii pls quote qty 600 marble coasters + qty 50 brass serving trays & qty 400 boxes sandalwood incense sticks exw jaipur before 8 February.  thx\n+91 981588 6849\n— Blue Dhow General Trading"
+    },
+    {
+      "id": "enq_0141",
+      "language": "en",
+      "difficulty": "hard",
+      "errors": 5,
+      "error": null,
+      "text": "hii pls quote qty 150 pcs silk scarves + 100 pcs embroidered cushion covers & five hundred pcs leather bound journals fob mundra by end of January.  thx\nahmed.k@gmail.com, +971 56 423 6673\n— Al Waha Gifts FZE"
+    }
+  ],
+  "notes": [
+    "Measures app.tools.rfq.extract_rfq with the active LLM profile."
+  ]
+}

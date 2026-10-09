@@ -1,0 +1,70 @@
+{
+  "suite": "docs",
+  "git_sha": "372e353",
+  "timestamp": "2026-10-09T14:36:25+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v1",
+  "split": "test",
+  "fast": true,
+  "n": 8,
+  "metrics": {
+    "doc_issue_recall": 0.0,
+    "doc_issue_precision": 1.0,
+    "doc_issue_f1": 0.0,
+    "clean_set_fpr": 0.0
+  },
+  "slices": {
+    "type=consignment_gap": {
+      "recall": 0.0
+    },
+    "type=hs_mismatch": {
+      "recall": 0.0
+    },
+    "type=missing_coo": {
+      "recall": 0.0
+    },
+    "type=qty_mismatch": {
+      "recall": 0.0
+    },
+    "type=weight_inconsistency": {
+      "recall": 0.0
+    }
+  },
+  "failures": [
+    {
+      "id": "doc_034",
+      "missed": "weight_inconsistency",
+      "field": "packing_list.line[0].net_kg"
+    },
+    {
+      "id": "doc_034",
+      "missed": "missing_coo",
+      "field": "certificate_of_origin"
+    },
+    {
+      "id": "doc_036",
+      "missed": "consignment_gap",
+      "field": "shipping.transshipment_port"
+    },
+    {
+      "id": "doc_036",
+      "missed": "missing_coo",
+      "field": "certificate_of_origin"
+    },
+    {
+      "id": "doc_038",
+      "missed": "hs_mismatch",
+      "field": "packing_list.line[2].hs_code"
+    }
+  ],
+  "notes": [
+    "doc_checker is a STUB until Phase 6: recall 0 is expected."
+  ]
+}

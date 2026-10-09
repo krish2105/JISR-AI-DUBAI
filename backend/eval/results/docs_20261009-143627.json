@@ -1,0 +1,82 @@
+{
+  "suite": "docs",
+  "git_sha": "372e353",
+  "timestamp": "2026-10-09T14:36:27+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v1",
+  "split": "all",
+  "fast": false,
+  "n": 40,
+  "metrics": {
+    "doc_issue_recall": 0.0,
+    "doc_issue_precision": 1.0,
+    "doc_issue_f1": 0.0,
+    "clean_set_fpr": 0.0
+  },
+  "slices": {
+    "type=consignment_gap": {
+      "recall": 0.0
+    },
+    "type=currency_mismatch": {
+      "recall": 0.0
+    },
+    "type=hs_mismatch": {
+      "recall": 0.0
+    },
+    "type=invoice_total_mismatch": {
+      "recall": 0.0
+    },
+    "type=line_total_mismatch": {
+      "recall": 0.0
+    },
+    "type=missing_coo": {
+      "recall": 0.0
+    },
+    "type=missing_export_declaration": {
+      "recall": 0.0
+    },
+    "type=qty_mismatch": {
+      "recall": 0.0
+    },
+    "type=weight_inconsistency": {
+      "recall": 0.0
+    }
+  },
+  "failures": [
+    {
+      "id": "doc_002",
+      "missed": "hs_mismatch",
+      "field": "certificate_of_origin.line[1].hs_code"
+    },
+    {
+      "id": "doc_002",
+      "missed": "currency_mismatch",
+      "field": "invoice.currency"
+    },
+    {
+      "id": "doc_004",
+      "missed": "qty_mismatch",
+      "field": "packing_list.line[1].quantity"
+    },
+    {
+      "id": "doc_006",
+      "missed": "line_total_mismatch",
+      "field": "invoice.line[0].amount"
+    },
+    {
+      "id": "doc_008",
+      "missed": "invoice_total_mismatch",
+      "field": "invoice.total"
+    }
+  ],
+  "notes": [
+    "doc_checker is a STUB until Phase 6: recall 0 is expected."
+  ]
+}

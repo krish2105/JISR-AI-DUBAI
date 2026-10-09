@@ -1,0 +1,66 @@
+{
+  "suite": "e2e",
+  "git_sha": "372e353",
+  "timestamp": "2026-10-09T14:36:27+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v1",
+  "split": "test",
+  "fast": true,
+  "n": 20,
+  "metrics": {
+    "task_success_rate": 0.65,
+    "latency_p50_s": 0.0299,
+    "latency_p95_s": 0.0334,
+    "steps_mean": 9
+  },
+  "slices": {
+    "lang=en": {
+      "task_success_rate": 0.65
+    }
+  },
+  "failures": [
+    {
+      "id": "enq_0055",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    },
+    {
+      "id": "enq_0059",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    },
+    {
+      "id": "enq_0061",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    },
+    {
+      "id": "enq_0065",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    },
+    {
+      "id": "enq_0074",
+      "language": "en",
+      "status": "needs_approval",
+      "lines": 0,
+      "draft_language": "en"
+    }
+  ],
+  "notes": []
+}
