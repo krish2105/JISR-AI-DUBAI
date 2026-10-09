@@ -16,9 +16,11 @@ from eval.suites.extraction import score_one
 from eval.suites.pricing import violations
 from eval.suites.security import standalone_numbers
 from eval.synth.adversarial import generate_adversarial
+from eval.synth.adversarial_dev import generate_adversarial_dev
 from eval.synth.docsets import MISTAKES, generate_docsets
 from eval.synth.enquiries import generate_enquiries
 from eval.synth.generate import SEED
+from eval.synth.pii import generate_pii
 
 
 def _rows(name: str) -> list[dict]:
@@ -33,7 +35,8 @@ def test_committed_datasets_match_the_generator_and_manifest():
     """Same seed -> same data: the committed files are exactly what the generator produces."""
     manifest = json.loads((DATA / "MANIFEST.json").read_text())
     for name, rows in (("enquiries", generate_enquiries(SEED)), ("adversarial", generate_adversarial()),
-                       ("docsets", generate_docsets(SEED))):
+                       ("docsets", generate_docsets(SEED)), ("adversarial_dev", generate_adversarial_dev()),
+                       ("pii", generate_pii(SEED))):
         text = "".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n" for r in rows)
         assert hashlib.sha256(text.encode()).hexdigest() == manifest["files"][f"{name}.jsonl"]["sha256"], name
 

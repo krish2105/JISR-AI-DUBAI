@@ -8,6 +8,8 @@ Outputs:
     data/synthetic/enquiries.jsonl    300 labelled buyer enquiries (EN / AR / mixed)
     data/synthetic/adversarial.jsonl  30 hand-written attacks (red-team)
     data/synthetic/docsets.jsonl      40 export document sets, 20 with planted mistakes
+    data/synthetic/adversarial_dev.jsonl  40 dev attacks + 20 benign lookalikes (guard development only)
+    data/synthetic/pii.jsonl          90 messages labelled with personal data to hide and business data to keep
     data/synthetic/MANIFEST.json      dataset version, seed, counts and SHA-256 of each file
 
 Same seed -> byte-identical files, so every eval run is comparable.
@@ -19,10 +21,12 @@ from collections import Counter
 from pathlib import Path
 
 from eval.synth.adversarial import generate_adversarial
+from eval.synth.adversarial_dev import generate_adversarial_dev
 from eval.synth.docsets import generate_docsets
 from eval.synth.enquiries import generate_enquiries
+from eval.synth.pii import generate_pii
 
-DATASET_VERSION = "synthetic-v1"
+DATASET_VERSION = "synthetic-v2"   # v2 (Phase 3): + adversarial_dev, + pii; v1 files unchanged
 SEED = 20261009
 OUT = Path(__file__).resolve().parents[3] / "data" / "synthetic"
 
@@ -41,6 +45,8 @@ def main() -> None:
         "enquiries": generate_enquiries(SEED),
         "adversarial": generate_adversarial(),
         "docsets": generate_docsets(SEED),
+        "adversarial_dev": generate_adversarial_dev(),
+        "pii": generate_pii(SEED),
     }
     manifest = {"version": DATASET_VERSION, "seed": SEED, "files": {}}
     for name, rows in datasets.items():

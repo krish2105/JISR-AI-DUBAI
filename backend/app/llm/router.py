@@ -398,10 +398,23 @@ class LLMRouter:
                 "Use LLM_PROFILE=prod (paid, no-training terms) or synthetic data."
             )
 
+    def check_pii_tripwire(self, req: LLMRequest) -> None:
+        """Last line of defence: refuse to send unmistakable personal/financial identifiers to ANY model.
+
+        Agents must send redacted text; if an email address, IBAN, Emirates ID, tax number or card
+        number is still present, something upstream forgot to redact, so we stop here (fail closed).
+        """
+        from app.security.redactor import find_high_risk_pii  # local import avoids a cycle
+
+        found = find_high_risk_pii(f"{req.system}\n{req.prompt}")
+        if found:
+            raise LLMPolicyError(f"Blocked: unredacted {', '.join(found)} in a {req.purpose or req.role} request.")
+
     async def complete(self, req: LLMRequest) -> LLMResponse:
         """Answer one request: pick the model, enforce data rules, call it, log it."""
         cfg = self.config_for(req.role)
         self.check_data_policy(cfg, req)
+        self.check_pii_tripwire(req)
         max_tokens = min(req.max_tokens or self.settings.llm_max_output_tokens,
                          self.settings.llm_max_output_tokens)
 

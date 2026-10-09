@@ -112,8 +112,15 @@ def fake_outreach_draft(req: LLMRequest) -> str:
     )
 
 
+def fake_injection_classify(req: LLMRequest) -> dict:
+    """The fake model cannot judge intent: it always says 'not an attack' so offline numbers measure
+    the deterministic rule layer only (no pretend second layer)."""
+    return {"is_attack": False, "categories": [], "confidence": 0.0, "rationale": "fake model: no classification"}
+
+
 # purpose -> script. The router's default FakeBackend loads these.
 DEMO_SCRIPTS = {
     "rfq_extract": fake_rfq_extract,
     "outreach_draft": fake_outreach_draft,
+    "injection_classify": fake_injection_classify,
 }

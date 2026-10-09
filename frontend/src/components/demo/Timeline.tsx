@@ -71,6 +71,17 @@ export function Timeline({ events }: { events: RunEvent[] }) {
               {/* dir="auto": agent explanations may be English inside the Arabic UI; let the
                   browser pick the right direction so punctuation stays where it belongs. */}
               {describe(e) && <p dir="auto" className="mt-0.5 break-words text-start text-ink-2">{describe(e)}</p>}
+              {/* Guard evidence: the exact text that triggered each flag (why it was flagged). */}
+              {Array.isArray(e.payload.evidence) && (e.payload.evidence as { flag: string; snippet: string }[]).length > 0 && (
+                <ul className="mt-1 space-y-0.5">
+                  {(e.payload.evidence as { flag: string; snippet: string }[]).map((ev) => (
+                    <li key={ev.flag} className="flex flex-wrap items-baseline gap-1.5 text-xs">
+                      <Badge tone="risk"><bdi>{ev.flag}</bdi></Badge>
+                      <q dir="auto" className="text-ink-3">{ev.snippet}</q>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </motion.li>
         ))}

@@ -33,7 +33,8 @@ from app.governance.policy_engine import PolicyContext, get_policy_engine
 from app.llm.router import LLMRequest, get_router
 from app.profile import get_business_profile
 from app.runs.emitter import RunEmitter
-from app.security.injection_guard import scan
+from app.security.classifier import classify, extra_flags
+from app.security.injection_guard import scan_rules
 from app.tools.pricing import price_lines
 from app.tools.rfq import extract_rfq
 
@@ -95,16 +96,29 @@ async def ingest(state: RunState, em: RunEmitter, config: RunnableConfig) -> Ste
 
 @agent_step("guard")
 async def guard(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
-    """Screen the untrusted message for injection and fraud patterns (v0 patterns)."""
-    flags = scan(state.raw_message_redacted)
+    """Screen the untrusted message: deterministic rules + LLM classifier (findings are added together)."""
+    rules = scan_rules(state.raw_message_redacted)
+    await em.emit("guard", "tool_call", {"tool": "llm.injection_classify", "role": "fast"})
+    verdict, error = await classify(state.raw_message_redacted)
+    added = [f for f in extra_flags(verdict) if f not in rules.flags]
+    await em.emit("guard", "tool_result", {
+        "tool": "llm.injection_classify",
+        "verdict": verdict.model_dump() if verdict else None,
+        "added_flags": added,
+        "fallback": "rules only" if error else None,
+    }, risk="medium" if error else None)
+    flags = sorted(set(rules.flags) | set(added))
+    evidence = rules.evidence + [{"flag": f, "snippet": f"classifier: {verdict.rationale[:80]}"} for f in added]
     impact = dict(state.impact)
     impact["risks_caught"] = impact.get("risks_caught", 0) + len(flags)
     return StepResult(
         updates={"injection_flags": flags, "impact": impact},
         summary={
-            "why": "Flags found: the message is treated as hostile data." if flags
-            else "No injection or fraud patterns found.",
+            "why": f"Flags found ({', '.join(flags)}): the message is treated as hostile data." if flags
+            else "No injection or fraud patterns found (rules + classifier).",
             "flags": flags,
+            "evidence": evidence,
+            "layers": {"rules": rules.flags, "classifier": added, "classifier_error": error},
         },
         risk="high" if flags else "low",
     )
@@ -114,22 +128,28 @@ async def guard(state: RunState, em: RunEmitter, config: RunnableConfig) -> Step
 async def supervisor(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
     """Decide which agents run. Phase 1: rule-based plan; Phase 9: LLM planner with re-planning."""
     pending: list[PendingAction] = []
-    if "bank_change" in state.injection_flags:
-        # Simulate the worst case: a fooled agent proposes the change. Governance must block it.
+    flags = set(state.injection_flags)
+    evidence = [f"guard flag: {f}" for f in state.injection_flags]
+    if flags & {"bank_change", "payment_status"}:
+        # Simulate the worst case: a fooled agent proposes the dangerous action. Governance must block it.
         plan = ["governance"]
-        iban = re.search(r"\[IBAN_\d+\]", state.raw_message_redacted)
-        pending.append(PendingAction(
-            action_type="update_bank_details",
-            title="Change buyer/beneficiary bank account",
-            payload={"new_account": iban.group(0) if iban else "(unspecified)"},
-            requested_by="supervisor",
-            reason="The inbound message asks to change bank details and confirm a payment.",
-            evidence=[f"guard flag: {f}" for f in state.injection_flags],
-        ))
-        why = "Message asks to change bank details: routed straight to governance."
+        if "bank_change" in flags:
+            iban = re.search(r"\[(IBAN|ACCOUNT)_\d+\]", state.raw_message_redacted)
+            pending.append(PendingAction(
+                action_type="update_bank_details", title="Change buyer/beneficiary bank account",
+                payload={"new_account": iban.group(0) if iban else "(unspecified)"}, requested_by="supervisor",
+                reason="The inbound message asks to change bank or beneficiary details.", evidence=evidence))
+        if "payment_status" in flags:
+            pending.append(PendingAction(
+                action_type="mark_payment_received", title="Mark an invoice as paid",
+                payload={}, requested_by="supervisor",
+                reason="The inbound message asks to mark or confirm a payment as received.", evidence=evidence))
+        why = "Message asks to change bank details or payment status: routed straight to governance."
     else:
         plan = ["quote", "duty", "docs", "trust", "outreach", "governance"]
-        why = "Standard enquiry: quote, duty check, documents, trust signals, reply draft, then governance."
+        why = ("Flagged message: drafting continues, but every outbound action will be HIGH risk for a human."
+               if flags else
+               "Standard enquiry: quote, duty check, documents, trust signals, reply draft, then governance.")
     await em.emit("supervisor", "plan", {"plan": plan, "why": why})
     return StepResult(
         updates={"plan": plan, "pending_actions": state.pending_actions + pending},

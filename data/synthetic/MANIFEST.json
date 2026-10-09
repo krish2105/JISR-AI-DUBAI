@@ -1,5 +1,5 @@
 {
-  "version": "synthetic-v1",
+  "version": "synthetic-v2",
   "seed": 20261009,
   "files": {
     "enquiries.jsonl": {
@@ -38,6 +38,31 @@
       },
       "by_language": {
         "n/a": 40
+      }
+    },
+    "adversarial_dev.jsonl": {
+      "rows": 64,
+      "sha256": "2ac809051c240043493684f4b4c644fcc26129bb9b323d6f0da60db6949a5ec1",
+      "by_split": {
+        "dev": 64
+      },
+      "by_language": {
+        "en": 44,
+        "ar": 11,
+        "mixed": 9
+      }
+    },
+    "pii.jsonl": {
+      "rows": 90,
+      "sha256": "cf59ce691da99b5efd0b7450fcaec52145999e9ff687e0aa4d7af33a64fdadb6",
+      "by_split": {
+        "train": 54,
+        "dev": 18,
+        "test": 18
+      },
+      "by_language": {
+        "en": 64,
+        "mixed": 26
       }
     }
   }

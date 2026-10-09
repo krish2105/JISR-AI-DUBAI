@@ -7,7 +7,11 @@ Metrics:
     quantity_preservation     over-redaction check: of the gold quantities written as numbers in the original
                               (after normalising Arabic-Indic digits, "1,200" and "1.2k"), the share still present
                               as standalone numbers after redaction. Number words ("five hundred") are excluded.
-    injection_detection_recall share of the 30 attacks that raise at least one guard flag. Phase 3 target 1.0.
+    injection_detection_recall share of the 30 HELD-OUT attacks that raise at least one flag. Phase 3 target 1.0.
+    injection_detection_recall_dev / lookalike_fpr_dev   the same on the development set the guard was built on
+                              (reported separately so held-out and tuned numbers are never mixed).
+    pii_case_recall / business_data_kept   redaction on the 90 labelled PII messages (names, IDs, tax numbers,
+                              accounts, cards, PO boxes, Arabic-Indic phones) and the share of business values kept.
     injection_category_recall share of expected flag codes that were raised (finer-grained).
     false_positive_rate       share of the 300 normal enquiries that raise any flag (target <= 0.02).
     hard_negative_fpr         same, on the 10 enquiries that mention banks/accounts/urgency legitimately.
@@ -16,7 +20,7 @@ Metrics:
 import re
 from collections import defaultdict
 
-from app.security.injection_guard import scan
+from app.security.injection_guard import scan_rules
 from app.security.redactor import redact
 from eval.common import EvalContext, SuiteResult, load
 
@@ -64,11 +68,33 @@ async def run(ctx: EvalContext) -> SuiteResult:
                 q_total += 1
                 q_kept += item["quantity"] in after
 
+    # ----- labelled PII cases (names, IDs, accounts, cards, PO boxes, Arabic-Indic phones) -----
+    pii_rows = load("pii", ctx)
+    case_total = case_hidden = keep_total = keep_ok = 0
+    case_types: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    for row in pii_rows:
+        redacted = redact(row["text"]).text
+        compact = re.sub(r"[\s\-.()]", "", redacted)
+        for item in row["labels"]["hide"]:
+            value = item["value"]
+            leaked = value in redacted or (item["type"] != "PERSON"
+                                           and re.sub(r"[\s\-.()]", "", value) in compact)
+            case_total += 1
+            case_types[item["type"]][1] += 1
+            if not leaked:
+                case_hidden += 1
+                case_types[item["type"]][0] += 1
+            else:
+                failures.append({"id": row["id"], "kind": "pii_leak", "type": item["type"], "value": "***"})
+        for value in row["labels"]["keep"]:
+            keep_total += 1
+            keep_ok += value in redacted
+
     # ----- injection screening -----
     detected = cat_hit = cat_total = 0
     per_lang: dict[str, list[int]] = defaultdict(lambda: [0, 0])
     for row in attacks:
-        flags = set(scan(redact(row["text"]).text))
+        flags = set(scan_rules(redact(row["text"]).text).flags)
         expected = set(row["labels"]["expected_flags"])
         per_lang[row["language"]][1] += 1
         if flags:
@@ -80,11 +106,19 @@ async def run(ctx: EvalContext) -> SuiteResult:
         cat_total += len(expected)
         cat_hit += len(expected & flags)
 
-    false_pos = [r for r in enquiries if scan(redact(r["text"]).text)]
+    def flagged(text: str) -> list[str]:
+        return scan_rules(redact(text).text).flags
+
+    # Development set (what the guard was built on) — reported separately from the held-out test.
+    dev_rows = load("adversarial_dev", EvalContext(fast=False, split="dev")) if not ctx.fast else []
+    dev_attacks = [r for r in dev_rows if r["labels"]["injection_expected"]]
+    dev_benign = [r for r in dev_rows if not r["labels"]["injection_expected"]]
+
+    false_pos = [r for r in enquiries if flagged(r["text"])]
     hard_neg = [r for r in enquiries if r["hard_negative"]]
     hard_fp = [r for r in hard_neg if r in false_pos]
     for r in false_pos[:5]:
-        failures.append({"id": r["id"], "kind": "false_positive", "flags": scan(redact(r["text"]).text),
+        failures.append({"id": r["id"], "kind": "false_positive", "flags": flagged(r["text"]),
                          "text": r["text"][:160]})
 
     metrics = {
@@ -94,8 +128,16 @@ async def run(ctx: EvalContext) -> SuiteResult:
         "injection_category_recall": cat_hit / cat_total if cat_total else 1.0,
         "false_positive_rate": len(false_pos) / len(enquiries) if enquiries else 0.0,
         "hard_negative_fpr": len(hard_fp) / len(hard_neg) if hard_neg else 0.0,
+        "pii_case_recall": case_hidden / case_total if case_total else 1.0,
+        "business_data_kept": keep_ok / keep_total if keep_total else 1.0,
     }
+    if dev_rows:
+        caught = sum(bool(flagged(r["text"])) for r in dev_attacks)
+        metrics["injection_detection_recall_dev"] = caught / len(dev_attacks)
+        metrics["lookalike_fpr_dev"] = sum(bool(flagged(r["text"])) for r in dev_benign) / len(dev_benign)
     slices = {f"pii={k}": {"redaction_recall": v[0] / v[1]} for k, v in by_type.items()}
+    slices |= {f"pii_case={k}": {"redaction_recall": v[0] / v[1]} for k, v in sorted(case_types.items())}
     slices |= {f"attack_lang={k}": {"detection_recall": v[0] / v[1]} for k, v in sorted(per_lang.items())}
-    return SuiteResult("security", len(enquiries) + len(attacks), metrics, slices, failures,
-                       notes=["Guard and redactor are v0 (Phase 1); Phase 3 hardens both."])
+    return SuiteResult("security", len(enquiries) + len(attacks) + len(pii_rows), metrics, slices, failures,
+                       notes=["Rule layer only: offline runs use the fake model, whose classifier never flags. "
+                              "Guard v1 was developed on adversarial_dev; the 30 test attacks were held out."])
