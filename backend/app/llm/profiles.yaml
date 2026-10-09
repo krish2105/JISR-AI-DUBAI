@@ -1,0 +1,44 @@
+# profiles.yaml — which model serves each ROLE in each PROFILE.
+#
+# Why: agents never name a model. They ask the router for a role ("smart", "worker", ...),
+# and this file decides which provider/model answers. Switching the whole system from
+# free tiers to Claude is one setting: LLM_PROFILE=prod.
+#
+# Fields per role:
+#   provider:  fake | anthropic | litellm
+#   model:     the provider's model id (Claude ids are exact; never add date suffixes)
+#   effort:    Claude only: low | medium | high | xhigh | max (Opus 5.5 defaults to medium, so we set it)
+#   free_tier: true means "only synthetic data may be sent here" (enforced by the router)
+#
+# Roles:
+#   smart  - planner, grounding verifier, hard reasoning
+#   worker - the specialist agents (quote, duty, docs, trust, outreach)
+#   fast   - classification, grading, cheap rerank fallback
+#   judge  - LLM-as-judge in evals; must be a different model from `worker`
+#   stt    - speech-to-text for WhatsApp voice notes (implemented in Phase 8)
+
+fake:
+  smart:  {provider: fake, model: fake-smart}
+  worker: {provider: fake, model: fake-worker}
+  fast:   {provider: fake, model: fake-fast}
+  judge:  {provider: fake, model: fake-judge}
+  stt:    {provider: fake, model: fake-stt}
+
+# Free tiers for development on SYNTHETIC data only. Model names change often:
+# check each provider's current free models and update here (record it in DECISIONS.md).
+dev:
+  smart:  {provider: litellm, model: gemini/gemini-2.5-flash,          free_tier: true}
+  worker: {provider: litellm, model: groq/llama-3.3-70b-versatile,     free_tier: true}
+  fast:   {provider: litellm, model: groq/llama-3.1-8b-instant,        free_tier: true}
+  judge:  {provider: litellm, model: gemini/gemini-2.5-flash,          free_tier: true}
+  stt:    {provider: litellm, model: groq/whisper-large-v3,            free_tier: true}
+
+# Paid Claude for the hosted demo, the pilot and the finals.
+prod:
+  smart:  {provider: anthropic, model: claude-opus-5-5,   effort: high}
+  worker: {provider: anthropic, model: claude-sonnet-5-5, effort: medium}
+  fast:   {provider: anthropic, model: claude-haiku-5-5,  effort: low}
+  judge:  {provider: anthropic, model: claude-opus-5-5,   effort: high}
+  # Claude does not transcribe audio, so speech-to-text stays on a dedicated STT model.
+  # Voice notes are redacted downstream; pilot audio must use a paid no-training STT (Phase 8).
+  stt:    {provider: litellm,   model: groq/whisper-large-v3, free_tier: true}

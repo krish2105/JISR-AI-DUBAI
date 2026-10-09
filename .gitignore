@@ -1,0 +1,30 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node / Next.js (Phase 1)
+node_modules/
+.next/
+out/
+
+# Local data that must never be committed
+jisr.db
+traces/
+data/pilot_raw/
+data/kb_sources/*
+!data/kb_sources/README.md
+data/sanctions_public/*
+!data/sanctions_public/README.md
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

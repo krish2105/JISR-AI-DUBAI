@@ -1,0 +1,43 @@
+# pyproject.toml — Python package definition for the Jisr AI backend.
+# Why: one place that lists every dependency, so `uv sync` gives everyone the same environment.
+
+[project]
+name = "jisr-backend"
+version = "0.0.1"
+description = "Jisr AI: a governed multi-agent system for India-to-UAE SME trade (backend)."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115",           # web framework for the API
+    "uvicorn[standard]>=0.30",  # server that runs FastAPI
+    "pydantic>=2.8",            # typed data models
+    "pydantic-settings>=2.4",   # reads settings from environment variables / .env
+    "pyyaml>=6.0",              # reads LLM profiles and (later) policy YAML files
+    "anthropic>=0.70",          # official Claude SDK (prod profile)
+    "litellm>=1.50",            # non-Claude free-tier providers (dev profile only)
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.27",              # used by FastAPI's TestClient
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"           # lets us write `async def test_...` without decorators
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

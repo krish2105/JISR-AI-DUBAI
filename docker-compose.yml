@@ -1,0 +1,40 @@
+# docker-compose.yml — run Postgres (with pgvector) and the API together.
+# Why: `make up` gives anyone the full backend with one command. The dashboard
+# (frontend) joins in Phase 1.
+#
+#   make db   -> starts only the database (for local `make run`)
+#   make up   -> starts database + API in containers
+
+services:
+  db:
+    image: pgvector/pgvector:pg17          # Postgres 17 with the pgvector extension built in
+    environment:
+      POSTGRES_USER: jisr
+      POSTGRES_PASSWORD: jisr_local_only   # local development password, never used in hosting
+      POSTGRES_DB: jisr
+    ports:
+      - "5432:5432"
+    volumes:
+      - jisr_pg:/var/lib/postgresql/data   # keeps data between restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jisr"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://jisr:jisr_local_only@db:5432/jisr
+      LLM_PROFILE: ${LLM_PROFILE:-fake}
+      TRACE_DIR: /app/traces
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  jisr_pg:
