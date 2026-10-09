@@ -119,7 +119,8 @@ def download_row(row: dict, force: bool) -> dict:
             # Not fetched by this script: just report whether a person has put the file in place.
             if target.exists():
                 data = target.read_bytes()
-                result.update(status=f"{mode.upper()}_PRESENT", bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
+                result.update(status=f"{mode.upper()}_PRESENT", bytes=len(data),
+                              sha256=hashlib.sha256(data).hexdigest())
             else:
                 result.update(status=f"{mode.upper()}_NEEDED", error=row.get("notes", "")[-160:])
             return result
@@ -131,7 +132,7 @@ def download_row(row: dict, force: bool) -> dict:
             return result
 
         last_error: Exception | None = None
-        for attempt in range(2):                        # one retry for flaky government servers
+        for _attempt in range(2):                       # one retry for flaky government servers
             try:
                 data, http_status, content_type, final_url = fetch(url)
                 break
