@@ -14,4 +14,8 @@ source or is our own measured data.** Status: `sourced` · `verify` · `own data
 | 7 | WhatsApp per-message pricing since July 2025; AED billing from April 2026 | Meta developer pricing page | ~Oct 2025 | **verify** current rates |
 | 8 | Dubai AI Seal is free to apply; requires a Dubai licence | Dubai Media Office | May 2025 | sourced; re-check dub.ai |
 | 9 | Championship: four categories, AED 550,000 per category winner, extra AED 1M for AI Agent of the Year; finalists must demo a working agent live | Dubai Chamber of Digital Economy coverage (tbreak, OB Gulf guide) | Oct 2026 | sourced; confirm on dubaichamberdigital.com |
-| 10 | Pilot results (minutes per quote, follow-up rate, errors caught, duty savings identified) | Jisr Impact Ledger | after pilot | to collect |
+| 10 | UAE dirham pegged to USD at 3.6725 AED/USD since 1997 (used for INR→AED) | The National (2024-11-22); Wikipedia (UAE dirham) | 2024 | **verify** on centralbank.ae |
+| 11 | ECB reference rate USD/INR 96.78 on 2026-10-08 (via Frankfurter API) | api.frankfurter.dev | 2026-10-08 | sourced (live; each quote stores its own rate, source and date) |
+| 12 | Logistics costs in the demo profile (freight AED/CBM, clearance, insurance %) | Demo estimates | n/a | **own estimate** — replace with forwarder quotes before any pitch use |
+| 13 | RFQ extraction F1 0.970 on 30 hand-written held-out enquiries (fake profile = deterministic parser) | docs/EVAL_REPORT.md | 2026-10-09 | own data (synthetic, small n=30; not real buyers) |
+| 14 | Pilot results (minutes per quote, follow-up rate, errors caught, duty savings identified) | Jisr Impact Ledger | after pilot | to collect |

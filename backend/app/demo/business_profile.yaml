@@ -1,23 +1,58 @@
 # business_profile.yaml — the seller's configurable profile (DEMO values, fictional company).
 #
-# Why: Jisr must not be hard-wired to one company. The pilot business gets its own profile;
-# the hosted demo uses this fictional one. Phase 4 replaces the stub pricing with real rules
-# (Incoterm costs, live FX with timestamp, margin floors) and moves this into the database.
+# Why: Jisr must not be hard-wired to one company. The pilot business gets its own profile; the hosted demo
+# uses this fictional one. EVERY cost below is a DEMO ESTIMATE: the pilot replaces them with the seller's real
+# costs and forwarder quotes. Pricing rules (margin floor, discount cap, volume tiers) are the OWNER's policy.
 
 seller_name: "Jaipur Heritage Crafts (demo)"
 home_currency: INR
 quote_currency: AED
-default_margin_pct: 22          # added on top of unit cost
 quote_validity_days: 15
 
-# STUB exchange rate for Phase 1 only. Phase 4 fetches a live rate and stores its source and time.
-fx_stub_inr_to_aed: 0.0436
+# --- pricing policy (owner) ---------------------------------------------------------------
+default_margin_pct: 22          # mark-up on unit cost
+min_margin_pct: 12              # never quote below this without owner approval (policy P-MARGIN-001)
+max_discount_pct: 10            # discounts above this need owner approval (policy P-DISC-001)
+volume_discounts:               # applied per line by quantity
+  - {min_qty: 1000, pct: 3}
+  - {min_qty: 2500, pct: 5}
 
-# Unit costs in INR, matched by keyword in the item description (English and Arabic).
+# Fixed demo exchange rate, used when FX_PROVIDER=fixed (tests, offline demo). Live mode uses ECB x AED peg.
+fx_stub_inr_to_aed: 0.0379
+
+# --- catalogue -------------------------------------------------------------------------------------------
+# keywords = product nouns (decisive); materials = supporting words. Best match = most noun hits, then materials.
+# unit_cost_inr = seller's cost; kg / cbm = packed weight and volume per unit (freight); hs_hint is NOT verified.
 catalogue:
-  - {keywords: [brass, diya, lamp, "مصباح", "فانوس"],             unit_cost_inr: 450,  hs_hint: "9405"}
-  - {keywords: [runner, table runner, "مفرش"],                      unit_cost_inr: 380,  hs_hint: "6302"}
-  - {keywords: [gift box, box, wooden, "صندوق", "خشبي"],            unit_cost_inr: 520,  hs_hint: "4420"}
-  - {keywords: [pashmina, shawl, stole, "وشاح", "باشمينا"],          unit_cost_inr: 1200, hs_hint: "6214"}
-  - {keywords: [cushion, cover, "وسادة"],                            unit_cost_inr: 290,  hs_hint: "6304"}
-default_unit_cost_inr: 500
+  - {name: "Brass lamp / diya / lantern", keywords: [diya, diyas, lamp, lamps, lantern, lanterns, "مصباح", "مصابيح", "فانوس"], materials: [brass, "نحاس"], unit_cost_inr: 450, kg: 0.9, cbm: 0.004, hs_hint: "9405"}
+  - {name: "Table runner", keywords: [runner, runners, "مفارش طاولة", "مفرش طاولة"], materials: [cotton, "قطن"], unit_cost_inr: 380, kg: 0.35, cbm: 0.0015, hs_hint: "6302"}
+  - {name: "Wooden gift box", keywords: [gift box, gift boxes, wooden box, wooden boxes, jewellery box, "صناديق هدايا", "صندوق هدايا"], materials: [wood, wooden, carved, "خشب"], unit_cost_inr: 520, kg: 0.7, cbm: 0.005, hs_hint: "4420"}
+  - {name: "Pashmina shawl", keywords: [shawl, shawls, pashmina, stole, "شال", "شالات", "باشمينا"], materials: [wool, cashmere], unit_cost_inr: 1200, kg: 0.25, cbm: 0.001, hs_hint: "6214"}
+  - {name: "Silk scarf", keywords: [scarf, scarves, "وشاح", "أوشحة"], materials: [silk, "حرير"], unit_cost_inr: 650, kg: 0.12, cbm: 0.0006, hs_hint: "6214"}
+  - {name: "Cushion cover", keywords: [cushion, cushions, "وسادة", "وسائد", "مخدة"], materials: [embroidered, "مطرزة"], unit_cost_inr: 290, kg: 0.3, cbm: 0.0012, hs_hint: "6304"}
+  - {name: "Marble coaster", keywords: [coaster, coasters, "قواعد أكواب"], materials: [marble, "رخام", "رخامية"], unit_cost_inr: 340, kg: 1.2, cbm: 0.002, hs_hint: "6802"}
+  - {name: "Pottery vase", keywords: [vase, vases, "مزهريات", "مزهرية"], materials: [pottery, ceramic, "فخار"], unit_cost_inr: 410, kg: 1.0, cbm: 0.006, hs_hint: "6913"}
+  - {name: "Leather journal", keywords: [journal, journals, notebook, notebooks, "دفاتر"], materials: [leather, "جلد"], unit_cost_inr: 360, kg: 0.4, cbm: 0.0012, hs_hint: "4820"}
+  - {name: "Jute bag", keywords: [tote, totes, bag, bags, "حقائب", "كيس"], materials: [jute, "جوت"], unit_cost_inr: 140, kg: 0.25, cbm: 0.0015, hs_hint: "4202"}
+  - {name: "Incense", keywords: [incense, "بخور"], materials: [sandalwood, "الصندل"], unit_cost_inr: 220, kg: 0.3, cbm: 0.0008, hs_hint: "3307"}
+  - {name: "Serving tray", keywords: [tray, trays, "صواني", "صينية"], materials: [brass, "نحاس"], unit_cost_inr: 600, kg: 1.3, cbm: 0.005, hs_hint: "7418"}
+  - {name: "Bath towel", keywords: [towel, towels, "مناشف"], materials: [cotton], unit_cost_inr: 260, kg: 0.5, cbm: 0.002, hs_hint: "6302"}
+  - {name: "Terracotta planter", keywords: [planter, planters, "أصص"], materials: [terracotta, "الطين"], unit_cost_inr: 180, kg: 1.5, cbm: 0.006, hs_hint: "6912"}
+  - {name: "Copper water bottle", keywords: [bottle, bottles, "قوارير"], materials: [copper, "نحاسية"], unit_cost_inr: 520, kg: 0.5, cbm: 0.0018, hs_hint: "7418"}
+  - {name: "Quilted bedspread", keywords: [bedspread, bedspreads, quilt, "مفارش سرير"], materials: [cotton, quilted], unit_cost_inr: 1450, kg: 1.6, cbm: 0.008, hs_hint: "6304"}
+default_unit_cost_inr: 500      # unknown items are priced at this assumed cost AND flagged for owner review
+default_kg: 1.0
+default_cbm: 0.004
+
+# --- logistics (DEMO ESTIMATES; replace with forwarder quotes) ----------------------------------------
+logistics:
+  origin_port: "Mundra"
+  inland_freight_inr_per_kg: 6.0          # factory -> port
+  export_clearance_inr: 9500              # per shipment (CHA, documentation)
+  ocean_freight_aed_per_cbm: {AE: 110, SA: 165, QA: 150, OM: 140, KW: 170, BH: 160, unknown: 170}
+  min_cbm: 1.0                            # LCL minimum
+  insurance_pct: 0.25                     # % of 110% of CIF value
+  destination_delivery_aed: 650           # DAP/DPU/DDP last-mile delivery
+  destination_clearance_aed: 400          # DDP import clearance (broker)
+  import_duty_pct: 5                      # GCC common tariff on the demo goods; source: Dubai Customs tariff master
+  import_duty_source: "Dubai Customs Integrated Customs Tariff master (DutyPercentage), fetched 2026-10-09; CEPA preference evaluated separately (Phase 5)"

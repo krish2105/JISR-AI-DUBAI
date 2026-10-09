@@ -64,9 +64,19 @@ export function ResultPanel({ runId, view }: { runId: string; view: RunView }) {
       {quote && quote.lines.length > 0 && (
         <Card>
           <CardHeader
-            title={r.quote}
-            aside={<Badge tone="sand" title={quote.fx_source}>{t.demo.stub} · {r.fx} <bdi>{quote.fx_inr_to_aed}</bdi></Badge>}
+            title={<>{r.quote} · <bdi>{quote.incoterm}</bdi>{quote.incoterm_assumed && <span className="text-ink-3"> ({r.assumed})</span>}</>}
+            aside={
+              <Badge tone={quote.fx?.stale ? "warn" : "neutral"} title={quote.fx?.source ?? quote.fx_source}>
+                {r.fxFrom} <bdi>1 INR = {quote.fx_inr_to_aed} AED{quote.fx?.rate_date ? ` · ${quote.fx.rate_date}` : ""}</bdi>
+              </Badge>
+            }
           />
+          {(quote.pricing_flags?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 border-b border-line bg-warn-soft px-4 py-2 text-xs">
+              <span className="font-medium text-warn">{r.review}:</span>
+              {quote.pricing_flags!.map((f) => <Badge key={f} tone="warn"><bdi>{f}</bdi></Badge>)}
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-ink-3">
@@ -88,6 +98,12 @@ export function ResultPanel({ runId, view }: { runId: string; view: RunView }) {
                 ))}
               </tbody>
               <tfoot>
+                {(quote.charges ?? []).map((c) => (
+                  <tr key={c.code} className="text-ink-2">
+                    <td className="px-4 py-1.5" colSpan={3} title={c.basis}>{c.description}</td>
+                    <td className="px-4 py-1.5 text-end tabular-nums"><bdi>{aed(c.total_aed)}</bdi></td>
+                  </tr>
+                ))}
                 <tr className="font-semibold">
                   <td className="px-4 py-2" colSpan={3}>{r.totalAed}</td>
                   <td className="px-4 py-2 text-end tabular-nums"><bdi>AED {aed(quote.total_aed)}</bdi></td>

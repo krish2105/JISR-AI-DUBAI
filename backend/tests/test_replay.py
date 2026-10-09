@@ -38,7 +38,8 @@ async def test_recorded_run_replays_identically(db_ready, monkeypatch):
     replay_state, replay_text = await _run_sample("en_brass_runners")
 
     assert replay_text == recorded_text
-    assert replay_state["quote"] == recorded_state["quote"]
+    money_keys = ("lines", "charges", "goods_total_aed", "charges_total_aed", "total_aed", "total_inr", "incoterm")
+    assert {k: replay_state["quote"][k] for k in money_keys} == {k: recorded_state["quote"][k] for k in money_keys}
     assert replay_state["drafts"][0]["model"].startswith("replay:")
 
 

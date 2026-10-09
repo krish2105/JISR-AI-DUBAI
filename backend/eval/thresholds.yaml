@@ -11,7 +11,8 @@
 regression_margin: 0.02
 
 extraction:
-  extraction_f1:              {min: 0.90, gate: target, phase: 4}
+  extraction_f1:              {min: 0.90, gate: hard}     # Phase 4 (template splits; overstates real accuracy)
+  extraction_f1_handwritten:  {min: 0.90, gate: hard}     # Phase 4: the honest one (first shot 0.970, never tuned on)
   crash_rate:                 {max: 0.00, gate: hard}
 
 security:
@@ -35,5 +36,5 @@ pricing:
   pricing_invariant_pass_rate: {min: 1.00, gate: hard}
 
 e2e:
-  task_success_rate:          {min: 0.90, gate: target, phase: 9}
+  task_success_rate:          {min: 0.90, gate: hard}     # met in Phase 4 (1.000); trajectory checks arrive in P9
   latency_p95_s:              {max: 120, gate: hard, regression: false}   # v3: under 2 minutes; timing noise exempt

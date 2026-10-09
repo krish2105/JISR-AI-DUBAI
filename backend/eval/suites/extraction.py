@@ -10,6 +10,8 @@ Method (field-level, micro-averaged; written down so the number is reproducible)
       value exists and the prediction equals it; FP when a prediction is wrong or invented; FN when
       a gold value is missed or wrong.
     * extraction_f1 = micro F1 over items + fields. Phase 4 target: >= 0.90 on the test split.
+    * extraction_f1_handwritten = the same on 30 hand-written enquiries in styles the templates never produce
+      (test only, never used for tuning): the honest estimate of how the extractor generalises.
 """
 
 import asyncio
@@ -68,21 +70,21 @@ def _summary(totals: dict[str, list[int]]) -> dict[str, float]:
     return out
 
 
-async def run(ctx: EvalContext) -> SuiteResult:
-    """Extract every enquiry in scope and score it."""
-    rows = [r for r in load("enquiries", ctx)]
+async def _score_rows(rows: list[dict], ctx: EvalContext) -> tuple[dict, dict, list, int, dict]:
+    """Extract and score rows; returns (totals, slices, failures, errors, sources)."""
     sem = asyncio.Semaphore(ctx.concurrency)
+    sources: dict[str, int] = defaultdict(int)
 
     async def one(row: dict) -> tuple[dict, dict | None, str | None]:
         async with sem:
             try:
-                rfq, _ = await extract_rfq(redact(row["text"]).text)
+                rfq, _, report = await extract_rfq(redact(row["text"]).text)
+                sources[report.source] += 1
                 return row, score_one(row["labels"], rfq), None
-            except Exception as exc:             # a crash counts as missing everything
+            except Exception as exc:
                 return row, None, f"{type(exc).__name__}: {exc}"
 
     results = await asyncio.gather(*(one(r) for r in rows))
-
     totals: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
     by_slice: dict[str, dict[str, list[int]]] = defaultdict(lambda: defaultdict(lambda: [0, 0, 0]))
     failures, errors = [], 0
@@ -100,10 +102,28 @@ async def run(ctx: EvalContext) -> SuiteResult:
                 target[comp][2] += fn
         if row_errors:
             failures.append({"id": row["id"], "language": row["language"], "difficulty": row["difficulty"],
-                             "errors": row_errors, "error": error, "text": row["text"][:220]})
-
+                             "errors": row_errors, "wrong": [k for k, v in counts.items() if v[1] or v[2]],
+                             "error": error, "text": row["text"][:220]})
     failures.sort(key=lambda f: -f["errors"])
+    return totals, by_slice, failures, errors, dict(sources)
+
+
+async def run(ctx: EvalContext) -> SuiteResult:
+    """Extract every enquiry in scope (+ the hand-written set) and score it."""
+    rows = [r for r in load("enquiries", ctx)]
+    totals, by_slice, failures, errors, sources = await _score_rows(rows, ctx)
+    hand_rows = load("enquiries_handwritten", EvalContext(split="test", concurrency=ctx.concurrency))
+    h_totals, h_slices, h_failures, h_errors, _ = await _score_rows(hand_rows, ctx)
+
     metrics = _summary(totals) | {"crash_rate": errors / len(rows) if rows else 0.0}
+    metrics["extraction_f1_handwritten"] = _summary(h_totals)["extraction_f1"]
+    metrics["items_f1_handwritten"] = _summary(h_totals).get("items_f1", 0.0)
     slices = {k: {"extraction_f1": _summary(v)["extraction_f1"]} for k, v in sorted(by_slice.items())}
-    return SuiteResult("extraction", len(rows), metrics, slices, failures,
-                       notes=["Measures app.tools.rfq.extract_rfq with the active LLM profile."])
+    slices |= {f"handwritten/{k}": {"extraction_f1": _summary(v)["extraction_f1"]}
+               for k, v in sorted(h_slices.items()) if k.startswith("lang=")}
+    hand_fail = [f | {"set": "handwritten"} for f in h_failures[:3]]
+    return SuiteResult("extraction", len(rows) + len(hand_rows), metrics, slices, hand_fail + failures,
+                       notes=[f"Extraction sources: {sources}. Hybrid tool app.tools.rfq.extract_rfq with the active "
+                              "LLM profile (fake = deterministic parser only).",
+                              "The parser was developed on the TRAIN split only; dev/test and the 30 hand-written "
+                              "enquiries were not used for tuning."])

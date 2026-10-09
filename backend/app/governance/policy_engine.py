@@ -37,6 +37,7 @@ class Condition(BaseModel):
 
     action_type_in: list[str] | None = None
     run_has_flags: bool | None = None
+    payload_flags_any: list[str] | None = None      # any of these codes in payload["pricing_flags"]
 
 
 class Rule(BaseModel):
@@ -85,6 +86,10 @@ class PolicyEngine:
             return False
         if cond.run_has_flags is not None and bool(ctx.injection_flags) != cond.run_has_flags:
             return False
+        if cond.payload_flags_any is not None:
+            present = set(action.payload.get("pricing_flags") or [])
+            if not present & set(cond.payload_flags_any):
+                return False
         return True
 
     def evaluate(self, action: PendingAction, ctx: PolicyContext) -> Decision:

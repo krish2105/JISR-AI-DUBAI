@@ -10,6 +10,7 @@ Outputs:
     data/synthetic/docsets.jsonl      40 export document sets, 20 with planted mistakes
     data/synthetic/adversarial_dev.jsonl  40 dev attacks + 20 benign lookalikes (guard development only)
     data/synthetic/pii.jsonl          90 messages labelled with personal data to hide and business data to keep
+    data/synthetic/enquiries_handwritten.jsonl  30 hand-written enquiries (test only; never used for tuning)
     data/synthetic/MANIFEST.json      dataset version, seed, counts and SHA-256 of each file
 
 Same seed -> byte-identical files, so every eval run is comparable.
@@ -24,9 +25,12 @@ from eval.synth.adversarial import generate_adversarial
 from eval.synth.adversarial_dev import generate_adversarial_dev
 from eval.synth.docsets import generate_docsets
 from eval.synth.enquiries import generate_enquiries
+from eval.synth.enquiries_handwritten import generate_handwritten
 from eval.synth.pii import generate_pii
 
-DATASET_VERSION = "synthetic-v2"   # v2 (Phase 3): + adversarial_dev, + pii; v1 files unchanged
+# v2 (Phase 3): + adversarial_dev, + pii. v3 (Phase 4): + enquiries_handwritten; enquiry country labels set to
+# None where no place is written (46 rows; labels must be answerable from the text).
+DATASET_VERSION = "synthetic-v3"
 SEED = 20261009
 OUT = Path(__file__).resolve().parents[3] / "data" / "synthetic"
 
@@ -47,6 +51,7 @@ def main() -> None:
         "docsets": generate_docsets(SEED),
         "adversarial_dev": generate_adversarial_dev(),
         "pii": generate_pii(SEED),
+        "enquiries_handwritten": generate_handwritten(),
     }
     manifest = {"version": DATASET_VERSION, "seed": SEED, "files": {}}
     for name, rows in datasets.items():

@@ -20,6 +20,7 @@ dependencies = [
     "psycopg[binary]>=3.2",     # Postgres driver (Docker / Neon)
     "pypdf>=5.0",
     "openpyxl>=3.1",
+    "httpx>=0.27",              # HTTP client (live FX rates; later WhatsApp Cloud API)
 ]
 
 [dependency-groups]
@@ -53,3 +54,4 @@ select = ["E", "F", "I", "B", "UP"]
 "eval/synth/*" = ["E501"]
 # The injection guard's pattern table is easier to review with one pattern per line.
 "app/security/injection_guard.py" = ["E501"]
+"app/tools/rfq_rules.py" = ["E501"]

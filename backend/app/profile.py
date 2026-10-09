@@ -1,47 +1,91 @@
 """
-profile.py — Load the seller's business profile (products, costs, margin, currencies).
+profile.py — Load the seller's business profile (catalogue, costs, pricing policy, logistics).
 
 Why this file exists:
-    Agents read pricing inputs from a configurable profile rather than from code, so the
-    same system serves the pilot business, the demo company, or any future customer.
+    Agents read pricing inputs from a configurable profile rather than from code, so the same system serves
+    the pilot business, the demo company or any future customer. All numbers in the demo profile are
+    estimates; the pilot replaces them with real costs and forwarder quotes.
 """
 
+import re
 from functools import lru_cache
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 DEFAULT_PROFILE_PATH = Path(__file__).parent / "demo" / "business_profile.yaml"
 
 
 class CatalogueEntry(BaseModel):
-    """A product family recognised by keywords, with its unit cost."""
+    """A product family recognised by keywords, with cost and packed weight/volume per unit."""
 
-    keywords: list[str]
+    name: str
+    keywords: list[str]                        # product nouns (decisive for matching)
+    materials: list[str] = Field(default_factory=list)
     unit_cost_inr: float
-    hs_hint: str | None = None   # a HINT only; HS codes are decided with cited sources (Phase 5)
+    kg: float
+    cbm: float
+    hs_hint: str | None = None                 # a HINT only; HS codes are decided with cited sources (Phase 5)
+
+
+class VolumeTier(BaseModel):
+    """Discount applied to a line whose quantity reaches min_qty."""
+
+    min_qty: float
+    pct: float
+
+
+class Logistics(BaseModel):
+    """Shipment cost inputs (demo estimates)."""
+
+    origin_port: str
+    inland_freight_inr_per_kg: float
+    export_clearance_inr: float
+    ocean_freight_aed_per_cbm: dict[str, float]
+    min_cbm: float
+    insurance_pct: float
+    destination_delivery_aed: float
+    destination_clearance_aed: float
+    import_duty_pct: float
+    import_duty_source: str
 
 
 class BusinessProfile(BaseModel):
-    """The seller's commercial settings."""
+    """The seller's commercial settings and owner pricing policy."""
 
     seller_name: str
     home_currency: str = "INR"
     quote_currency: str = "AED"
-    default_margin_pct: float
     quote_validity_days: int = 15
+    default_margin_pct: float
+    min_margin_pct: float
+    max_discount_pct: float
+    volume_discounts: list[VolumeTier] = Field(default_factory=list)
     fx_stub_inr_to_aed: float
     catalogue: list[CatalogueEntry]
     default_unit_cost_inr: float
+    default_kg: float
+    default_cbm: float
+    logistics: Logistics
 
     def match(self, description: str) -> CatalogueEntry | None:
-        """Return the first catalogue entry whose keyword appears in the description."""
+        """Best catalogue entry for a description: most product-noun hits, then material hits; None if no noun."""
         text = description.lower()
-        for entry in self.catalogue:
-            if any(k.lower() in text for k in entry.keywords):
-                return entry
-        return None
+
+        def hits(words: list[str]) -> int:
+            return sum(1 for w in words if re.search(rf"(?<![\w؀-ۿ]){re.escape(w.lower())}", text))
+
+        scored = [(hits(e.keywords), hits(e.materials), e) for e in self.catalogue]
+        scored = [s for s in scored if s[0] > 0]
+        if not scored:
+            return None
+        return max(scored, key=lambda s: (s[0], s[1]))[2]
+
+    def volume_discount(self, quantity: float) -> float:
+        """Discount % for a line quantity (highest tier reached)."""
+        reached = [t.pct for t in self.volume_discounts if quantity >= t.min_qty]
+        return max(reached) if reached else 0.0
 
 
 @lru_cache

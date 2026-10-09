@@ -35,7 +35,8 @@ from app.profile import get_business_profile
 from app.runs.emitter import RunEmitter
 from app.security.classifier import classify, extra_flags
 from app.security.injection_guard import scan_rules
-from app.tools.pricing import price_lines
+from app.tools.fx import get_inr_to_aed
+from app.tools.pricing import price_quote
 from app.tools.rfq import extract_rfq
 
 FREE_MAIL_DOMAINS = {"gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "proton.me"}
@@ -159,24 +160,33 @@ async def supervisor(state: RunState, em: RunEmitter, config: RunnableConfig) ->
 
 @agent_step("quote")
 async def quote(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
-    """Extract the RFQ with the LLM router, then price each line (stub pricing until Phase 4)."""
-    await em.emit("quote", "tool_call", {"tool": "llm.rfq_extract", "role": "worker"})
-    rfq, reply = await extract_rfq(state.raw_message_redacted)
-    await em.emit("quote", "tool_result", {"tool": "llm.rfq_extract", "model": reply.model,
-                                           "items": len(rfq.items), "language": rfq.language})
+    """Extract the RFQ (model grounded by rules), fetch FX with provenance, price goods + Incoterm charges."""
+    await em.emit("quote", "tool_call", {"tool": "rfq.extract", "role": "worker"})
+    rfq, reply, report = await extract_rfq(state.raw_message_redacted, channel=state.channel)
+    await em.emit("quote", "tool_result", {"tool": "rfq.extract", "model": reply.model if reply else None,
+                                           "source": report.source, "corrections": report.corrections,
+                                           "items": len(rfq.items), "language": rfq.language},
+                  risk="medium" if report.corrections or report.error else None)
 
     profile = get_business_profile()
-    quote_doc = price_lines(rfq.items, profile, incoterm=rfq.incoterm)
-    await em.emit("quote", "tool_call", {"tool": "pricing", "lines": len(quote_doc["lines"])})
-    lines = quote_doc["lines"]
-    unmatched = sum(1 for ln in lines if not ln["catalogue_match"])
+    fx = await get_inr_to_aed(profile.fx_stub_inr_to_aed)
+    await em.emit("quote", "tool_call", {"tool": "fx", "rate": fx.rate, "source": fx.source,
+                                         "rate_date": fx.rate_date, "stale": fx.stale})
+    quote_doc = price_quote(rfq.items, profile, fx, rfq.incoterm, rfq.buyer_country)
+    quote_doc["extraction"] = report.model_dump()
+    await em.emit("quote", "tool_call", {"tool": "pricing", "lines": len(quote_doc["lines"]),
+                                         "charges": len(quote_doc["charges"]), "flags": quote_doc["pricing_flags"]})
+    flags = quote_doc["pricing_flags"]
+    review = bool(flags) or not quote_doc["lines"]
     return StepResult(
         updates={"rfq": rfq, "quote": quote_doc,
-                 "confidence": {**state.confidence, "quote": 0.5 if unmatched or not lines else 0.8}},
-        summary={"why": f"Priced {len(lines)} line(s) at {profile.default_margin_pct}% margin.",
+                 "confidence": {**state.confidence, "quote": 0.5 if review else 0.85}},
+        summary={"why": (f"Priced {len(quote_doc['lines'])} line(s) + {len(quote_doc['charges'])} "
+                         f"{quote_doc['incoterm']} charge(s); total AED {quote_doc['total_aed']:,.2f}"
+                         + (f"; needs review: {', '.join(flags)}." if flags else ".")),
                  "total_aed": quote_doc["total_aed"], "total_inr": quote_doc["total_inr"],
-                 "unmatched_lines": unmatched, "stub": True},
-        risk="medium" if unmatched or not lines else "low",
+                 "incoterm": quote_doc["incoterm"], "fx_source": fx.source, "flags": flags},
+        risk="medium" if review else "low",
     )
 
 
@@ -231,6 +241,18 @@ async def trust(state: RunState, em: RunEmitter, config: RunnableConfig) -> Step
     )
 
 
+def quote_for_prompt(quote: dict) -> dict:
+    """Only what the reply drafter needs. Excludes timestamps and internal reports, so prompts stay small
+    and identical for identical quotes (which also keeps offline replay deterministic)."""
+    keep_line = ("description", "quantity", "unit", "unit_price_aed", "total_aed")
+    return {
+        "lines": [{k: ln[k] for k in keep_line} for ln in quote["lines"]],
+        "charges": [{"description": c["description"], "total_aed": c["total_aed"]} for c in quote.get("charges", [])],
+        "incoterm": quote.get("incoterm"), "total_aed": quote["total_aed"],
+        "validity_days": quote.get("validity_days", 15),
+    }
+
+
 @agent_step("outreach")
 async def outreach(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
     """Draft the reply in the buyer's language via the LLM router; queue it for approval."""
@@ -243,10 +265,13 @@ async def outreach(state: RunState, em: RunEmitter, config: RunnableConfig) -> S
         role="worker",
         purpose="outreach_draft",
         system="Write a short, polite quotation reply. Use only the figures given. Do not add facts.",
-        prompt=(f"<language>{language}</language><buyer>{state.rfq.buyer_name}</buyer>"
-                f"<seller>{seller}</seller><quote>{json.dumps(state.quote, ensure_ascii=False)}</quote>"),
+        prompt=(f"<language>{language}</language><buyer>{state.rfq.buyer_name}</buyer><seller>{seller}</seller>"
+                f"<quote>{json.dumps(quote_for_prompt(state.quote), ensure_ascii=False)}</quote>"),
     ))
-    draft = {"language": language, "channel": state.channel, "text": reply.text, "model": reply.model}
+    draft = {"language": language, "channel": state.channel, "text": reply.text, "model": reply.model,
+             "pricing_flags": state.quote.get("pricing_flags", []),
+             "min_effective_margin_pct": state.quote.get("min_effective_margin_pct"),
+             "total_aed": state.quote["total_aed"], "incoterm": state.quote.get("incoterm")}
     action = PendingAction(
         action_type="send_message",
         title=f"Send quotation reply ({language.upper()}, {state.channel})",

@@ -1,10 +1,10 @@
 {
-  "version": "synthetic-v2",
+  "version": "synthetic-v3",
   "seed": 20261009,
   "files": {
     "enquiries.jsonl": {
       "rows": 300,
-      "sha256": "638184c4ee89c858e46a20f1d3c4d5a2db81d71f6baaa789fc93e7d5dde0622a",
+      "sha256": "de129e42709dbca9088b582a1ed2bf54e196f8bb2afe33d5dedcd822cc0e77c3",
       "by_split": {
         "train": 180,
         "dev": 60,
@@ -63,6 +63,18 @@
       "by_language": {
         "en": 64,
         "mixed": 26
+      }
+    },
+    "enquiries_handwritten.jsonl": {
+      "rows": 30,
+      "sha256": "90892cfd15fccb7c614ffc04912a1b7d4a72d4dd15d601a529b2ead6e0e306c0",
+      "by_split": {
+        "test": 30
+      },
+      "by_language": {
+        "en": 14,
+        "ar": 10,
+        "mixed": 6
       }
     }
   }

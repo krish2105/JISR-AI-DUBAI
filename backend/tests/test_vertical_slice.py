@@ -51,14 +51,19 @@ async def test_english_enquiry_reaches_the_approval_inbox(db_ready):
     assert run.status == "needs_approval"
     lines = run.state["quote"]["lines"]
     assert [ln["quantity"] for ln in lines] == [500, 200]
-    # 450 INR cost + 22% margin = 549.00 INR; x 0.0436 = 23.94 AED per lamp (stub FX)
-    assert lines[0]["unit_price_inr"] == 549.0 and lines[0]["unit_price_aed"] == 23.94
-    # Invoice consistency to the cent: line total = unit price x qty; quote total = sum of lines.
+    # 450 INR cost + 22% margin = 549.00 INR; x 0.0379 (fixed demo FX) = 20.81 AED per lamp
+    assert lines[0]["unit_price_inr"] == 549.0 and lines[0]["unit_price_aed"] == 20.81
+    # Invoice consistency to the cent: line = unit x qty; goods = sum of lines; total = goods + charges.
+    quote = run.state["quote"]
     for ln in lines:
         assert round(ln["unit_price_aed"] * ln["quantity"], 2) == ln["total_aed"]
         assert round(ln["unit_price_inr"] * ln["quantity"], 2) == ln["total_inr"]
-    assert round(sum(ln["total_aed"] for ln in lines), 2) == run.state["quote"]["total_aed"]
-    assert lines[0]["total_aed"] == 11970.0                                # 23.94 x 500
+    assert lines[0]["total_aed"] == 10405.0                                # 20.81 x 500
+    assert round(sum(ln["total_aed"] for ln in lines), 2) == quote["goods_total_aed"]
+    assert round(quote["goods_total_aed"] + quote["charges_total_aed"], 2) == quote["total_aed"]
+    assert quote["incoterm"] == "CIF" and [c["code"] for c in quote["charges"]] == ["inland", "export", "freight",
+                                                                                    "insurance"]
+    assert quote["fx"]["source"].startswith("Fixed demo rate")
     assert "ahmed.k" not in run.raw_redacted                               # PII never stored
 
     [approval] = await _approvals(run_id)

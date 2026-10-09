@@ -1,4 +1,4 @@
-# Synthetic evaluation data — datasheet (`synthetic-v2`)
+# Synthetic evaluation data — datasheet (`synthetic-v3`)
 
 Regenerate with `make data` (deterministic, seed 20261009; `MANIFEST.json` holds counts and SHA-256).
 A test checks that the committed files are byte-identical to the generator's output.
@@ -9,6 +9,7 @@ A test checks that the committed files are byte-identical to the generator's out
 | `adversarial.jsonl` | 30 | Hand-written attacks: instruction override, prompt/secret extraction, bank-detail change, payment pressure, approval bypass, hidden instructions in attachment text / file names / metadata; obfuscated, Arabic and code-switched variants | all `test` (never tuned on) |
 | `adversarial_dev.jsonl` | 64 | **Development** red-team set for building the guard: 42 attacks (different wording from the test set) + 22 benign lookalikes (banks, payments, urgency, approvals, "ignore my previous message") | all `dev` |
 | `pii.jsonl` | 90 | Messages with labelled personal data to hide (names, PO boxes, Emirates ID, TRN, GSTIN, PAN, accounts, Luhn-valid fake cards, Arabic-Indic phones) and business data to keep (company, quantity, HS code, Incoterm, date) | 54 train / 18 dev / 18 test |
+| `enquiries_handwritten.jsonl` | 30 | **Hand-written** enquiries in styles the templates never produce (formal emails, forwarded chats, voice-note transcripts, tables, Gulf Arabic, code-switching, products outside the catalogue); written before the Phase 4 parser existed | all `test` (never tuned on) |
 | `docsets.jsonl` | 40 | Export document sets (invoice, packing list, CoO, shipping, export declaration); 20 clean, 20 with 1–2 planted mistakes covering 9 mistake types | 24 train / 8 dev / 8 test |
 
 ## How it was built and labelled
@@ -19,7 +20,8 @@ A test checks that the committed files are byte-identical to the generator's out
   so evaluation is not biased towards the model under test.
 - Hard cases mimic WhatsApp writing: lowercase, "1.2k", number words, Arabic-Indic digits (٥٠٠), "+" and "&" lists.
   Hard negatives contain legitimate bank/account/urgency wording that a guard must **not** flag.
-- v2 (Phase 3) added `adversarial_dev` and `pii`; v1 files are byte-identical.
+- v2 (Phase 3) added `adversarial_dev` and `pii`. v3 (Phase 4) added `enquiries_handwritten` and set 46 enquiry
+  country labels to unknown where no place is written in the text.
 - **Attacks** were written by hand (Claude Code, reviewed in this repo) with expected flags and the dangerous goal
   each one pursues. **Founder review pending:** add or edit cases you think a real attacker would send.
 - **Document sets** are generated consistent, then mistakes are planted on purpose; the planted list is the gold label.

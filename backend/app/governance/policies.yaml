@@ -5,9 +5,10 @@
 #       block  >  require_approval  >  allow
 #   If no rule matches, `default_effect` applies (safe default: a human approves).
 #
-# Supported conditions (Phase 1; more arrive in Phase 7):
-#   action_type_in: [..]   the action's type is one of these
-#   run_has_flags: true    the inbound message was flagged by the injection guard
+# Supported conditions (more arrive in Phase 7):
+#   action_type_in: [..]     the action's type is one of these
+#   run_has_flags: true      the inbound message was flagged by the injection guard
+#   payload_flags_any: [..]  the action carries any of these pricing flags (set by the deterministic pricing tool)
 #
 # Every rule has a trigger test and a non-trigger test in tests/test_policy_engine.py.
 
@@ -35,3 +36,24 @@ rules:
       run_has_flags: true
     effect: require_approval
     risk: high
+
+  - id: P-MARGIN-001
+    description: A quote held at the owner's minimum margin, or where the buyer's target price is below it, needs the OWNER's approval.
+    when:
+      payload_flags_any: [held_at_margin_floor, target_below_floor]
+    effect: require_approval
+    risk: high
+
+  - id: P-DISC-001
+    description: A discount above the owner's maximum discount needs the OWNER's approval.
+    when:
+      payload_flags_any: [discount_above_cap]
+    effect: require_approval
+    risk: high
+
+  - id: P-PRICE-001
+    description: Quotes with an unpriced item, an assumed Incoterm or a stale exchange rate must be checked before sending.
+    when:
+      payload_flags_any: [unpriced_item, incoterm_not_stated, incoterm_unknown, fx_stale]
+    effect: require_approval
+    risk: medium

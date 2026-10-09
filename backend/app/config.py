@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     # Hard ceiling on output tokens for a single LLM call (protects the demo budget).
     llm_max_output_tokens: int = 16000
 
+    # Exchange rates: "fixed" (demo/tests/replay, deterministic) or "live" (ECB via Frankfurter x AED peg).
+    fx_provider: Literal["fixed", "live"] = "fixed"
+    fx_cache_hours: float = 6.0
+
     # Pause between agent steps so humans can follow the live demo (0 in tests).
     demo_step_delay_ms: int = 450
 

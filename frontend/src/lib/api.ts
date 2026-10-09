@@ -34,9 +34,17 @@ export type QuoteLine = {
   total_aed: number; total_inr: number; catalogue_match: boolean;
 };
 
+export type QuoteCharge = { code: string; description: string; basis: string; total_aed: number; total_inr: number };
+
 export type Quote = {
-  lines: QuoteLine[]; incoterm: string | null; margin_pct: number; fx_inr_to_aed: number; fx_source: string;
-  total_inr: number; total_aed: number; validity_days: number;
+  lines: (QuoteLine & { discount_pct?: number; effective_margin_pct?: number; catalogue_item?: string | null })[];
+  charges?: QuoteCharge[];
+  incoterm: string | null; incoterm_assumed?: boolean; destination_country?: string;
+  margin_pct: number; min_effective_margin_pct?: number | null;
+  fx_inr_to_aed: number; fx_source: string;
+  fx?: { rate: number; source: string; rate_date: string | null; fetched_at: string; stale: boolean };
+  goods_total_aed?: number; charges_total_aed?: number; total_inr: number; total_aed: number;
+  validity_days: number; pricing_flags?: string[]; notes?: string[];
 };
 
 export type RunDetail = {

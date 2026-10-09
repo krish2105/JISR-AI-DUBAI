@@ -235,6 +235,11 @@ class EnquiryGenerator:
         else:
             text = self._mixed_text(items, place_en, place_ar, inc_en, dl_en, contact, buyer)
 
+        # A label must be answerable from the text: if no destination place is written, the country is unknown
+        # (fixed in synthetic-v3; 46 enquiries previously carried a country only implied by their phone number).
+        if place_en.lower() not in text.lower() and place_ar not in text:
+            country = None
+
         return {
             "id": f"enq_{idx:04d}",
             "language": language,

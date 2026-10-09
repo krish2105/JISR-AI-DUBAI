@@ -7,30 +7,14 @@ Why this file exists:
     predictable rules (regexes and templates). They read the same prompt a real model gets,
     so the agent code path is identical in fake, dev and prod.
 
-    These are NOT the product's intelligence: Phase 4 replaces RFQ extraction with a real
-    model and measures it (F1 >= 0.9) against a labelled set.
+    RFQ extraction offline is answered by the deterministic parser (app/tools/rfq_rules.py), which is also the
+    grounding layer for real models. Drafting and classification use simple, clearly-labelled templates.
 """
 
 import json
 import re
 
 from app.llm.router import LLMRequest
-
-ARABIC_CHAR = re.compile(r"[؀-ۿ]")
-LATIN_CHAR = re.compile(r"[A-Za-z]")
-MONTHS = {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}
-INCOTERM_RE = re.compile(r"\b(EXW|FCA|FAS|FOB|CFR|CIF|CPT|CIP|DAP|DPU|DDP)\b")
-UAE_PLACES = ("dubai", "jebel ali", "abu dhabi", "sharjah", "ajman", "دبي", "جبل علي", "أبوظبي", "الشارقة")
-
-# English: "500 pcs brass diya lamps" / "200 hand-block printed cotton table runners"
-EN_ITEM_RE = re.compile(
-    r"(?<![\w.])(\d[\d,]*)\s*"                    # quantity, e.g. 500 or 1,200
-    r"(pcs|pieces|units|sets|nos)?\.?\s+"           # optional unit
-    r"(?:of\s+)?([A-Za-z][A-Za-z \-]+?)"             # the product description
-    r"(?=\s*(?:\(|,|\.|\band\b|$))"                # ...ends at "(", ",", ".", "and" or end
-)
-# Arabic: "300 صندوق هدايا خشبي منقوش و 150 وشاح باشمينا"
-AR_ITEM_RE = re.compile(r"(\d+)\s+([؀-ۿ][؀-ۿ ]+?)(?=\s+و\s+\d|،|\.|\(|\n|$)")
 
 
 def _between(text: str, tag: str) -> str:
@@ -39,40 +23,11 @@ def _between(text: str, tag: str) -> str:
     return match.group(1).strip() if match else text
 
 
-def detect_language(text: str) -> str:
-    """'ar' if mostly Arabic letters, 'en' if mostly Latin, else 'mixed'."""
-    ar, la = len(ARABIC_CHAR.findall(text)), len(LATIN_CHAR.findall(text))
-    if ar and ar >= 3 * la:
-        return "ar"
-    if la and la >= 3 * ar:
-        return "en"
-    return "mixed"
-
-
 def fake_rfq_extract(req: LLMRequest) -> dict:
-    """Pull buyer, items, Incoterm and deadline out of the message with simple patterns."""
-    message = _between(req.prompt, "message")
-    items = []
-    for qty, unit, desc in EN_ITEM_RE.findall(message):
-        desc = desc.strip()
-        if desc.split()[0].lower()[:3] in MONTHS:          # "15 Dec" is a date, not an item
-            continue
-        items.append({"description": desc, "quantity": float(qty.replace(",", "")), "unit": unit or "pcs"})
-    for qty, desc in AR_ITEM_RE.findall(message):
-        items.append({"description": desc.strip(), "quantity": float(qty), "unit": "pcs"})
+    """Offline 'model': the deterministic bilingual parser (app/tools/rfq_rules.py) answers the extraction."""
+    from app.tools.rfq_rules import parse_rfq  # local import: rfq_rules imports app.agents.state
 
-    signature = re.search(r"^[—-]\s*(.+)$", message, re.MULTILINE)
-    deadline = re.search(r"(?:before|by)\s+(\d{1,2}\s+[A-Za-z]{3,9}|end of [A-Za-z]+)|قبل\s+(نهاية\s+\S+)", message)
-    incoterm = INCOTERM_RE.search(message)
-    return {
-        "buyer_name": signature.group(1).strip() if signature else "Unknown buyer",
-        "buyer_country": "AE" if any(p in message.lower() for p in UAE_PLACES) else "unknown",
-        "items": items,
-        "incoterm": incoterm.group(1) if incoterm else None,
-        "deadline": next((g for g in deadline.groups() if g), None) if deadline else None,
-        "language": detect_language(message),
-        "channel": "whatsapp",
-    }
+    return parse_rfq(_between(req.prompt, "message")).model_dump()
 
 
 def fake_outreach_draft(req: LLMRequest) -> str:
@@ -84,6 +39,7 @@ def fake_outreach_draft(req: LLMRequest) -> str:
     lines = quote["lines"]
     incoterm = quote.get("incoterm") or "FOB"
     validity = quote.get("validity_days", 15)
+    charges = quote.get("charges", [])
 
     if language == "ar":
         body = "\n".join(
@@ -91,10 +47,11 @@ def fake_outreach_draft(req: LLMRequest) -> str:
             f"(الإجمالي {ln['total_aed']:.2f} درهم)"
             for ln in lines
         )
+        extra = "\n".join(f"- {c['description']}: {c['total_aed']:.2f} درهم" for c in charges)
         return (
             f"السادة {buyer} المحترمين،\n"
             "شكراً لاستفساركم. يسعدنا تقديم عرض السعر التالي:\n"
-            f"{body}\n"
+            f"{body}\n" + (f"{extra}\n" if extra else "") +
             f"الإجمالي: {quote['total_aed']:.2f} درهم. الشروط: {incoterm}، والأسعار سارية لمدة {validity} يوماً.\n"
             f"مع خالص التحية،\n{seller}"
         )
@@ -103,10 +60,11 @@ def fake_outreach_draft(req: LLMRequest) -> str:
         f"(total AED {ln['total_aed']:.2f})"
         for ln in lines
     )
+    extra = "\n".join(f"- {c['description']}: AED {c['total_aed']:.2f}" for c in charges)
     return (
         f"Dear {buyer},\n"
         "Thank you for your enquiry. Please find our quotation below:\n"
-        f"{body}\n"
+        f"{body}\n" + (f"{extra}\n" if extra else "") +
         f"Total: AED {quote['total_aed']:.2f}. Terms: {incoterm}, prices valid for {validity} days.\n"
         f"Best regards,\n{seller}"
     )
