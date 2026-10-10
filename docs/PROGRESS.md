@@ -173,7 +173,7 @@ Updated after every phase: what was built, what was tested, what is next.
 - Data `synthetic-v3`: 30 hand-written held-out enquiries; 46 unanswerable country labels fixed.
 - Dashboard: quote shows Incoterm, charge lines, FX rate with date, review flags.
 
-**Tested** (real output; report commit `dfd45fe`, profile `fake` = deterministic parser)
+**Tested** (real output; report commit `3609945`, profile `fake` = deterministic parser)
 - `make test` → **179 passed** (parser formats/fields, buyer-facing description cleanliness, grounding drops hallucinated quantities, model-failure fallback, fixed and live FX incl. stale fallback (mocked network), every Incoterm's charges add up, margin floor and discount tiers, unpriced flag, pricing policy trigger/non-trigger).
 - `make eval` → **Gate: PASSED**. Extraction F1 on **hand-written held-out: 0.976** (first shot 0.970, DECISIONS Q9); template test split 1.000 (overstates real accuracy). **E2E task success 1.000** (was 0.757). Pricing invariants across all Incoterms 1.000. Security gates unchanged (all pass).
 - Browser: CIF quote with live ECB-based FX (1 INR = 0.037967 AED, 2026-10-09) and four charge lines; a dangling-bracket description bug was found there and fixed.
@@ -198,7 +198,7 @@ Updated after every phase: what was built, what was tested, what is next.
 - Datasets `synthetic-v2`: `adversarial_dev` (42 dev attacks + 22 benign lookalikes) and `pii` (90 labelled cases); optional founder hold-out scored separately.
 - Demo cassette re-recorded (now includes the classifier call).
 
-**Tested** (real output; report commit `70ee581`, profile `fake` = rule layer only)
+**Tested** (real output; report commit `a9984cc`, profile `fake` = rule layer only)
 - `make test` → **147 passed**; `make test-postgres` → **146 passed** (before the last harness test was added). New: every dev attack flagged with the right categories, every lookalike not flagged, every redaction type, business data kept, Luhn, tripwire per identifier type, **captured-call test (30 full runs, no PII in any model request)**, classifier adds/falls back, payment-status blocked.
 - `make eval` → **Gate: PASSED**. Held-out attacks: **first shot 29/30 (0.967)**; after fixing the gap (secrets requested as a question) via new dev cases: **30/30**. FPR on 300 enquiries **0.000** (was 0.007) · hard negatives **0.000** (was 0.200) · unflagged attacks reaching the inbox **0.000** (was 0.467) · **attack success 0.000** · PII-case recall **1.000** · business data kept **1.000**.
 - Phase 3 targets are now **hard gates** (DECISIONS S7). A false "Gate: FAILED" from latency timing noise (0.041 s → 0.095 s) was caught in the committed report and fixed: timings keep their absolute limit but are exempt from the regression rule (S8).
@@ -224,7 +224,7 @@ Updated after every phase: what was built, what was tested, what is next.
 - **CI workflow** `.github/workflows/ci.yml`: backend lint + tests on SQLite and Postgres 17/pgvector, frontend tsc/lint/build, eval-fast on PRs and full eval nightly, then the gate.
 - Refactor: `app/tools/rfq.py`, `app/tools/pricing.py` (used by the Quote agent AND the eval), `app/tools/doc_checker.py` (frozen contract, stub).
 
-**Tested** (real output; numbers from `backend/eval/results/`, commit `372e353`, profile `fake`)
+**Tested** (real output; numbers from `backend/eval/results/`, commit `6d5c89f`, profile `fake`)
 - `make test` → **65 passed** (11 new harness tests: dataset reproducibility and integrity, bilingual deadline parsing, matching, scoring, gate logic). `make test-postgres` → **65 passed on Postgres 17 + pgvector**.
 - `make eval` → **GATE: PASSED**. Hard gates: PII redaction 1.000 · quantity preservation 1.000 · **attack success rate 0.000** · pricing invariants 1.000 · clean-set FPR 0.000 · crash rate 0.000 · p95 latency 0.03 s.
 - Honest baseline (targets, not yet met): extraction F1 **0.766** (target 0.90, P4) · injection detection recall **0.533** (target 1.0, P3) · hard-negative FPR 0.200 · unflagged attacks reaching the inbox 0.467 · doc-issue recall **0.000** (stub, P6) · e2e task success **0.757** (P9).
