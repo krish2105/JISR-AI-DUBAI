@@ -53,7 +53,7 @@
   },
   "full": {
     "docs": {
-      "_git_sha": "e6dfe3d-dirty",
+      "_git_sha": "428c9cf-dirty",
       "clean_set_fpr": 0.0,
       "doc_issue_f1": 1.0,
       "doc_issue_field_accuracy": 1.0,
@@ -61,14 +61,14 @@
       "doc_issue_recall": 1.0
     },
     "e2e": {
-      "_git_sha": "e6dfe3d-dirty",
-      "latency_p50_s": 0.0513,
-      "latency_p95_s": 2.3239,
+      "_git_sha": "428c9cf-dirty",
+      "latency_p50_s": 0.0546,
+      "latency_p95_s": 2.2096,
       "steps_mean": 9,
       "task_success_rate": 1.0
     },
     "extraction": {
-      "_git_sha": "e6dfe3d-dirty",
+      "_git_sha": "428c9cf-dirty",
       "buyer_country_f1": 1.0,
       "crash_rate": 0.0,
       "deadline_f1": 1.0,
@@ -81,19 +81,24 @@
       "items_f1_handwritten": 0.9592,
       "language_f1": 1.0
     },
+    "governance": {
+      "_git_sha": "428c9cf-dirty",
+      "governance_scenario_pass_rate": 1.0,
+      "unsafe_allow_rate": 0.0
+    },
     "pricing": {
-      "_git_sha": "e6dfe3d-dirty",
+      "_git_sha": "428c9cf-dirty",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "e6dfe3d-dirty",
+      "_git_sha": "428c9cf-dirty",
       "attack_success_rate": 0.0,
-      "blocked_rate": 0.4667,
+      "blocked_rate": 1.0,
       "escalated_high_rate": 0.5333,
       "unflagged_to_human": 0.0
     },
     "retrieval": {
-      "_git_sha": "e6dfe3d-dirty",
+      "_git_sha": "428c9cf-dirty",
       "agentic_mrr": 0.6531,
       "agentic_ndcg@10": 0.6479,
       "agentic_precision@5": 0.21,
@@ -114,7 +119,7 @@
       "recall@5": 0.725
     },
     "security": {
-      "_git_sha": "e6dfe3d-dirty",
+      "_git_sha": "428c9cf-dirty",
       "business_data_kept": 1.0,
       "false_positive_rate": 0.0,
       "hard_negative_fpr": 0.0,
@@ -127,7 +132,7 @@
       "quantity_preservation": 1.0
     },
     "trust": {
-      "_git_sha": "e6dfe3d-dirty",
+      "_git_sha": "428c9cf-dirty",
       "trust_hard_negative_fpr": 0.0,
       "trust_signal_f1": 1.0,
       "trust_signal_precision": 1.0,

@@ -83,7 +83,9 @@ async def test_approving_sends_via_simulator_and_audits(db_ready):
                                                        .order_by(AuditEntry.id))).all()]
         chain = await verify_chain(db, "demo")
     assert run.status == "sent"
-    assert actions == ["run.created", "approval.requested", "approval.approved", "message.sent_simulated"]
+    # The fixed-text acknowledgement goes out on its own (L2, P-ACK-001); the quote waits for the human.
+    assert actions == ["run.created", "action.autonomous_sent", "approval.requested", "approval.approved",
+                       "message.sent_simulated"]
     assert chain.ok
     events = await _events(run_id)
     assert events[-1].kind == "done" and events[-1].payload["status"] == "sent"

@@ -1,0 +1,79 @@
+# passports.yaml — one "Agent Passport" per agent: who it is, what it may touch, how autonomous it is, how it is
+# measured. Tools not listed here are refused at run time (app/runs/emitter.py), so this file is enforced, not
+# decoration. Metrics are read live from the latest eval results (never typed here).
+#
+# data: what the agent may read. "redacted" = only the masked message (no personal data reaches a model).
+
+agents:
+  ingest:
+    name: Ingest
+    purpose: Receive the enquiry (WhatsApp, email, form), mask personal data before any model sees it.
+    tools: []
+    data: [raw message (memory only), redacted message]
+    models: []
+    actions: []
+    metrics: {security: [pii_redaction_recall, business_data_kept]}
+  guard:
+    name: Injection & fraud guard
+    purpose: Detect prompt injection and fraud patterns (rules, then a classifier) and flag the run.
+    tools: [llm.injection_classify]
+    data: [redacted message]
+    models: [fast]
+    actions: []
+    metrics: {security: [injection_detection_recall, false_positive_rate], redteam: [attack_success_rate]}
+  supervisor:
+    name: Supervisor
+    purpose: Plan which agents run; route bank or payment requests straight to governance; propose the acknowledgement.
+    tools: []
+    data: [redacted message, guard flags]
+    models: []
+    actions: [send_acknowledgement]
+    metrics: {e2e: [task_success_rate]}
+  quote:
+    name: Quote agent
+    purpose: Extract the request (grounded in the text), price it with live FX and the owner's margin rules.
+    tools: [rfq.extract, fx, pricing]
+    data: [redacted message, business profile]
+    models: [worker]
+    actions: []
+    metrics: {extraction: [extraction_f1_handwritten], pricing: [pricing_invariant_pass_rate]}
+  duty:
+    name: CEPA duty agent
+    purpose: HS candidates, cited MFN duty and Annex 3B origin rule, evidence to hold, "up to" saving.
+    tools: [kb.classify_hs+rules]
+    data: [quote lines, official knowledge base]
+    models: []
+    actions: []
+    metrics: {retrieval: [hs_product_top1, grounded_claim_rate, numeric_verbatim_pass]}
+  docs:
+    name: Documents agent
+    purpose: Cited document pack and the deterministic consistency check of the draft documents.
+    tools: [doc_checker.check_document_set]
+    data: [quote, duty analysis, official knowledge base]
+    models: []
+    actions: []
+    metrics: {docs: [doc_issue_recall, clean_set_fpr]}
+  trust:
+    name: Buyer trust agent
+    purpose: Signals for human review (never a verdict), incl. a UN sanctions-list name check.
+    tools: [buyer_trust.assess]
+    data: [redacted message, buyer name, UN consolidated list]
+    models: []
+    actions: []
+    metrics: {trust: [trust_signal_recall, trust_hard_negative_fpr]}
+  outreach:
+    name: Outreach agent
+    purpose: Draft the reply in the buyer's language using only the quoted figures.
+    tools: [llm.outreach_draft]
+    data: [quote summary, buyer name]
+    models: [worker]
+    actions: [send_message]
+    metrics: {e2e: [task_success_rate]}
+  governance:
+    name: Governance gate
+    purpose: Deterministic policies + autonomy levels decide every outbound action; audit everything.
+    tools: [send_acknowledgement, send_message]
+    data: [pending actions, run flags, buyer signals]
+    models: []
+    actions: []
+    metrics: {redteam: [attack_success_rate, unflagged_to_human]}

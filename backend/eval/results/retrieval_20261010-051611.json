@@ -1,0 +1,275 @@
+{
+  "suite": "retrieval",
+  "git_sha": "428c9cf-dirty",
+  "timestamp": "2026-10-10T05:16:11+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v4",
+  "split": "all",
+  "fast": false,
+  "n": 92,
+  "metrics": {
+    "recall@5": 0.725,
+    "recall@10": 0.75,
+    "mrr": 0.5979,
+    "ndcg@10": 0.5803,
+    "precision@5": 0.205,
+    "agentic_recall@5": 0.825,
+    "agentic_recall@10": 0.8375,
+    "agentic_mrr": 0.6531,
+    "agentic_ndcg@10": 0.6479,
+    "agentic_precision@5": 0.21,
+    "grounded_claim_rate": 1.0,
+    "numeric_verbatim_pass": 1.0,
+    "correct_refusal_rate": 0.75,
+    "false_refusal_rate": 0.025,
+    "hs_product_top1": 0.8679,
+    "hs_product_top3": 0.9623,
+    "hs_tariffdesc_top1": 0.9333,
+    "hs_tariffdesc_top3": 0.9667
+  },
+  "slices": {
+    "mode=bm25": {
+      "recall@5": 0.6,
+      "recall@10": 0.6375,
+      "mrr": 0.4992,
+      "ndcg@10": 0.4949,
+      "precision@5": 0.16
+    },
+    "mode=vector": {
+      "recall@5": 0.6875,
+      "recall@10": 0.7625,
+      "mrr": 0.6508,
+      "ndcg@10": 0.6143,
+      "precision@5": 0.2025
+    },
+    "mode=rrf": {
+      "recall@5": 0.675,
+      "recall@10": 0.7625,
+      "mrr": 0.6365,
+      "ndcg@10": 0.6147,
+      "precision@5": 0.2
+    },
+    "mode=rrf_rerank": {
+      "recall@5": 0.725,
+      "recall@10": 0.75,
+      "mrr": 0.5979,
+      "ndcg@10": 0.5803,
+      "precision@5": 0.205
+    },
+    "mode=agentic": {
+      "recall@5": 0.825,
+      "recall@10": 0.8375,
+      "mrr": 0.6531,
+      "ndcg@10": 0.6479,
+      "precision@5": 0.21
+    },
+    "hs_product/all": {
+      "top1": 0.8679,
+      "top3": 0.9623,
+      "n": 53
+    },
+    "hs_product/glossary=covered": {
+      "top1": 0.9211,
+      "top3": 1.0,
+      "n": 38
+    },
+    "hs_product/glossary=uncovered": {
+      "top1": 0.7333,
+      "top3": 0.8667,
+      "n": 15
+    },
+    "hs_product/lang=ar": {
+      "top1": 0.8261,
+      "top3": 0.9565,
+      "n": 23
+    },
+    "hs_product/lang=en": {
+      "top1": 0.9,
+      "top3": 0.9667,
+      "n": 30
+    },
+    "mode=agentic/lang=ar": {
+      "recall@5": 0.8519,
+      "recall@10": 0.8889,
+      "mrr": 0.5741,
+      "ndcg@10": 0.5863,
+      "precision@5": 0.2222
+    },
+    "mode=agentic/lang=cross": {
+      "recall@5": 0.6667,
+      "recall@10": 0.6667,
+      "mrr": 0.6296,
+      "ndcg@10": 0.6129,
+      "precision@5": 0.1444
+    },
+    "mode=agentic/lang=en": {
+      "recall@5": 0.8857,
+      "recall@10": 0.8857,
+      "mrr": 0.7262,
+      "ndcg@10": 0.7135,
+      "precision@5": 0.2343
+    },
+    "mode=bm25/lang=ar": {
+      "recall@5": 0.8148,
+      "recall@10": 0.8148,
+      "mrr": 0.6481,
+      "ndcg@10": 0.6311,
+      "precision@5": 0.2296
+    },
+    "mode=bm25/lang=cross": {
+      "recall@5": 0.0,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0,
+      "precision@5": 0.0
+    },
+    "mode=bm25/lang=en": {
+      "recall@5": 0.7429,
+      "recall@10": 0.8286,
+      "mrr": 0.641,
+      "ndcg@10": 0.6443,
+      "precision@5": 0.1886
+    },
+    "mode=rrf/lang=ar": {
+      "recall@5": 0.8519,
+      "recall@10": 0.8889,
+      "mrr": 0.8556,
+      "ndcg@10": 0.7778,
+      "precision@5": 0.2667
+    },
+    "mode=rrf/lang=cross": {
+      "recall@5": 0.0556,
+      "recall@10": 0.1667,
+      "mrr": 0.045,
+      "ndcg@10": 0.0648,
+      "precision@5": 0.0111
+    },
+    "mode=rrf/lang=en": {
+      "recall@5": 0.8571,
+      "recall@10": 0.9714,
+      "mrr": 0.7717,
+      "ndcg@10": 0.7718,
+      "precision@5": 0.2457
+    },
+    "mode=rrf_rerank/lang=ar": {
+      "recall@5": 0.8889,
+      "recall@10": 0.8889,
+      "mrr": 0.6667,
+      "ndcg@10": 0.6551,
+      "precision@5": 0.2519
+    },
+    "mode=rrf_rerank/lang=cross": {
+      "recall@5": 0.1667,
+      "recall@10": 0.1667,
+      "mrr": 0.1667,
+      "ndcg@10": 0.1407,
+      "precision@5": 0.0444
+    },
+    "mode=rrf_rerank/lang=en": {
+      "recall@5": 0.8857,
+      "recall@10": 0.9429,
+      "mrr": 0.7667,
+      "ndcg@10": 0.7488,
+      "precision@5": 0.2514
+    },
+    "mode=vector/lang=ar": {
+      "recall@5": 0.8148,
+      "recall@10": 0.9259,
+      "mrr": 0.7621,
+      "ndcg@10": 0.7189,
+      "precision@5": 0.2296
+    },
+    "mode=vector/lang=cross": {
+      "recall@5": 0.1667,
+      "recall@10": 0.1667,
+      "mrr": 0.1296,
+      "ndcg@10": 0.1237,
+      "precision@5": 0.0444
+    },
+    "mode=vector/lang=en": {
+      "recall@5": 0.8571,
+      "recall@10": 0.9429,
+      "mrr": 0.8329,
+      "ndcg@10": 0.7859,
+      "precision@5": 0.2629
+    }
+  },
+  "failures": [
+    {
+      "id": "hs_runner_ar",
+      "type": "hs_product",
+      "question": "مفارش طاولة قطنية",
+      "expected": [
+        "6302"
+      ],
+      "got": [
+        "5702",
+        "5703",
+        "6302"
+      ]
+    },
+    {
+      "id": "hs_bedsheet_ar",
+      "type": "hs_product",
+      "question": "شراشف أسرة قطنية",
+      "expected": [
+        "6302"
+      ],
+      "got": [
+        "5702",
+        "6303",
+        "6302"
+      ]
+    },
+    {
+      "id": "hs_dining_ar",
+      "type": "hs_product",
+      "question": "طاولات طعام خشبية",
+      "expected": [
+        "9403"
+      ],
+      "got": [
+        "4419",
+        "9403",
+        "4420"
+      ]
+    },
+    {
+      "id": "hs_diamond_en",
+      "type": "hs_product",
+      "question": "cut and polished diamonds",
+      "expected": [
+        "7102"
+      ],
+      "got": [
+        "6804",
+        "7102",
+        "8205"
+      ]
+    },
+    {
+      "id": "hs_paracetamol_ar",
+      "type": "hs_product",
+      "question": "أقراص باراسيتامول",
+      "expected": [
+        "3004"
+      ],
+      "got": [
+        "2933",
+        "2404",
+        "2106"
+      ]
+    }
+  ],
+  "notes": [
+    "Split: test. Headline retrieval numbers use pipeline 'rrf_rerank'. Seconds per question: bm25 0.02, vector 0.02, rrf 0.04, rrf_rerank 5.14, agentic 4.19",
+    "Gold passages come from the structure of the official sources (eval/synth/retrieval.py), not from a model."
+  ]
+}

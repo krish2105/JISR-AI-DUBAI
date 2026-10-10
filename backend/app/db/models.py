@@ -120,3 +120,15 @@ class AuditEntry(Base):
     details: Mapped[dict] = mapped_column(JSON, default=dict)
     prev_hash: Mapped[str] = mapped_column(String(64))
     hash: Mapped[str] = mapped_column(String(64))
+
+
+class OrgSettings(Base):
+    """Per-organisation governance switches (one row per organisation)."""
+
+    __tablename__ = "org_settings"
+
+    org_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    kill_switch: Mapped[bool] = mapped_column(default=False)          # True = nothing leaves Jisr
+    kill_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)

@@ -1,0 +1,33 @@
+# autonomy.yaml — how much an agent may do on its own, per action type (read by policy_engine.py, never a model).
+#
+# Levels (graded autonomy):
+#   NEVER  the action is never performed by Jisr, whatever the policies say            -> block
+#   L0     observe: an agent may only mention it; a proposal is refused                -> block
+#   L1     assist: Jisr prepares it, a human approves every time                       -> at least require_approval
+#   L2     act within limits: done automatically when the policies ALLOW it and the risk is low; else a human
+#   L3     autonomous: done automatically whenever the policies ALLOW it
+# The final effect is the STRONGEST of the policy effect and the autonomy cap, so autonomy can only add caution;
+# it can never override a block or an approval rule. Unknown action types get `default_level`.
+
+version: 1
+default_level: L1
+
+actions:
+  send_acknowledgement:          # "Thank you, we received your enquiry" (fixed text, no prices, no commitments)
+    level: L2
+    why: Answering within minutes keeps buyers; the text commits to nothing.
+  send_message:                  # a quotation or any free-text reply
+    level: L1
+    why: Prices and commitments always need the owner.
+  send_documents:
+    level: L1
+    why: Documents go to banks and customs; mistakes cost the preference.
+  update_bank_details:
+    level: NEVER
+    why: Bank details are changed only by the owner, outside Jisr.
+  change_payment_instructions:
+    level: NEVER
+    why: Same as bank details.
+  mark_payment_received:
+    level: NEVER
+    why: Payment status comes from the bank, never from a message.

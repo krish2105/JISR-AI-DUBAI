@@ -10,6 +10,7 @@
 #   run_has_flags: true      the inbound message was flagged by the injection guard
 #   payload_flags_any: [..]  the action carries any of these pricing flags (set by the deterministic pricing tool)
 #   buyer_signals_any: [..]  the Buyer Trust tool raised any of these signals in the run
+#   kill_switch_engaged: true  the organisation kill switch is on (P-KILL-001)
 #
 # Every rule has a trigger test and a non-trigger test in tests/test_policy_engine.py.
 
@@ -41,6 +42,7 @@ rules:
   - id: P-MARGIN-001
     description: A quote held at the owner's minimum margin, or where the buyer's target price is below it, needs the OWNER's approval.
     when:
+      action_type_in: [send_message, send_documents]      # price-bearing actions only
       payload_flags_any: [held_at_margin_floor, target_below_floor]
     effect: require_approval
     risk: high
@@ -48,6 +50,7 @@ rules:
   - id: P-DISC-001
     description: A discount above the owner's maximum discount needs the OWNER's approval.
     when:
+      action_type_in: [send_message, send_documents]      # price-bearing actions only
       payload_flags_any: [discount_above_cap]
     effect: require_approval
     risk: high
@@ -55,6 +58,7 @@ rules:
   - id: P-PRICE-001
     description: Quotes with an unpriced item, an assumed Incoterm or a stale exchange rate must be checked before sending.
     when:
+      action_type_in: [send_message, send_documents]      # price-bearing actions only
       payload_flags_any: [unpriced_item, incoterm_not_stated, incoterm_unknown, fx_stale]
     effect: require_approval
     risk: medium
@@ -64,4 +68,26 @@ rules:
     when:
       buyer_signals_any: [possible_sanctions_match, bank_change_request, third_party_payment]
     effect: require_approval
+    risk: high
+
+  - id: P-KILL-001
+    description: The organisation's kill switch is on; nothing leaves Jisr until a human turns it off.
+    when:
+      kill_switch_engaged: true
+    effect: block
+    risk: high
+
+  - id: P-ACK-001
+    description: A fixed-text acknowledgement (no prices, no commitments) may be sent automatically.
+    when:
+      action_type_in: [send_acknowledgement]
+    effect: allow
+    risk: low
+
+  - id: P-INJ-002
+    description: No automatic contact with the sender of a message flagged for injection or fraud.
+    when:
+      action_type_in: [send_acknowledgement]
+      run_has_flags: true
+    effect: block
     risk: high

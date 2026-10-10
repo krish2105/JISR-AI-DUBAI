@@ -2,6 +2,24 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 7 — Governance: autonomy, kill switch, Agent Passports ✅ (2026-10-10)
+
+**Built**
+- **Graded autonomy** (`autonomy.yaml`): NEVER / L0 / L1 / L2 / L3 per action type; the final effect is the strongest of the policy effect and the autonomy cap, so autonomy only adds caution. The supervisor proposes a fixed-text **acknowledgement** (L2): it goes out on its own only when every policy allows it (P-ACK-001), never to a flagged sender (P-INJ-002), and waits for the owner when the buyer looks risky (P-TRUST-001).
+- **Kill switch** per organisation (rule P-KILL-001, audited on/off, re-checked in the outbox; approving while it is on returns 409).
+- **Single outbound path** `app/channels/outbox.py` for approved and autonomous actions (simulator now, WhatsApp in Phase 8).
+- **Agent Passports** (`passports.yaml`): purpose, data, models, actions and tools; tool calls outside the list are refused at run time. `/passports` adds live eval metrics and 24 h activity.
+- **Governance API + dashboard** `/governance`: kill switch, "done on its own (24 h)", autonomy table, policy rules, passports. Contracts updated.
+- **Governance scenario suite** (20 owner-readable rows): it caught pricing rules applying to any action with pricing flags; scoped to price-bearing actions.
+- `docs/SEAL_READINESS.md`: Dubai AI Seal is a company certification (DCAI); product evidence mapped; licence and team are founder tasks.
+
+**Tested**
+- `make test` → 254 passed (autonomy matrix, kill switch over HTTP and in the service, passport enforcement, endpoints, acknowledgement in the audit trail).
+- `make eval` → **Gate: PASSED**. Governance scenarios **1.000**, unsafe automatic actions **0.000**; red team: attacks succeeded **0/30** (blocked_rate is now 1.000 because every flagged run also has its acknowledgement blocked); e2e 1.000, p95 2.2 s; all earlier gates unchanged.
+- Browser: `/governance` renders; "Stop everything" → a new run is fully blocked (P-KILL-001 on the acknowledgement and the quote, audit `kill_switch.on`); "Turn off" restores normal behaviour.
+
+**Next: Phase 8, channels**: real WhatsApp Cloud API (signature check, 24 h window), voice notes → STT → quote, simulator, collections reminders.
+
 ## Phase 6 — Document Consistency Checker + Buyer Trust ✅ (2026-10-10)
 
 **Built**

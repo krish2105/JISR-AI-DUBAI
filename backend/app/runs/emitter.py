@@ -16,6 +16,7 @@ from sqlalchemy import func, select
 from app.db.models import RunEventRow
 from app.db.session import session_scope
 from app.events import RunEvent, bus
+from app.governance.passports import ToolNotAllowed, check_tool
 
 # One lock per run so two concurrent emits can never get the same sequence number.
 _locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
@@ -42,7 +43,14 @@ class RunEmitter:
         self.delay_ms = delay_ms
 
     async def emit(self, agent: str, kind: str, payload: dict | None = None, risk: str | None = None) -> RunEvent:
-        """Emit an event for this run."""
+        """Emit an event for this run. A tool call outside the agent's passport is refused (and shown)."""
+        if kind == "tool_call":
+            try:
+                check_tool(agent, str((payload or {}).get("tool", "")))
+            except ToolNotAllowed as exc:
+                await emit(self.run_id, agent, "blocked", {"tool": (payload or {}).get("tool"),
+                                                            "reasons": [str(exc)], "rule_ids": ["PASSPORT"]}, "high")
+                raise
         return await emit(self.run_id, agent, kind, payload, risk)
 
     async def pace(self) -> None:

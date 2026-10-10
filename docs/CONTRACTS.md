@@ -44,10 +44,14 @@ Payload conventions:
 | GET | `/audit?limit=` | latest audit entries |
 | GET | `/audit/verify` | recompute the hash chain → `{ok, entries, broken_at_id, reason}` |
 | GET | `/demo/samples` | built-in demo enquiries |
+| GET | `/governance` | kill switch state, every policy rule, autonomy level per action type (P7) |
+| POST | `/governance/kill-switch` | body `{engaged, reason?}`; audited; while on, nothing leaves (P7) |
+| GET | `/governance/autonomous?hours=24` | actions done without a human + blocks, from the audit chain (P7) |
+| GET | `/passports` | Agent Passports: enforced tools, data, autonomy, live eval metrics, 24 h activity (P7) |
 
 Organisation: optional `X-Org-Id` header (default `demo`). Every query filters by org; other orgs get 404.
 
-Planned (not yet built): `GET /passports` (P7), `GET /kb/tree` (P5), `POST /channels/whatsapp/webhook` (P8), `GET /roi` (P10).
+Planned (not yet built): `GET /kb/tree` (P11, 3D tariff tree), `POST /channels/whatsapp/webhook` (P8), `GET /roi` (P10).
 
 ## 3. RunState
 
@@ -56,4 +60,7 @@ Source of truth: [`backend/app/agents/state.py`](../backend/app/agents/state.py)
 ## 4. Governance files
 
 - `backend/app/governance/policies.yaml`: rules evaluated by `policy_engine.py` (strongest effect wins: block > require_approval > allow; default require_approval).
+- `backend/app/governance/autonomy.yaml`: autonomy level per action type (NEVER, L0–L3, default L1). Final effect = strongest of policy effect and autonomy cap (autonomy only adds caution).
+- `backend/app/governance/passports.yaml`: Agent Passports; tool calls outside an agent's list are refused by `RunEmitter` (event `blocked`, rule `PASSPORT`).
+- `backend/app/channels/outbox.py`: the single outbound path (approved and autonomous actions); re-checks the kill switch.
 - Audit chain: `hash = sha256(canonical_json(org_id, ts, actor, action, run_id, details, prev_hash))`, per organisation, starting from `GENESIS`.

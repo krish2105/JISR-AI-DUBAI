@@ -28,6 +28,7 @@ from langchain_core.runnables import RunnableConfig
 
 from app.agents.state import PendingAction, RunState
 from app.agents.trade_agents import analyse_duty, build_doc_pack, check_draft_documents
+from app.channels.outbox import KillSwitchEngaged, kill_switch_on, send
 from app.db.models import Approval
 from app.db.session import session_scope
 from app.governance.audit import append_audit
@@ -127,6 +128,23 @@ async def guard(state: RunState, em: RunEmitter, config: RunnableConfig) -> Step
     )
 
 
+ACK_TEXT = {
+    "en": "Thank you for your enquiry. We have received it and are preparing your quotation; we will reply shortly.",
+    "ar": "شكراً لاستفساركم. تم استلامه ونقوم بإعداد عرض السعر، وسنرد عليكم قريباً.",
+}
+
+
+def acknowledgement(state: RunState) -> PendingAction:
+    """A fixed-text receipt in the buyer's script: no prices, no dates, no commitments (autonomy L2)."""
+    arabic = len(re.findall(r"[\u0600-\u06ff]", state.raw_message_redacted))
+    language = "ar" if arabic > 0.3 * max(1, len(re.findall(r"[A-Za-z\u0600-\u06ff]", state.raw_message_redacted))) \
+        else "en"
+    return PendingAction(action_type="send_acknowledgement", title=f"Acknowledge receipt ({language.upper()})",
+                         payload={"text": ACK_TEXT[language], "language": language, "channel": state.channel},
+                         requested_by="supervisor", reason="Buyers expect an answer within minutes.",
+                         evidence=["fixed text: no prices, no commitments"])
+
+
 @agent_step("supervisor")
 async def supervisor(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
     """Decide which agents run. Phase 1: rule-based plan; Phase 9: LLM planner with re-planning."""
@@ -153,6 +171,7 @@ async def supervisor(state: RunState, em: RunEmitter, config: RunnableConfig) ->
         why = ("Flagged message: drafting continues, but every outbound action will be HIGH risk for a human."
                if flags else
                "Standard enquiry: quote, duty check, documents, trust signals, reply draft, then governance.")
+    pending.append(acknowledgement(state))       # L2: sent automatically only if every policy allows it
     await em.emit("supervisor", "plan", {"plan": plan, "why": why})
     return StepResult(
         updates={"plan": plan, "pending_actions": state.pending_actions + pending},
@@ -326,11 +345,12 @@ async def governance(state: RunState, em: RunEmitter, config: RunnableConfig) ->
     wait for our own lock (SQLite allows one writer at a time).
     """
     engine = get_policy_engine()
-    ctx = PolicyContext(injection_flags=state.injection_flags,
-                        buyer_signals=[s["signal"] for s in state.buyer_signals])
     events: list[tuple[str, dict, str]] = []          # (kind, payload, risk) to emit after commit
-    held, blocked = 0, 0
+    held, blocked, done_alone = 0, 0, 0
     async with session_scope() as db:
+        ctx = PolicyContext(injection_flags=state.injection_flags,
+                            buyer_signals=[s["signal"] for s in state.buyer_signals],
+                            kill_switch=await kill_switch_on(db, state.org_id))
         for action in state.pending_actions:
             decision = engine.evaluate(action, ctx)
             events.append(("policy_decision",
@@ -344,6 +364,18 @@ async def governance(state: RunState, em: RunEmitter, config: RunnableConfig) ->
                                             "requested_by": action.requested_by})
                 events.append(("blocked", {"action_type": action.action_type, "title": action.title,
                                            "rule_ids": decision.rule_ids, "reasons": decision.reasons}, "high"))
+            elif decision.effect == "allow":
+                # Allowed by every policy AND by the action's autonomy level: Jisr does it on its own (audited).
+                try:
+                    sent = await send(db, org_id=state.org_id, run_id=state.run_id, action_type=action.action_type,
+                                      payload=action.payload, actor=action.requested_by, autonomous=True)
+                    done_alone += 1
+                    events.append(("tool_result", {"tool": action.action_type, "autonomous": True,
+                                                   "title": action.title, **sent}, "low"))
+                except KillSwitchEngaged:
+                    blocked += 1
+                    events.append(("blocked", {"action_type": action.action_type, "title": action.title,
+                                               "rule_ids": ["P-KILL-001"], "reasons": ["Kill switch is on."]}, "high"))
             elif decision.effect == "require_approval":
                 held += 1
                 approval = Approval(
@@ -365,7 +397,8 @@ async def governance(state: RunState, em: RunEmitter, config: RunnableConfig) ->
     status = "needs_approval" if held else ("blocked" if blocked else "done")
     return StepResult(
         updates={"status": status},
-        summary={"why": f"{held} action(s) held for approval, {blocked} blocked by policy.",
-                 "held": held, "blocked": blocked},
+        summary={"why": f"{held} action(s) held for approval, {blocked} blocked by policy, "
+                        f"{done_alone} done automatically within policy.",
+                 "held": held, "blocked": blocked, "autonomous": done_alone},
         risk="high" if blocked else ("medium" if held else "low"),
     )

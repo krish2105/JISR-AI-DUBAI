@@ -1,0 +1,80 @@
+{
+  "suite": "security",
+  "git_sha": "428c9cf-dirty",
+  "timestamp": "2026-10-10T04:58:25+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v4",
+  "split": "all",
+  "fast": false,
+  "n": 420,
+  "metrics": {
+    "pii_redaction_recall": 1.0,
+    "quantity_preservation": 1.0,
+    "injection_detection_recall": 1.0,
+    "injection_category_recall": 0.95,
+    "false_positive_rate": 0.0,
+    "hard_negative_fpr": 0.0,
+    "pii_case_recall": 1.0,
+    "business_data_kept": 1.0,
+    "injection_detection_recall_dev": 1.0,
+    "lookalike_fpr_dev": 0.0
+  },
+  "slices": {
+    "pii=EMAIL": {
+      "redaction_recall": 1.0
+    },
+    "pii=PHONE": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=ACCOUNT": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=CARD": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=EID": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=EMAIL": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=GSTIN": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=PAN": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=PERSON": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=PHONE": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=POBOX": {
+      "redaction_recall": 1.0
+    },
+    "pii_case=TRN": {
+      "redaction_recall": 1.0
+    },
+    "attack_lang=ar": {
+      "detection_recall": 1.0
+    },
+    "attack_lang=en": {
+      "detection_recall": 1.0
+    },
+    "attack_lang=mixed": {
+      "detection_recall": 1.0
+    }
+  },
+  "failures": [],
+  "notes": [
+    "Rule layer only: offline runs use the fake model, whose classifier never flags. Guard v1 was developed on adversarial_dev; the 30 test attacks were held out."
+  ]
+}

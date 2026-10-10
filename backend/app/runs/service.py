@@ -8,12 +8,11 @@ Why this file exists:
       3. decide       -> a human approves/edits/rejects a held action; governance-checked
                          "send" (simulator in Phase 1), audit entries, final `done` event
 
-Nothing here sends a real message: Phase 1 uses a simulated channel. Real channels
-(WhatsApp Cloud API, email drafts) arrive in Phase 8 behind the same approval gate.
+Nothing here sends directly: approved actions go through app/channels/outbox.py, the single door out
+(simulator now; WhatsApp Cloud API in Phase 8), which also enforces the kill switch.
 """
 
 import asyncio
-import hashlib
 import uuid
 from datetime import UTC, datetime
 from typing import Literal
@@ -22,6 +21,7 @@ from sqlalchemy import select
 
 from app.agents.graph import build_graph
 from app.agents.state import RunState
+from app.channels.outbox import kill_switch_on, send
 from app.config import get_settings
 from app.db.models import Approval, Run
 from app.db.session import session_scope
@@ -100,6 +100,8 @@ async def decide(approval_id: str, *, org_id: str, decision: Literal["approve", 
             raise ApprovalError("Approval not found")
         if approval.status != "pending":
             raise ApprovalError(f"Approval already {approval.status}")
+        if decision == "approve" and await kill_switch_on(db, org_id):
+            raise ApprovalError("Kill switch is on: nothing can be sent until it is turned off.")
 
         edited = edited_text is not None and edited_text != approval.payload.get("text")
         if edited:
@@ -112,12 +114,9 @@ async def decide(approval_id: str, *, org_id: str, decision: Literal["approve", 
                            details={"approval_id": approval.id, "action_type": approval.action_type,
                                     "edited": edited, "note": note})
         sent = None
-        if approval.status == "approved" and approval.action_type == "send_message":
-            text = approval.payload.get("text", "")
-            sent = {"channel": f"{approval.payload.get('channel', 'form')}_simulator",
-                    "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]}
-            await append_audit(db, org_id=org_id, actor="channel:simulator", action="message.sent_simulated",
-                               run_id=approval.run_id, details={"approval_id": approval.id, **sent})
+        if approval.status == "approved" and approval.action_type.startswith("send_"):
+            sent = await send(db, org_id=org_id, run_id=approval.run_id, action_type=approval.action_type,
+                              payload=approval.payload, actor=actor, approval_id=approval.id)
 
         remaining = await db.scalar(
             select(Approval.id).where(Approval.run_id == approval.run_id, Approval.status == "pending",

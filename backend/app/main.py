@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api import approvals, audit, demo, runs
+from app.api import approvals, audit, demo, governance, runs
 from app.config import get_settings
 from app.db.session import get_engine, init_db
 from app.llm.router import get_router
@@ -51,7 +51,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    for module in (runs, approvals, audit, demo):
+    for module in (runs, approvals, audit, demo, governance):
         app.include_router(module.router)
 
     @app.get("/health", tags=["system"])
