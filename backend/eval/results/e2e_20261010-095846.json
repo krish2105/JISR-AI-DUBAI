@@ -1,0 +1,37 @@
+{
+  "suite": "e2e",
+  "git_sha": "911e82b",
+  "timestamp": "2026-10-10T09:58:46+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v4",
+  "split": "all",
+  "fast": false,
+  "n": 300,
+  "metrics": {
+    "task_success_rate": 1.0,
+    "voice_task_success_rate": 1.0,
+    "latency_p50_s": 0.0524,
+    "latency_p95_s": 2.3815,
+    "steps_mean": 8.7667
+  },
+  "slices": {
+    "lang=ar": {
+      "task_success_rate": 1.0
+    },
+    "lang=en": {
+      "task_success_rate": 1.0
+    },
+    "lang=mixed": {
+      "task_success_rate": 1.0
+    }
+  },
+  "failures": [],
+  "notes": []
+}
