@@ -22,6 +22,11 @@ def route_after_supervisor(state: RunState) -> str:
     return state.plan[0] if state.plan else "governance"
 
 
+def route_after_quote(state: RunState) -> str:
+    """Explainable re-plan after pricing (see nodes.route_after_pricing)."""
+    return nodes.route_after_pricing(state.quote or {})[0]
+
+
 @lru_cache
 def build_graph():
     """Build and compile the Phase 1 graph once (compiled graphs are reusable)."""
@@ -33,7 +38,7 @@ def build_graph():
     graph.add_edge("ingest", "guard")
     graph.add_edge("guard", "supervisor")
     graph.add_conditional_edges("supervisor", route_after_supervisor, ["quote", "governance"])
-    graph.add_edge("quote", "duty")
+    graph.add_conditional_edges("quote", route_after_quote, ["duty", "docs", "trust"])
     graph.add_edge("duty", "docs")
     graph.add_edge("docs", "trust")
     graph.add_edge("trust", "outreach")

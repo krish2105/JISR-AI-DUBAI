@@ -62,7 +62,7 @@ Planned (not yet built): `GET /kb/tree` (P11, 3D tariff tree), `GET /roi` (P10).
 
 ## 3. RunState
 
-Source of truth: [`backend/app/agents/state.py`](../backend/app/agents/state.py) (v3 §8.1 plus `channel` and typed `pending_actions`).
+Source of truth: [`backend/app/agents/state.py`](../backend/app/agents/state.py) (v3 §8.1 plus `channel` and typed `pending_actions`). Additive in Phase 9: `contact_key`, `memory` (DECISIONS A2).
 
 ## 4. Governance files
 

@@ -2,6 +2,20 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 9 — Supervisor routing, buyer memory, trajectory suite ✅ (2026-10-10)
+
+**Built**
+- **Explainable re-planning** (deterministic by design, DECISIONS A1): after pricing the supervisor routes to (a) a **clarification** question when no product/quantity could be read (no guessed quote), (b) **no CEPA step** for destinations outside the UAE, (c) the standard path; each re-plan is a visible timeline event with its reason.
+- **Buyer memory** (`buyer_memory`, facts only, per org + hashed contact): fills a missing Incoterm from the last order (flagged and reviewed), shows "returning buyer" and earlier high-risk signals in the trust card.
+- **Trajectory suite** (`data/gold/trajectories.yaml`): 50 scenarios (clean EN/AR/mixed, attacks, kill switch, risky buyers, missing details, non-UAE, returning buyers, voice notes, duplicate delivery) x 3 runs through the signed WhatsApp path; gates on pass rate, pass^3 and path consistency.
+- Fixes found by the scenarios: third-party payment is a HIGH-risk signal (matching P-TRUST-001); "Again 50 …" was dropped by the parser ("in" matched inside "Again").
+
+**Tested**
+- `make test` → 273 passed (routing rules, clarification path, non-UAE path, memory fill + facts-only, existing suites).
+- `make eval` → **Gate: PASSED**. Trajectories **1.000** pass rate, **1.000** pass^3, **1.000** path consistency (fake profile: deterministic; on Claude this measures variance). E2E 1.000 (p95 2.8 s), voice 1.000; all other gates unchanged.
+
+**Next: Phase 10**: full dashboard (runs, ROI / Impact Ledger), MCP server, 3D hero + live 3D agent graph, deploy configuration.
+
 ## Phase 8 — Channels: WhatsApp, voice notes, collections ✅ (2026-10-10)
 
 **Built**

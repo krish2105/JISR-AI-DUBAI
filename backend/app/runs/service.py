@@ -20,6 +20,7 @@ from typing import Literal
 from sqlalchemy import select
 
 from app.agents.graph import build_graph
+from app.agents.memory import remember_run, remember_sent
 from app.agents.state import RunState
 from app.channels.outbox import OutsideServiceWindow, kill_switch_on, send, service_window_open
 from app.config import get_settings
@@ -46,7 +47,8 @@ async def create_run(*, message: str, channel: str = "form", org_id: str | None 
     run_id = f"run_{uuid.uuid4().hex[:12]}"
     redaction = redact(message)                       # the raw message is never stored
 
-    state = RunState(run_id=run_id, org_id=org_id, raw_message_redacted=redaction.text, channel=channel)
+    state = RunState(run_id=run_id, org_id=org_id, raw_message_redacted=redaction.text, channel=channel,
+                     contact_key=contact_key)
     async with session_scope() as db:
         db.add(Run(id=run_id, org_id=org_id, status="new", channel=channel, sample_id=sample_id,
                    raw_redacted=redaction.text, state=state.model_dump(mode="json"), contact_key=contact_key))
@@ -87,6 +89,7 @@ async def execute_run(run_id: str, redaction_counts: dict | None = None) -> RunS
         run = await db.get(Run, run_id)
         run.state = final.model_dump(mode="json")
         run.status = final.status
+    await remember_run(final.org_id, final.contact_key, final.model_dump(mode="json"))
     if final.status != "needs_approval":
         await emit(run_id, "system", "done", {"status": final.status, "impact": final.impact})
     return final
@@ -143,6 +146,8 @@ async def decide(approval_id: str, *, org_id: str, decision: Literal["approve", 
                risk=approval.risk)
     if sent:
         await emit(approval.run_id, "channel", "tool_result", {"tool": "send_message", **sent})
+        if approval.action_type == "send_message" and run.contact_key:
+            await remember_sent(org_id, run.contact_key)
     if remaining is None:
         await emit(approval.run_id, "system", "done", {"status": run.status, "impact": run.state.get("impact", {})})
     return approval

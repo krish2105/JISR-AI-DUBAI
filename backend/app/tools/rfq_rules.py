@@ -225,7 +225,7 @@ def _clean_description(desc: str) -> str:
 NUM = r"(\d[\d,]*(?:\.\d+)?k?)"
 NON_QTY_AFTER = re.compile(r"^\s*(items?|products?|sizes?|colou?rs?|days?|weeks?|months?|%|ft|cm|mm|inch|"
                            rf"{EN_MONTH_RE}\b|يوم|يوما|ايام|أيام|{_norm(AR_MONTH_RE)})", re.I)
-NON_QTY_BEFORE = re.compile(r"(within|in|before|by|rfq|invoice|inv|po|order|no\.?|#|aed|inr|usd|rs\.?|sets of|"
+NON_QTY_BEFORE = re.compile(r"(?<![A-Za-z])(within|in|before|by|rfq|invoice|inv|po|order|no\.?|#|aed|inr|usd|rs\.?|sets of|"
                             r"خلال|قبل)\s*$", re.I)
 
 

@@ -18,7 +18,8 @@ import tempfile
 import time
 from pathlib import Path
 
-SUITES = ["pricing", "security", "extraction", "docs", "trust", "governance", "redteam", "e2e", "retrieval"]
+SUITES = ["pricing", "security", "extraction", "docs", "trust", "governance", "redteam", "e2e", "trajectory",
+          "retrieval"]
 
 
 def configure_environment(profile: str) -> None:

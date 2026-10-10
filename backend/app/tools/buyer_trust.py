@@ -52,7 +52,7 @@ PATTERNS: dict[str, tuple[re.Pattern, str, str]] = {
         re.compile(r"(payment|pay|paid)(\s+\w+){0,3}?\s+(from|by|through)\s+(a |an |our )?(third|another|different)"
                    r"[- ](party|company)|"
                    r"(sister|partner) company will pay|طرف ثالث|شركة أخرى ستدفع", re.I),
-        "medium", "Payment from a party other than the buyer complicates KYC and chargebacks."),
+        "high", "Payment from a party other than the buyer complicates KYC and chargebacks; review before quoting."),
 }
 TRADE_LICENCE = re.compile(r"(trade )?licen[cs]e\s*(no\.?|number|#)?\s*[:\-]?\s*\d{5,}|"
                            r"رخصة تجارية\s*(رقم)?\s*[:\-]?\s*\d{5,}", re.I)

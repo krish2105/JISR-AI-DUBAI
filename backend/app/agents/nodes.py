@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 
 from langchain_core.runnables import RunnableConfig
 
+from app.agents.memory import recall
 from app.agents.state import PendingAction, RunState
 from app.agents.trade_agents import analyse_duty, build_doc_pack, check_draft_documents
 from app.channels.outbox import KillSwitchEngaged, OutsideServiceWindow, kill_switch_on, send
@@ -87,13 +88,17 @@ def agent_step(name: str) -> Callable[[NodeBody], Callable]:
 async def ingest(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
     """Receive the message. Redaction already happened before the run was stored."""
     counts = config["configurable"].get("redaction_counts", {})
+    memory = await recall(state.org_id, state.contact_key)
     return StepResult(
-        updates={"status": "planning"},
+        updates={"status": "planning", "memory": memory},
         summary={
-            "why": "Message received; personal data was masked before any model could see it.",
+            "why": "Message received; personal data was masked before any model could see it."
+                   + (f" Returning buyer: {memory['runs']} earlier enquiry(ies), {memory['quotes_sent']} quote(s) sent."
+                      if memory else ""),
             "channel": state.channel,
             "masked": counts,
             "chars": len(state.raw_message_redacted),
+            "returning_buyer": bool(memory),
         },
     )
 
@@ -179,6 +184,17 @@ async def supervisor(state: RunState, em: RunEmitter, config: RunnableConfig) ->
     )
 
 
+def route_after_pricing(quote_doc: dict) -> tuple[str, str]:
+    """Explainable re-planning after the quote: ask for details, skip CEPA, or continue normally."""
+    if not quote_doc.get("lines"):
+        return "trust", "No product and quantity could be read: check the buyer, then ask for the missing details."
+    country = quote_doc.get("destination_country")
+    if country not in (None, "unknown", "AE"):
+        return "docs", (f"Destination {country} is outside the UAE: the India-UAE CEPA does not apply; "
+                        "duty step skipped.")
+    return "duty", "Standard path: CEPA duty check next."
+
+
 @agent_step("quote")
 async def quote(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
     """Extract the RFQ (model grounded by rules), fetch FX with provenance, price goods + Incoterm charges."""
@@ -189,6 +205,10 @@ async def quote(state: RunState, em: RunEmitter, config: RunnableConfig) -> Step
                                            "items": len(rfq.items), "language": rfq.language},
                   risk="medium" if report.corrections or report.error else None)
 
+    remembered = None
+    if not rfq.incoterm and state.memory and state.memory.get("last_incoterm"):
+        remembered = state.memory["last_incoterm"]                   # buyer's last order; flagged for review
+        rfq = rfq.model_copy(update={"incoterm": remembered})
     profile = get_business_profile()
     fx = await get_inr_to_aed(profile.fx_stub_inr_to_aed)
     await em.emit("quote", "tool_call", {"tool": "fx", "rate": fx.rate, "source": fx.source,
@@ -197,8 +217,14 @@ async def quote(state: RunState, em: RunEmitter, config: RunnableConfig) -> Step
     quote_doc["extraction"] = report.model_dump()
     await em.emit("quote", "tool_call", {"tool": "pricing", "lines": len(quote_doc["lines"]),
                                          "charges": len(quote_doc["charges"]), "flags": quote_doc["pricing_flags"]})
+    if remembered:
+        quote_doc["pricing_flags"] = [*quote_doc["pricing_flags"], "incoterm_from_memory"]
+        quote_doc["incoterm_source"] = "buyer memory (last order)"
     flags = quote_doc["pricing_flags"]
     review = bool(flags) or not quote_doc["lines"]
+    nxt, why_next = route_after_pricing(quote_doc)
+    if nxt != "duty":                                   # re-plan, shown on the timeline
+        await em.emit("supervisor", "plan", {"replan": True, "next": nxt, "why": why_next})
     return StepResult(
         updates={"rfq": rfq, "quote": quote_doc,
                  "confidence": {**state.confidence, "quote": 0.5 if review else 0.85}},
@@ -277,6 +303,15 @@ async def trust(state: RunState, em: RunEmitter, config: RunnableConfig) -> Step
         buyer_name=state.rfq.buyer_name if state.rfq else "", buyer_country=(state.rfq.buyer_country or "")
         if state.rfq else "", quote_total_aed=(state.quote or {}).get("total_aed"),
         injection_flags=state.injection_flags)
+    memory = state.memory or {}
+    if memory:
+        signals.append({"signal": "returning_buyer", "risk": "positive",
+                        "evidence": f"{memory['runs']} earlier enquiry(ies), {memory['quotes_sent']} quote(s) sent",
+                        "why": "A known buyer; history is kept as facts only (no message text)."})
+        if memory.get("risk_signals"):
+            signals.append({"signal": "earlier_high_risk_signal", "risk": "medium",
+                            "evidence": ", ".join(memory["risk_signals"]),
+                            "why": "This buyer triggered a high-risk signal before; check the history."})
     impact = dict(state.impact)
     impact["risks_caught"] = impact.get("risks_caught", 0) + sum(1 for s in signals if s["risk"] in ("medium", "high"))
     review = needs_review(signals)
@@ -302,11 +337,33 @@ def quote_for_prompt(quote: dict) -> dict:
     }
 
 
+CLARIFY_TEXT = {
+    "en": "Thank you for your enquiry. To prepare an accurate quotation, could you please confirm: the products and "
+          "quantities, the delivery port or city, the Incoterm (for example CIF Jebel Ali) and the date you need them?",
+    "ar": "شكراً لاستفساركم. لإعداد عرض سعر دقيق، نرجو تأكيد: المنتجات والكميات، وميناء أو مدينة التسليم، وشرط "
+          "التسليم (مثل CIF جبل علي)، والتاريخ المطلوب.",
+}
+
+
 @agent_step("outreach")
 async def outreach(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
     """Draft the reply in the buyer's language via the LLM router; queue it for approval."""
-    if not state.quote or not state.rfq:
-        return StepResult(updates={}, summary={"why": "No quote to send; nothing drafted."}, risk="medium")
+    if not state.rfq:
+        return StepResult(updates={}, summary={"why": "No enquiry could be read; nothing drafted."}, risk="medium")
+    if not state.quote or not state.quote.get("lines"):
+        language = state.rfq.language if state.rfq.language in ("en", "ar") else "en"
+        draft = {"language": language, "channel": state.channel, "text": CLARIFY_TEXT[language],
+                 "kind": "clarification"}
+        action = PendingAction(action_type="send_message", title=f"Ask buyer for missing details ({language.upper()})",
+                               payload=draft, requested_by="outreach",
+                               reason="The enquiry has no product and quantity Jisr could price.",
+                               evidence=["0 priced lines"])
+        return StepResult(
+            updates={"drafts": state.drafts + [draft], "pending_actions": state.pending_actions + [action]},
+            summary={"why": "Missing details: drafted a short question to the buyer instead of guessing a quote.",
+                     "language": language, "clarification": True},
+            risk="medium",
+        )
     language = state.rfq.language if state.rfq.language in ("en", "ar") else "en"
     seller = get_business_profile().seller_name
     await em.emit("outreach", "tool_call", {"tool": "llm.outreach_draft", "role": "worker", "language": language})

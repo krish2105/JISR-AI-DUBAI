@@ -59,7 +59,7 @@ rules:
     description: Quotes with an unpriced item, an assumed Incoterm or a stale exchange rate must be checked before sending.
     when:
       action_type_in: [send_message, send_documents]      # price-bearing actions only
-      payload_flags_any: [unpriced_item, incoterm_not_stated, incoterm_unknown, fx_stale]
+      payload_flags_any: [unpriced_item, incoterm_not_stated, incoterm_unknown, fx_stale, incoterm_from_memory]
     effect: require_approval
     risk: medium
 

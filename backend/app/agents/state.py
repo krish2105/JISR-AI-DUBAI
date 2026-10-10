@@ -70,6 +70,8 @@ class RunState(BaseModel):
     org_id: str                                         # per-organisation isolation
     raw_message_redacted: str                           # models only ever see redacted text
     channel: Literal["whatsapp", "email", "form"] = "form"
+    contact_key: str | None = None                      # hashed sender id (Phase 8); never a phone number
+    memory: dict | None = None                          # buyer memory recalled at ingest (Phase 9b)
     injection_flags: list[str] = Field(default_factory=list)
     rfq: RFQ | None = None
     plan: list[str] = Field(default_factory=list)
