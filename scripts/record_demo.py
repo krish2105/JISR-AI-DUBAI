@@ -59,6 +59,21 @@ async def main() -> None:
                 fh.write(json.dumps({"seq": r.seq, "ts": r.ts.isoformat(), "agent": r.agent, "kind": r.kind,
                                      "payload": r.payload, "risk": r.risk}, ensure_ascii=False) + "\n")
         print(f"  {sample.id:<22} {len(rows):>3} events -> {out.relative_to(REPO)}")
+    # Voice notes: run each synthetic note through the same signed inbound path, so the cassette also holds the
+    # transcripts (offline speech-to-text) and every model answer of those runs.
+    from app.api.channels import VOICE_DIR, process_payload  # noqa: E402
+    from app.channels.whatsapp import sign  # noqa: E402
+    from app.llm.router import VOICE_MANIFEST  # noqa: E402
+
+    secret = get_settings().simulator_secret
+    for i, note in enumerate(json.loads(VOICE_MANIFEST.read_text(encoding="utf-8")).values()):
+        msg = {"from": f"97150000{i:04d}", "id": f"wamid.REC.{i}", "timestamp": "1760000000", "type": "audio",
+               "audio": {"id": f"media.{i}", "mime_type": note["mime_type"], "voice": True}}
+        raw = json.dumps({"entry": [{"changes": [{"value": {"messages": [msg]}}]}]}).encode()
+        [res] = await process_payload(raw, sign(raw, secret), secret, source="simulator",
+                                      audio=(VOICE_DIR / note["file"]).read_bytes(), mime_type=note["mime_type"],
+                                      wait=True, run_in_background=False)
+        print(f"  voice:{note['file']:<17} {res['status']}")
     entries = sum(1 for _ in CASSETTE.open(encoding="utf-8")) if CASSETTE.exists() else 0
     print(f"Cassette: {entries} recorded model answers.")
 

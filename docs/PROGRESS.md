@@ -2,6 +2,26 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 12 — Submission pack ✅ (2026-10-10)
+
+**Built**
+- `docs/SUBMISSION.md` (≤ 700 words: problem, what Jisr does, why it can be trusted, measured results table, limits), `docs/PITCH_NOTES.md` (timed live demo + trust moment + failure fallbacks), `docs/VIVA_QA.md` (45 questions with evidence), `docs/DEMO_CHECKLIST.md`, `docs/DATA_PROTECTION.md` + `/privacy` page (EN/AR, footer link).
+- Offline replay covers **every** demo path: the cassette now also records the voice-note transcripts; a test runs all samples and both voice notes from the committed cassette alone.
+- Claims register rows 19–24 (red team, e2e, trajectories, governance, documents, time-saved assumption); landing page status text now states the evaluation discipline.
+
+**Tested**
+- `make test` → 286 passed; `npm run build` OK; replay coverage test green.
+- `make eval` on the submission commit → see `docs/EVAL_REPORT.md`.
+
+**Founder tasks before 9 Dec** (none of these can be done from code)
+1. `ANTHROPIC_API_KEY`, then `make record` with `LLM_PROFILE=prod`; measure Claude latency and cost on the demo.
+2. Deploy (docs/DEPLOY.md: Fly + Neon + Vercel) and test the hosted link on a fresh browser.
+3. WhatsApp test number (docs/WHATSAPP_SETUP.md); `make sanctions` for the UN list.
+4. Official CEPA Annex 2B; advisor review of HS labels and of the retrieval set sample.
+5. Shadow-mode pilot with the family business (baseline interview, 30–50 real enquiries anonymised) → replace the time-saved assumption.
+6. Confirm deadline and eligibility with the organisers in writing; video (2–3 min, captions) and deck from PITCH_NOTES.
+7. Dubai licence + Dubai AI Seal application (docs/SEAL_READINESS.md).
+
 ## Phase 11 — A2A buyer agent, 3D tariff tree, 3D document pack ✅ (2026-10-10)
 
 **Built**

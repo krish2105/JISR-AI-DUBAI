@@ -29,6 +29,28 @@ const en = {
     ledger: "Ledger", when: "When", kind: "Kind", buyer: "Buyer", status: "Status", total: "Quote",
     dutyCol: "Duty up to (AED)", risksCol: "Risks", secs: "Agent s",
   },
+  privacy: {
+    title: "Data protection",
+    intro: "How Jisr handles personal data. Each point is enforced in code and tested; the full version is docs/DATA_PROTECTION.md.",
+    sections: [
+      { h: "What models see", items: [
+        "Only masked text: emails, phones, IBANs, Emirates ID, tax and card numbers are hidden before any model sees the message.",
+        "A tripwire refuses any model request that still contains such data.",
+        "Free-tier models only ever receive synthetic data; real data goes only to paid providers that do not train on it.",
+      ] },
+      { h: "What is stored", items: [
+        "The masked enquiry, quotes, approvals and a hash-chained audit log, separated per organisation.",
+        "A buyer's WhatsApp number only to reply; agents see a hashed id. Buyer memory keeps facts, never message text.",
+        "Voice notes are transcribed and not kept (only a fingerprint is logged).",
+      ] },
+      { h: "What leaves", items: [
+        "Nothing without a person's approval, except a fixed-text acknowledgement when every policy allows it.",
+        "Bank details and payment status are never changed by Jisr. A kill switch stops everything.",
+      ] },
+    ],
+    note: "Designed with the UAE PDPL (Federal Decree-Law 45/2021) and India's DPDP Act 2023 in mind; not legal advice. The public demo uses synthetic data only.",
+    link: "Data protection",
+  },
   governance: {
     title: "Governance",
     subtitle: "Plain rules and autonomy levels decide what Jisr may do. Models can propose; only this layer lets anything out.",
@@ -206,6 +228,28 @@ const ar: Dictionary = {
     formula: "عروض الأسعار × (دقائق العمل اليدوي − دقائق المراجعة)", minutesShort: "د", source: "المصدر",
     ledger: "السجل", when: "الوقت", kind: "النوع", buyer: "المشتري", status: "الحالة", total: "العرض",
     dutyCol: "الرسوم حتى (درهم)", risksCol: "المخاطر", secs: "ثوانٍ",
+  },
+  privacy: {
+    title: "حماية البيانات",
+    intro: "كيف يتعامل جسر مع البيانات الشخصية. كل نقطة مطبّقة في الشيفرة ومختبرة؛ النسخة الكاملة في docs/DATA_PROTECTION.md.",
+    sections: [
+      { h: "ما تراه النماذج", items: [
+        "نص مُقنّع فقط: تُخفى البريد والهاتف وأرقام الحسابات والهوية والضريبة والبطاقات قبل أن يرى أي نموذج الرسالة.",
+        "يرفض نظام حماية أخير أي طلب لنموذج ما زال يحتوي على هذه البيانات.",
+        "النماذج المجانية لا تتلقى إلا بيانات اصطناعية؛ والبيانات الحقيقية تذهب فقط إلى مزوّدين مدفوعين لا يدرّبون عليها.",
+      ] },
+      { h: "ما يُحفظ", items: [
+        "الاستفسار المُقنّع وعروض الأسعار والموافقات وسجل تدقيق متسلسل بالتجزئة، مفصولة لكل مؤسسة.",
+        "رقم واتساب للمشتري للرد فقط؛ والوكلاء يرون معرّفاً مجزّأً. ذاكرة المشتري تحفظ حقائق لا نصوص رسائل.",
+        "تُحوَّل الرسائل الصوتية إلى نص ولا تُحفظ (تُسجَّل بصمتها فقط).",
+      ] },
+      { h: "ما يخرج", items: [
+        "لا شيء دون موافقة إنسان، باستثناء رسالة إقرار بنص ثابت عندما تسمح كل السياسات.",
+        "لا يغيّر جسر أبداً بيانات البنك أو حالة الدفع. ومفتاح الإيقاف يوقف كل شيء.",
+      ] },
+    ],
+    note: "صُمّم مع مراعاة قانون حماية البيانات الإماراتي (المرسوم بقانون اتحادي 45 لسنة 2021) وقانون حماية البيانات الهندي 2023؛ وليس استشارة قانونية. يستخدم العرض العام بيانات اصطناعية فقط.",
+    link: "حماية البيانات",
   },
   governance: {
     title: "الحوكمة",

@@ -57,3 +57,37 @@ async def test_real_data_is_never_recorded(monkeypatch):
     get_settings.cache_clear()
     await LLMRouter().complete(LLMRequest(role="worker", prompt="pilot message", data_class="real"))
     assert not get_settings().llm_cassette.exists()
+
+
+async def test_committed_cassette_covers_every_demo_path(db_ready, monkeypatch):
+    """Finals safety net: every demo sample and both voice notes run from replay/demo.cassette.jsonl alone."""
+    import json
+
+    from app.api.channels import VOICE_DIR, process_payload
+    from app.channels.whatsapp import sign
+    from app.demo.samples import SAMPLES
+    from app.llm.router import VOICE_MANIFEST
+    from app.llm.router import VOICE_MANIFEST as _vm
+
+    REPO_ROOT = _vm.parents[2]                         # replay/voice/manifest.json -> repo root
+    monkeypatch.setenv("LLM_PROFILE", "replay")
+    monkeypatch.setenv("LLM_CASSETTE", str(REPO_ROOT / "replay" / "demo.cassette.jsonl"))
+    get_settings.cache_clear()
+    get_router.cache_clear()
+    for sample in SAMPLES:
+        run_id = await create_run(message=sample.message, channel=sample.channel, background=False)
+        async with session_scope() as db:
+            run = await db.get(Run, run_id)
+        assert run.status == ("blocked" if sample.hostile else "needs_approval"), sample.id
+        assert all(d["model"].startswith("replay:") for d in run.state.get("drafts", []) if "model" in d)
+    secret = get_settings().simulator_secret
+    for i, note in enumerate(json.loads(VOICE_MANIFEST.read_text(encoding="utf-8")).values()):
+        msg = {"from": f"9715099{i:05d}", "id": f"wamid.REPLAY.{i}", "timestamp": "1760000000", "type": "audio",
+               "audio": {"id": "m", "mime_type": note["mime_type"], "voice": True}}
+        raw = json.dumps({"entry": [{"changes": [{"value": {"messages": [msg]}}]}]}).encode()
+        [res] = await process_payload(raw, sign(raw, secret), secret, source="simulator",
+                                      audio=(VOICE_DIR / note["file"]).read_bytes(), mime_type=note["mime_type"],
+                                      wait=True, run_in_background=False)
+        async with session_scope() as db:
+            run = await db.get(Run, res["run_id"])
+        assert run.status == "needs_approval" and len(run.state["quote"]["lines"]) == 2, note["file"]

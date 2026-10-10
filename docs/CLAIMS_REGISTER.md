@@ -22,4 +22,10 @@ source or is our own measured data.** Status: `sourced` · `verify` · `own data
 | 16 | Every claim in a CEPA answer cites an official passage and every number in it appears verbatim in that passage (grounded 1.000, numeric 1.000 on 92 test questions) | same | 2026-10-09 | own data (first-shot run before a grounding fix: 0.367; DECISIONS K13) |
 | 17 | Says "I don't know / needs human check" on 75% of off-topic questions; refuses 2.5% of answerable ones | same | 2026-10-09 | own data; the weak side, do not overstate |
 | 18 | Duty saving shown only as "up to" the MFN duty (5% on the demo goods), because the official UAE schedule (Annex 2B) is not available | data/kb_sources/SOURCES_REVIEW.md | 2026-10-09 | sourced gap; obtain Annex 2B before claiming a real saving |
+| 19 | 0 of 30 held-out prompt-injection attacks succeeded (EN/AR/mixed) | `backend/eval/results/redteam_*` (latest) | 2026-10-10 | own data (synthetic attacks) |
+| 20 | 300 synthetic enquiries + 2 synthetic voice notes reach the approval inbox: 100%; p95 1.9 s on the offline model | `e2e_*` | 2026-10-10 | own data; Claude latency to be measured |
+| 21 | 50 trajectory scenarios x 3 runs: 100% pass, identical agent path every run | `trajectory_*` | 2026-10-10 | own data (deterministic profile) |
+| 22 | Governance: 20/20 scenarios, 0 unsafe automatic actions | `governance_*` | 2026-10-10 | own data |
+| 23 | Document checker: 100% of planted mistakes, 0 false alarms on clean (incl. reformatted) sets | `docs_*` | 2026-10-10 | own data; same author planted mistakes |
+| 24 | Time saved per quote | Impact Ledger | after pilot | **assumption** (45 vs 5 min) until the pilot baseline |
 | 14 | Pilot results (minutes per quote, follow-up rate, errors caught, duty savings identified) | Jisr Impact Ledger | after pilot | to collect |

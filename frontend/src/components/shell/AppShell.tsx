@@ -82,7 +82,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
       <footer className="border-t border-line py-4 text-center text-xs text-ink-3">
-        {t.brand.name} · {t.brand.tagline}
+        {t.brand.name} · {t.brand.tagline} ·{" "}
+        <Link href={`/${locale}/privacy`} className="underline-offset-4 hover:underline">{t.privacy.link}</Link>
       </footer>
     </>
   );
