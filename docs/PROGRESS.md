@@ -2,6 +2,26 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 10 — Dashboard, Impact Ledger, MCP, 3D, deploy configuration ✅ (2026-10-10)
+
+**Built**
+- **3D** (React Three Fiber, pinned): **live 3D agent graph** on `/demo` (2D/3D switch; agents pulse when active, edges light up, work parcels travel, the gate turns amber when held / red when blocked) and the **3D bridge hero** on the landing page (shipments cross India → UAE through the governance keystone; SVG poster underneath). Theme-aware (pearl/midnight re-colour live), off under reduced motion / without WebGL / by choice; labels are real DOM text (Arabic shapes correctly).
+- **Impact Ledger** `/impact` + `GET /impact`: measured outcomes per run (enquiries, quotes, approved & sent, agent time, time to acknowledge, risks caught, CEPA "up to") kept apart from the labelled time-saved estimate; ledger rows open the run.
+- **MCP server** (`app/interop/mcp_server.py`, SDK 2.3): 6 governed tools (analyse, ask CEPA, classify HS, check documents, pending approvals, governance status); no approve/send tools; passport-checked and audited; HTTP at `/mcp/` behind a bearer token, stdio for Claude Desktop.
+- **Hosted-demo protection**: per-IP run limit, daily token budget with a labelled offline fallback (shown in `/health`).
+- **Deploy configuration**: `deploy/api.Dockerfile` (repo-root build with index and replay assets), `fly.toml`, `.dockerignore`, `docs/DEPLOY.md` (Fly + Neon + Vercel, founder steps).
+- Acknowledgements only on channels with a waiting buyer (WhatsApp, email).
+
+**Tested**
+- `make test` → 281 passed (MCP over HTTP: token, tool set, audit, analyse sends nothing, not mounted without a token; rate limit 201/201/429; budget fallback; impact ledger).
+- `npm run build` → production build OK (all pages incl. 3D chunks).
+- `make eval` → **Gate: PASSED**, all metrics unchanged (e2e p95 2.1 s; trajectories 1.000).
+- Browser: 3D graph live during a run (light), 3D bridge (light and dark), `/impact` with real ledger rows.
+
+**Not done here (founder steps)**: the actual Fly / Neon / Vercel deployment (accounts), building the API image (~3 GB model download).
+
+**Next: Phase 11**: A2A buyer agent (Agent Card, RFQ task, malicious-agent block), 3D HS-tariff tree, 3D document pack.
+
 ## Phase 9 — Supervisor routing, buyer memory, trajectory suite ✅ (2026-10-10)
 
 **Built**

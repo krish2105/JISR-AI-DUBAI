@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from app.api.deps import org_id_header
+from app.api.ratelimit import limit_runs
 from app.db.models import Approval, Run, RunEventRow
 from app.db.session import session_scope
 from app.demo.samples import get_sample
@@ -40,7 +41,7 @@ class CreateRunRequest(BaseModel):
     channel: str = "form"
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, dependencies=[Depends(limit_runs)])
 async def start_run(body: CreateRunRequest, org_id: str = Depends(org_id_header)) -> dict:
     """Create a run and start the agents in the background; returns the run id at once."""
     message, channel = body.message, body.channel

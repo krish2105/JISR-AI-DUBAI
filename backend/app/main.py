@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api import approvals, audit, channels, collections, demo, governance, runs
+from app.api import approvals, audit, channels, collections, demo, governance, impact, runs
 from app.config import get_settings
 from app.db.session import get_engine, init_db
 from app.llm.router import get_router
@@ -29,12 +29,42 @@ from app.llm.router import get_router
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Runs once at start-up (create tables) and once at shutdown (close DB connections)."""
     await init_db()
+    if getattr(app.state, "mcp", None) is not None:          # the MCP HTTP transport needs its session manager
+        async with app.state.mcp.session_manager.run():
+            await _seed_demo()
+            yield
+        await get_engine().dispose()
+        return
+    await _seed_demo()
+    yield
+    await get_engine().dispose()
+
+
+async def _seed_demo() -> None:
+    """Synthetic invoices for the collections demo (demo organisation only)."""
     if get_settings().default_org_id == "demo":
         from app.agents.collections import seed_demo_invoices
 
-        await seed_demo_invoices("demo")         # synthetic invoices for the collections demo
-    yield
-    await get_engine().dispose()
+        await seed_demo_invoices("demo")
+
+
+class BearerGuard:
+    """Tiny ASGI wrapper: requests must carry `Authorization: Bearer <MCP_TOKEN>` (constant-time compare)."""
+
+    def __init__(self, app, token: str) -> None:
+        self.app, self.token = app, token
+
+    async def __call__(self, scope, receive, send) -> None:
+        import hmac
+
+        if scope["type"] == "http":
+            auth = dict(scope.get("headers") or []).get(b"authorization", b"").decode()
+            if not hmac.compare_digest(auth, f"Bearer {self.token}"):
+                await send({"type": "http.response.start", "status": 401,
+                            "headers": [(b"content-type", b"application/json")]})
+                await send({"type": "http.response.body", "body": b'{"detail":"unauthorized"}'})
+                return
+        await self.app(scope, receive, send)
 
 
 def create_app() -> FastAPI:
@@ -55,8 +85,23 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    for module in (runs, approvals, audit, demo, governance, channels, collections):
+    for module in (runs, approvals, audit, demo, governance, channels, collections, impact):
         app.include_router(module.router)
+
+    # MCP over streamable HTTP at /mcp, only when a token is configured (every request needs it).
+    app.state.mcp = None
+    if settings.mcp_token:
+        from mcp.server.transport_security import TransportSecuritySettings
+
+        from app.interop.mcp_server import mcp
+
+        security = TransportSecuritySettings(enable_dns_rebinding_protection=True,
+                                             allowed_hosts=[settings.mcp_host, f"{settings.mcp_host}:*", "testserver"],
+                                             allowed_origins=[])
+        mcp_http = mcp.streamable_http_app(streamable_http_path="/", stateless_http=True, json_response=True,
+                                           transport_security=security)
+        app.state.mcp = mcp
+        app.mount("/mcp", BearerGuard(mcp_http, settings.mcp_token))
 
     @app.get("/health", tags=["system"])
     def health() -> dict:
@@ -73,6 +118,7 @@ def create_app() -> FastAPI:
             "env": settings.app_env,
             "llm_profile": settings.llm_profile,
             "models": {role: cfg.model for role, cfg in router.profiles[settings.llm_profile].items()},
+            "budget": router.budget_status(),
         }
 
     return app

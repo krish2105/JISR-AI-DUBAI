@@ -77,3 +77,11 @@ agents:
     models: []
     actions: []
     metrics: {redteam: [attack_success_rate, unflagged_to_human]}
+  mcp:
+    name: MCP server (external assistants)
+    purpose: Lets other AI assistants use Jisr's analysis tools. Cannot approve, send, change bank details or governance.
+    tools: [analyse_enquiry, ask_cepa, classify_hs, check_export_documents, list_pending_approvals, governance_status]
+    data: [enquiry text sent by the assistant (redacted before any model), knowledge base, approval titles]
+    models: [worker]
+    actions: []
+    metrics: {e2e: [task_success_rate], retrieval: [grounded_claim_rate]}

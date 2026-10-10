@@ -81,7 +81,7 @@ def test_passports_enforce_tool_allow_lists():
 async def test_kill_switch_stops_sends(client):
     r = await client.post("/governance/kill-switch", json={"engaged": True, "reason": "test drill"})
     assert r.json()["kill_switch"] is True
-    run_id = await create_run(message=ENQUIRY, org_id="demo", background=False)
+    run_id = await create_run(message=ENQUIRY, org_id="demo", channel="whatsapp", background=False)
     async with session_scope() as db:
         run = await db.get(Run, run_id)
         actions = [a.action for a in (await db.scalars(select(AuditEntry).where(AuditEntry.run_id == run_id))).all()]
@@ -91,7 +91,7 @@ async def test_kill_switch_stops_sends(client):
 
 
 async def test_approval_refused_while_kill_switch_is_on(client):
-    run_id = await create_run(message=ENQUIRY, org_id="demo", background=False)
+    run_id = await create_run(message=ENQUIRY, org_id="demo", channel="whatsapp", background=False)
     approvals = (await client.get("/approvals")).json()
     approval = next(a for a in approvals if a["run_id"] == run_id)
     await client.post("/governance/kill-switch", json={"engaged": True, "reason": "drill"})
@@ -106,10 +106,21 @@ async def test_governance_and_passport_endpoints(client):
     g = (await client.get("/governance")).json()
     assert {p["id"] for p in g["policies"]} >= {"P-BANK-001", "P-KILL-001", "P-ACK-001", "P-TRUST-001"}
     assert {a["action_type"]: a["level"] for a in g["autonomy"]}["update_bank_details"] == "NEVER"
-    await create_run(message=ENQUIRY, org_id="demo", background=False)
+    await create_run(message=ENQUIRY, org_id="demo", channel="whatsapp", background=False)
     auto = (await client.get("/governance/autonomous")).json()
     assert auto["done_alone"] >= 1
     passports = {p["id"]: p for p in (await client.get("/passports")).json()}
     assert passports["supervisor"]["autonomy"] == {"send_acknowledgement": "L2"}
     assert passports["quote"]["tools"] == ["rfq.extract", "fx", "pricing"]
     assert passports["quote"]["activity_24h"].get("tool_call", 0) >= 3
+
+
+async def test_impact_ledger_is_computed_from_runs(client):
+    await create_run(message=ENQUIRY, org_id="demo", channel="whatsapp", background=False)
+    await create_run(message="Hi, please send me your catalogue.", org_id="demo", channel="whatsapp", background=False)
+    data = (await client.get("/impact?days=7")).json()
+    m = data["measured"]
+    assert m["enquiries"] >= 2 and m["quotes_drafted"] >= 1 and m["acknowledged_automatically"] >= 2
+    assert m["median_seconds_to_acknowledge"] is not None
+    assert {"quote", "clarification"} <= {r["kind"] for r in data["ledger"]}
+    assert data["estimated"]["assumptions"]["source"].startswith("founder estimate")      # labelled, not measured

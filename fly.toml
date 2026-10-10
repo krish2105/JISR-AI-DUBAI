@@ -1,0 +1,35 @@
+# fly.toml — the hosted Jisr API on Fly.io (deploy from the repo root: `fly deploy`). Steps: docs/DEPLOY.md.
+app = "jisr-ai-api"                    # change to your Fly app name
+primary_region = "bom"                 # Mumbai: close to both India and the UAE; check `fly platform regions`
+
+[build]
+  dockerfile = "deploy/api.Dockerfile"
+
+[env]
+  APP_ENV = "prod"
+  LLM_PROFILE = "prod"                 # Claude (set ANTHROPIC_API_KEY as a secret)
+  FX_PROVIDER = "live"
+  DEMO_STEP_DELAY_MS = "300"
+  PUBLIC_RUNS_PER_HOUR = "20"          # no-login demo: per visitor IP
+  LLM_DAILY_TOKEN_BUDGET = "2000000"   # past this, answers come from the offline model (labelled), never an error
+  TRACE_DIR = "/tmp/traces"
+  # Secrets (fly secrets set ...): ANTHROPIC_API_KEY, DATABASE_URL (Neon), CORS_ORIGINS, MCP_TOKEN,
+  # WHATSAPP_* (optional), MCP_HOST
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1             # keep one warm for judges (models load in ~10 s)
+
+  [[http_service.checks]]
+    grace_period = "60s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "performance-2x"              # 4 GB RAM: e5-large + reranker on CPU
+  memory = "4gb"

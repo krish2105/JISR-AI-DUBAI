@@ -11,7 +11,18 @@ import type { Locale } from "./config";
 
 const en = {
   brand: { name: "Jisr", tagline: "The governed bridge for India–UAE trade" },
-  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance" },
+  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact" },
+  impact: {
+    title: "Impact ledger",
+    subtitle: "What Jisr did for the business, computed from the run records. Measured numbers and estimates are kept apart.",
+    period: "Period", days: "days", measured: "Measured",
+    enquiries: "Enquiries", quotes: "Quotes drafted", sent: "Approved & sent", agentTime: "Agent time (median)",
+    ack: "Time to acknowledge (median)", risks: "Risks caught", duty: "CEPA duty, up to",
+    estimated: "Estimated time saved", assumption: "Assumption", minutes: "minutes",
+    formula: "Quotes drafted × (manual − review minutes)", minutesShort: "min", source: "Source",
+    ledger: "Ledger", when: "When", kind: "Kind", buyer: "Buyer", status: "Status", total: "Quote",
+    dutyCol: "Duty up to (AED)", risksCol: "Risks", secs: "Agent s",
+  },
   governance: {
     title: "Governance",
     subtitle: "Plain rules and autonomy levels decide what Jisr may do. Models can propose; only this layer lets anything out.",
@@ -65,6 +76,7 @@ const en = {
     voiceEnglish: "English voice note",
     running: "Agents working…",
     graph: "Agent graph",
+    graphView: "Graph view",
     timeline: "Timeline",
     emptyTimeline: "Start a run to see each step here.",
     counters: {
@@ -168,7 +180,18 @@ export type Dictionary = typeof en;
 
 const ar: Dictionary = {
   brand: { name: "جسر", tagline: "الجسر المحوكم للتجارة بين الهند والإمارات" },
-  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة" },
+  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر" },
+  impact: {
+    title: "سجل الأثر",
+    subtitle: "ما أنجزه جسر للشركة، محسوباً من سجلات التشغيل. الأرقام المقاسة منفصلة عن التقديرات.",
+    period: "الفترة", days: "يوماً", measured: "مقاس",
+    enquiries: "الاستفسارات", quotes: "عروض الأسعار المعدّة", sent: "المعتمدة والمرسلة", agentTime: "وقت الوكلاء (الوسيط)",
+    ack: "زمن الإقرار (الوسيط)", risks: "المخاطر المرصودة", duty: "رسوم الاتفاقية، حتى",
+    estimated: "الوقت الموفّر المقدّر", assumption: "افتراض", minutes: "دقيقة",
+    formula: "عروض الأسعار × (دقائق العمل اليدوي − دقائق المراجعة)", minutesShort: "د", source: "المصدر",
+    ledger: "السجل", when: "الوقت", kind: "النوع", buyer: "المشتري", status: "الحالة", total: "العرض",
+    dutyCol: "الرسوم حتى (درهم)", risksCol: "المخاطر", secs: "ثوانٍ",
+  },
   governance: {
     title: "الحوكمة",
     subtitle: "قواعد واضحة ومستويات استقلالية تحدد ما يمكن لجسر فعله. النماذج تقترح فقط؛ وهذه الطبقة وحدها تسمح بخروج أي شيء.",
@@ -222,6 +245,7 @@ const ar: Dictionary = {
     voiceEnglish: "رسالة صوتية بالإنجليزية",
     running: "الوكلاء يعملون…",
     graph: "خريطة الوكلاء",
+    graphView: "طريقة العرض",
     timeline: "الخط الزمني",
     emptyTimeline: "ابدأ تشغيلاً لرؤية كل خطوة هنا.",
     counters: {

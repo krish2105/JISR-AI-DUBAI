@@ -52,6 +52,16 @@ make kb         # tariff tree + rules + chunks + embeddings -> data/kb_index/ (f
 the duty card says the knowledge base is unavailable; the retrieval eval suite reports SKIP. Sources, corrections and
 gaps (no official Annex 2B yet, so savings are shown as "up to"): [data/kb_sources/SOURCES_REVIEW.md](data/kb_sources/SOURCES_REVIEW.md).
 
+### Dashboard pages
+
+`/demo` live run (2D / 3D agent graph) · `/approvals` inbox + collections · `/audit` hash chain · `/governance` kill
+switch, autonomy levels, policies, Agent Passports · `/impact` Impact Ledger. 3D turns off under reduced motion.
+
+### MCP and hosting
+
+`uv --directory backend run python -m app.interop.mcp_server` serves Jisr's tools to MCP clients (stdio); with
+`MCP_TOKEN` set the API also serves `/mcp/`. Hosting (Fly + Neon + Vercel): [docs/DEPLOY.md](docs/DEPLOY.md).
+
 ### WhatsApp and voice notes
 
 The demo page has a **WhatsApp voice notes** card: synthetic Arabic and English voice notes go through the same

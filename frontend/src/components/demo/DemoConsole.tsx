@@ -16,7 +16,12 @@ import { deriveRunView } from "@/lib/runView";
 import { useRunEvents } from "@/lib/useRunEvents";
 import { setUrlParam, useUrlParam } from "@/lib/useUrlParam";
 import { Badge, Button, Card, CardHeader, cx } from "@/components/ui/primitives";
+import dynamic from "next/dynamic";
+import { use3D } from "@/components/three/use3D";
 import { AgentGraph2D } from "./AgentGraph2D";
+
+// 3D is loaded only when switched on (no server rendering; the 2D graph is the fallback).
+const AgentGraph3D = dynamic(() => import("@/components/three/AgentGraph3D"), { ssr: false });
 import { Counters } from "./Counters";
 import { ResultPanel } from "./ResultPanel";
 import { Timeline } from "./Timeline";
@@ -32,6 +37,7 @@ export function DemoConsole() {
   const { t, locale } = useI18n();
   const [samples, setSamples] = useState<Sample[]>([]);
   const [voices, setVoices] = useState<VoiceSample[]>([]);
+  const three = use3D();
   const runId = useUrlParam("run");                       // the URL is the source of truth
   const [custom, setCustom] = useState("");
   const [starting, setStarting] = useState(false);
@@ -153,8 +159,19 @@ export function DemoConsole() {
           <CardHeader
             title={t.demo.graph}
             aside={
-              runId && (
                 <div className="flex items-center gap-2 text-xs">
+                  {three.allowed && (
+                    <div role="group" aria-label={t.demo.graphView} className="inline-flex rounded-full border border-line p-0.5">
+                      {(["2d", "3d"] as const).map((mode) => (
+                        <button key={mode} type="button" aria-pressed={(mode === "3d") === three.enabled}
+                          onClick={() => three.setEnabled(mode === "3d")}
+                          className={cx("rounded-full px-2 py-0.5 font-medium uppercase", (mode === "3d") === three.enabled ? "bg-accent text-white" : "text-ink-3")}>
+                          {mode}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {runId && (<>
                   {running && (
                     <span className="inline-flex items-center gap-1 text-accent">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> {t.demo.running}
@@ -162,12 +179,12 @@ export function DemoConsole() {
                   )}
                   {view.finalStatus && <Badge tone={view.finalStatus === "blocked" ? "risk" : "ok"}>{t.status[view.finalStatus] ?? view.finalStatus}</Badge>}
                   <code className="text-ink-3"><bdi>{runId}</bdi></code>
+                  </>)}
                 </div>
-              )
             }
           />
           <div className="px-2 py-4 sm:px-6">
-            <AgentGraph2D view={view} />
+            {three.enabled ? <AgentGraph3D view={view} labels={t.agents} /> : <AgentGraph2D view={view} />}
           </div>
         </Card>
 

@@ -53,6 +53,10 @@ class Settings(BaseSettings):
 
     # Hard ceiling on output tokens for a single LLM call (protects the demo budget).
     llm_max_output_tokens: int = 16000
+    # Hosted-demo protection (Phase 10). 0 = unlimited. Past the daily token budget the router answers with the
+    # deterministic offline model (labelled "budget-fallback") instead of failing; the demo keeps working.
+    llm_daily_token_budget: int = 0
+    public_runs_per_hour: int = 0              # per client IP, for POST /runs and the WhatsApp simulator
 
     # Use the local knowledge base (data/kb_index, built by `make kb`). Unit tests switch it off.
     kb_enabled: bool = True
@@ -76,6 +80,10 @@ class Settings(BaseSettings):
     whatsapp_api_version: str = "v23.0"        # Graph API version; check Meta's changelog and update
     whatsapp_org_id: str = "demo"              # organisation that receives the number's messages
     simulator_secret: str = "jisr-simulator-local-only"   # signs simulated webhooks so they take the same path
+
+    # MCP server over HTTP (Phase 10). Empty token = not mounted (stdio mode still works locally).
+    mcp_token: str = ""
+    mcp_host: str = "127.0.0.1"                # public host name when deployed (DNS-rebinding protection)
 
     # Allowed browser origins for the dashboard (comma-separated in the env var).
     cors_origins: str = "http://localhost:3000"

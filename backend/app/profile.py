@@ -51,6 +51,14 @@ class Logistics(BaseModel):
     import_duty_source: str
 
 
+class RoiAssumptions(BaseModel):
+    """Inputs for the time-saved estimate. ASSUMPTIONS until the pilot measures the real baseline."""
+
+    manual_minutes_per_quote: float = 45       # owner's estimate: reading, pricing, duty lookup, typing the reply
+    review_minutes_per_quote: float = 5        # checking Jisr's draft before approving
+    source: str = "founder estimate (replace with the pilot baseline interview)"
+
+
 class BusinessProfile(BaseModel):
     """The seller's commercial settings and owner pricing policy."""
 
@@ -68,6 +76,7 @@ class BusinessProfile(BaseModel):
     default_kg: float
     default_cbm: float
     logistics: Logistics
+    roi: RoiAssumptions = Field(default_factory=RoiAssumptions)
 
     def match(self, description: str) -> CatalogueEntry | None:
         """Best catalogue entry for a description: most product-noun hits, then material hits; None if no noun."""

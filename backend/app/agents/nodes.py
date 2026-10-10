@@ -176,7 +176,8 @@ async def supervisor(state: RunState, em: RunEmitter, config: RunnableConfig) ->
         why = ("Flagged message: drafting continues, but every outbound action will be HIGH risk for a human."
                if flags else
                "Standard enquiry: quote, duty check, documents, trust signals, reply draft, then governance.")
-    pending.append(acknowledgement(state))       # L2: sent automatically only if every policy allows it
+    if state.channel in ("whatsapp", "email"):    # only where a buyer is waiting for an answer
+        pending.append(acknowledgement(state))   # L2: sent automatically only if every policy allows it
     await em.emit("supervisor", "plan", {"plan": plan, "why": why})
     return StepResult(
         updates={"plan": plan, "pending_actions": state.pending_actions + pending},

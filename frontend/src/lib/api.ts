@@ -113,6 +113,16 @@ export type Passport = {
   activity_24h: Record<string, number>;
 };
 
+export type Impact = {
+  since: string; days: number;
+  measured: { enquiries: number; quotes_drafted: number; approved_and_sent: number; rejected: number; waiting: number;
+    median_agent_seconds: number | null; acknowledged_automatically: number; median_seconds_to_acknowledge: number | null;
+    risks_caught: number; blocked_by_policy: number; duty_upto_aed: number };
+  estimated: { minutes_saved: number; assumptions: { manual_minutes_per_quote: number; review_minutes_per_quote: number; source: string } };
+  ledger: { run_id: string; created_at: string; channel: string; status: string; buyer: string | null;
+    quote_total_aed: number | null; duty_upto_aed: number | null; risks: number; agent_seconds: number | null; kind: string }[];
+};
+
 export type VoiceSample = { name: string; language: "ar" | "en"; transcript: string; audio_url: string };
 
 export type Approval = {
@@ -164,6 +174,7 @@ export const api = {
   voiceSamples: () => call<VoiceSample[]>("/channels/whatsapp/voice-samples"),
   simulateWhatsApp: (body: { text?: string; voice_sample?: string }) =>
     call<{ status: string; run_id?: string; reason?: string }>("/channels/whatsapp/simulate", { method: "POST", body: JSON.stringify(body) }),
+  impact: (days = 30) => call<Impact>(`/impact?days=${days}`),
   runCollections: () => call<{ drafted: number; reminders: { invoice_id: string; days_overdue: number; tone: string }[] }>(
     "/collections/run", { method: "POST" }),
 };

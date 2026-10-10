@@ -1,0 +1,13 @@
+# Keep the API image small and free of local state.
+**/.venv
+**/node_modules
+**/__pycache__
+frontend
+traces
+*.db
+*.db-shm
+*.db-wal
+.env
+data/kb_sources/downloads
+data/sanctions_public/*.xml
+india_uae_trade_kb.zip

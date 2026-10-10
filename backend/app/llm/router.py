@@ -419,13 +419,35 @@ class LLMRouter:
                          self.settings.llm_max_output_tokens)
 
         started = time.perf_counter()
+        if self._over_budget() and cfg.provider not in ("fake", "replay"):
+            # Daily budget used up: answer with the deterministic offline model and say so (never fail the demo).
+            cfg = RoleConfig(provider="fake", model=f"budget-fallback:{cfg.model}")
         response = await self.backends[cfg.provider].complete(cfg, req, max_tokens)
         response.latency_ms = round((time.perf_counter() - started) * 1000, 2)
+        self._spend(response)
 
         self._log_call(cfg, req, response)
         if self.settings.llm_record:
             self._record(req, response)
         return response
+
+    def _spend(self, resp: LLMResponse) -> None:
+        """Count today's tokens (UTC day, per process: one machine hosts the demo)."""
+        today = datetime.now(UTC).date().isoformat()
+        if getattr(self, "_budget_day", None) != today:
+            self._budget_day, self._budget_used = today, 0
+        self._budget_used += (resp.input_tokens or 0) + (resp.output_tokens or 0)
+
+    def _over_budget(self) -> bool:
+        """True when a daily token budget is set and today's usage reached it."""
+        budget = self.settings.llm_daily_token_budget
+        today = datetime.now(UTC).date().isoformat()
+        return bool(budget) and getattr(self, "_budget_day", None) == today and self._budget_used >= budget
+
+    def budget_status(self) -> dict:
+        """For /health: budget, used today, and whether the fallback is active."""
+        return {"daily_token_budget": self.settings.llm_daily_token_budget,
+                "used_today": getattr(self, "_budget_used", 0), "fallback_active": self._over_budget()}
 
     async def transcribe(self, req: TranscribeRequest) -> Transcript:
         """Speech-to-text for a voice note, under the same data rules as text requests."""

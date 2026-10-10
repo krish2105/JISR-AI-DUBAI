@@ -2,12 +2,12 @@
  * page.tsx — Landing / overview page (/en, /ar).
  *
  * A Server Component: static text in the right language, the bridge illustration, and the
- * one primary action ("Run the live demo"). The 3D hero replaces the illustration in Phase 7.
+ * one primary action ("Run the live demo"). The 3D bridge fades in over the SVG poster when allowed.
  */
 
 import Link from "next/link";
 import { ArrowRight, Languages, ScrollText, ShieldCheck } from "lucide-react";
-import { BridgeHero } from "@/components/landing/BridgeHero";
+import { HeroStage } from "@/components/landing/HeroStage";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { notFound } from "next/navigation";
@@ -38,7 +38,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           </div>
         </div>
         <div className="glass p-4">
-          <BridgeHero
+          <HeroStage
             fromLabel={lang === "ar" ? "الهند" : "India"}
             toLabel={lang === "ar" ? "الإمارات" : "UAE"}
             gateLabel={t.agents.governance}

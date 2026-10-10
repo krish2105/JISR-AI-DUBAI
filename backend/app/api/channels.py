@@ -15,10 +15,11 @@ import time
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
+from app.api.ratelimit import limit_runs
 from app.channels.inbound import handle_inbound
 from app.channels.outbox import whatsapp_client
 from app.channels.whatsapp import parse_webhook, sign, verify_signature
@@ -95,7 +96,7 @@ class SimulateBody(BaseModel):
     name: str = "Demo buyer"
 
 
-@router.post("/simulate")
+@router.post("/simulate", dependencies=[Depends(limit_runs)])
 async def simulate(body: SimulateBody, sync: bool = False) -> dict:
     """Build a webhook payload like Meta's, sign it, and process it through the same code as real deliveries."""
     if not body.text and not body.voice_sample:
