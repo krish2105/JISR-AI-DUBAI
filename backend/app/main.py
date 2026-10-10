@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api import approvals, audit, channels, collections, demo, governance, impact, runs
+from app.api import approvals, audit, channels, collections, demo, governance, impact, kb, runs
 from app.config import get_settings
 from app.db.session import get_engine, init_db
 from app.llm.router import get_router
@@ -85,8 +85,13 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    for module in (runs, approvals, audit, demo, governance, channels, collections, impact):
+    for module in (runs, approvals, audit, demo, governance, channels, collections, impact, kb):
         app.include_router(module.router)
+
+    # A2A: Agent Card at /.well-known/agent-card.json and JSON-RPC at /a2a (buyer agents request quotations).
+    from app.interop.a2a_server import mount as mount_a2a
+
+    mount_a2a(app, settings.public_base_url)
 
     # MCP over streamable HTTP at /mcp, only when a token is configured (every request needs it).
     app.state.mcp = None

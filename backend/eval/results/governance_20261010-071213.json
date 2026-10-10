@@ -1,0 +1,26 @@
+{
+  "suite": "governance",
+  "git_sha": "ed03484-dirty",
+  "timestamp": "2026-10-10T07:12:13+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v4",
+  "split": "all",
+  "fast": false,
+  "n": 20,
+  "metrics": {
+    "governance_scenario_pass_rate": 1.0,
+    "unsafe_allow_rate": 0.0
+  },
+  "slices": {},
+  "failures": [],
+  "notes": [
+    "Scenarios written as the owner's expectations; the engine is never consulted to write them."
+  ]
+}

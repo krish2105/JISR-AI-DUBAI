@@ -2,6 +2,22 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 11 — A2A buyer agent, 3D tariff tree, 3D document pack ✅ (2026-10-10)
+
+**Built**
+- **A2A** (a2a-sdk 1.2.2, protocol 1.0): Agent Card + JSON-RPC `/a2a`; a buyer agent's RFQ (text or JSON) runs the normal pipeline; the task stays WORKING until the owner approves, then completes with the approved quotation through the outbox; malicious requests → REJECTED; errors → FAILED. Demo client `scripts/buyer_agent.py` (normal and `--malicious`).
+- **3D tariff explorer** `/tariff` + `GET /kb/chapters|tree|locate`: radial chapter tree, the duty agent's cited path for a product lit and animated (turned to face the viewer), detail panel with official EN/AR text, duty, Annex 3B rule; list fallback.
+- **3D document pack** in run results: invoice / packing list / certificate cards with red beams between conflicting fields; new sample "Order with a document mismatch" (jute bags: catalogue 4202 vs cited 6305).
+- Shared 2D/3D toggle; general glossary additions for HS (trays, planters, coasters, journals, bedspreads); buyer-name fix for "email — Company" signatures.
+
+**Tested**
+- `make test` → 285 passed (A2A with the official SDK client in-process: card, WORKING → approve → COMPLETED with artifact, malicious → REJECTED; KB API on the real index).
+- Live over HTTP: `buyer_agent.py --malicious` → REJECTED; normal run → WORKING, approved via the API → COMPLETED with the quotation.
+- `make eval` → **Gate: PASSED**, all metrics unchanged.
+- Browser: tariff explorer (list and 3D, "brass diya lamps" → 9405 path, detail with Annex 3B-9), 3D document pack with the 4202 ↔ 63051010 beam, 3D agent graph.
+
+**Next: Phase 12 — submission pack.**
+
 ## Phase 10 — Dashboard, Impact Ledger, MCP, 3D, deploy configuration ✅ (2026-10-10)
 
 **Built**

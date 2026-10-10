@@ -76,7 +76,8 @@ export type RunDetail = {
   state: {
     quote?: Quote | null; drafts?: { language: string; text: string }[]; impact?: Record<string, number>;
     duty?: DutyAnalysis | null;
-    docs?: { status: string; documents: { document: string; citation: Citation | null }[]; note?: string } | null;
+    docs?: { status: string; documents: { document: string; citation: Citation | null }[]; note?: string;
+             draft?: unknown } | null;
     doc_issues?: DocIssue[];
     buyer_signals?: BuyerSignal[];
   };
@@ -112,6 +113,13 @@ export type Passport = {
   metrics: { suite: string; metric: string; value: number | null; result_file: string | null; git_sha: string | null }[];
   activity_24h: Record<string, number>;
 };
+
+export type KbRule = { rule_id: string; text: string; scope: string; page_label: string; is_ex: boolean };
+export type KbChapter = { code: string; title: string; title_ar: string; rule: string | null };
+export type KbNode = { code: string; level: string; desc_en: string; desc_ar: string; duty_pct: string | null;
+  rule: KbRule | null; children: KbNode[]; more: number; source?: { tariff: string; rules: string } };
+export type KbLocate = { query: string; needs_human_check: boolean;
+  candidates: { heading: string; line: string; desc: string; confidence: number; duty_pct: string | null; path: string[]; rule: KbRule | null }[] };
 
 export type Impact = {
   since: string; days: number;
@@ -174,6 +182,9 @@ export const api = {
   voiceSamples: () => call<VoiceSample[]>("/channels/whatsapp/voice-samples"),
   simulateWhatsApp: (body: { text?: string; voice_sample?: string }) =>
     call<{ status: string; run_id?: string; reason?: string }>("/channels/whatsapp/simulate", { method: "POST", body: JSON.stringify(body) }),
+  kbChapters: () => call<KbChapter[]>("/kb/chapters"),
+  kbTree: (chapter: string) => call<KbNode>(`/kb/tree?chapter=${encodeURIComponent(chapter)}`),
+  kbLocate: (q: string) => call<KbLocate>(`/kb/locate?q=${encodeURIComponent(q)}`),
   impact: (days = 30) => call<Impact>(`/impact?days=${days}`),
   runCollections: () => call<{ drafted: number; reminders: { invoice_id: string; days_overdue: number; tone: string }[] }>(
     "/collections/run", { method: "POST" }),

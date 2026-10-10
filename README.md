@@ -54,8 +54,15 @@ gaps (no official Annex 2B yet, so savings are shown as "up to"): [data/kb_sourc
 
 ### Dashboard pages
 
-`/demo` live run (2D / 3D agent graph) · `/approvals` inbox + collections · `/audit` hash chain · `/governance` kill
-switch, autonomy levels, policies, Agent Passports · `/impact` Impact Ledger. 3D turns off under reduced motion.
+`/demo` live run (2D / 3D agent graph, 3D document pack) · `/approvals` inbox + collections · `/audit` hash chain ·
+`/governance` kill switch, autonomy levels, policies, Agent Passports · `/tariff` 3D tariff explorer · `/impact` Impact
+Ledger. 3D turns off under reduced motion.
+
+### Agent to agent (A2A)
+
+A buyer's procurement agent can request a quotation over A2A (Agent Card at `/.well-known/agent-card.json`). The quote
+returns only after the owner approves it. Try it: `uv --directory backend run python ../scripts/buyer_agent.py`
+(add `--malicious` to see a hostile agent rejected).
 
 ### MCP and hosting
 

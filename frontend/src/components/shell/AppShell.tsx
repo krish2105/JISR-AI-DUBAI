@@ -26,6 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: `/${locale}/approvals`, label: t.nav.approvals, active: rest.startsWith("/approvals") },
     { href: `/${locale}/audit`, label: t.nav.audit, active: rest.startsWith("/audit") },
     { href: `/${locale}/governance`, label: t.nav.governance, active: rest.startsWith("/governance") },
+    { href: `/${locale}/tariff`, label: t.nav.tariff, active: rest.startsWith("/tariff") },
     { href: `/${locale}/impact`, label: t.nav.impact, active: rest.startsWith("/impact") },
   ];
 

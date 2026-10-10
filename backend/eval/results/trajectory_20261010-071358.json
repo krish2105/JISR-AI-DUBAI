@@ -1,0 +1,27 @@
+{
+  "suite": "trajectory",
+  "git_sha": "ed03484-dirty",
+  "timestamp": "2026-10-10T07:13:59+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v4",
+  "split": "all",
+  "fast": false,
+  "n": 50,
+  "metrics": {
+    "trajectory_pass_rate": 1.0,
+    "trajectory_pass_all_k": 1.0,
+    "path_consistency": 1.0
+  },
+  "slices": {},
+  "failures": [],
+  "notes": [
+    "50 scenarios x 3 runs, profile-dependent: with the fake/replay profile runs are deterministic, so consistency is expected to be 1.0; with Claude (prod) this measures run-to-run variance."
+  ]
+}

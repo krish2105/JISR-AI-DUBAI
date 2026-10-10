@@ -49,7 +49,7 @@ class RFQ(BaseModel):
     incoterm: str | None = None
     deadline: str | None = None
     language: Literal["en", "ar", "mixed"] = "en"
-    channel: Literal["whatsapp", "email", "form"] = "form"
+    channel: Literal["whatsapp", "email", "form", "a2a"] = "form"
 
 
 class PendingAction(BaseModel):
@@ -69,7 +69,7 @@ class RunState(BaseModel):
     run_id: str
     org_id: str                                         # per-organisation isolation
     raw_message_redacted: str                           # models only ever see redacted text
-    channel: Literal["whatsapp", "email", "form"] = "form"
+    channel: Literal["whatsapp", "email", "form", "a2a"] = "form"     # a2a: a buyer's agent (Phase 11)
     contact_key: str | None = None                      # hashed sender id (Phase 8); never a phone number
     memory: dict | None = None                          # buyer memory recalled at ingest (Phase 9b)
     injection_flags: list[str] = Field(default_factory=list)

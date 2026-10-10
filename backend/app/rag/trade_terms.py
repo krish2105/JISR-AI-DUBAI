@@ -36,8 +36,13 @@ GLOSSARY: list[tuple[str, str]] = [
      "shawls scarves mufflers mantillas veils"),
     (r"t-?shirts?|تي شيرت", "T-shirts singlets knitted or crocheted"),
     # household and metal articles
-    (r"bottles?|tumblers?|jugs?|utensils?|cookware|kitchenware|bowls?|زجاجات?|قارورة|أواني|أدوات مطبخ|أكواب",
+    (r"bottles?|tumblers?|jugs?|utensils?|cookware|kitchenware|bowls?|trays?|platters?|زجاجات?|قارورة|أواني|"
+     r"أدوات مطبخ|أكواب|صوان|صواني|صينية",
      "table kitchen or other household articles"),
+    (r"planters?|flower ?pots?|plant pots?|أصص|أصيص", "flower pots ornamental articles household articles"),
+    (r"coasters?|قواعد أكواب", "table articles household articles"),
+    (r"journals?|diar(y|ies)|notebooks?|دفاتر|دفتر", "registers account books note books diaries"),
+    (r"bed ?spreads?|quilts?|مفارش سرير|لحاف", "bedspreads quilts furnishing articles"),
     (r"statues?|statuettes?|idols?|figurines?|sculptures?|تماثيل|تمثال", "statuettes and other ornaments"),
     (r"(jewell?ery )?boxes|caskets?|صناديق|صندوق|علب", "caskets and cases for jewellery boxes cases"),
     (r"photo frames?|picture frames?|براويز|إطارات صور", "wooden frames for paintings photographs mirrors"),
@@ -80,3 +85,4 @@ def expand(description: str) -> str:
     """The description plus its tariff vocabulary in brackets ('brass diya lamps (non-electrical luminaires ...)')."""
     terms = tariff_terms(description)
     return f"{description} ({'; '.join(terms)})" if terms else description
+

@@ -14,7 +14,12 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { api, type Approval, type RunDetail } from "@/lib/api";
 import type { RunView } from "@/lib/runView";
 import { ApprovalCard } from "@/components/approvals/ApprovalCard";
+import dynamic from "next/dynamic";
+import { use3D } from "@/components/three/use3D";
+import type { DraftDocs } from "@/components/three/DocPack3D";
 import { ChecksCard } from "./ChecksCard";
+
+const DocPack3D = dynamic(() => import("@/components/three/DocPack3D"), { ssr: false });
 import { DutyCard } from "./DutyCard";
 import { Badge, Card, CardHeader } from "@/components/ui/primitives";
 
@@ -25,6 +30,7 @@ export function ResultPanel({ runId, view }: { runId: string; view: RunView }) {
   const r = t.demo.result;
   const [run, setRun] = useState<RunDetail | null>(null);
   const [approvals, setApprovals] = useState<Approval[]>([]);
+  const three = use3D();
 
   // Load the results once the governance gate has decided (the quote and drafts exist by then).
   useEffect(() => {
@@ -124,6 +130,14 @@ export function ResultPanel({ runId, view }: { runId: string; view: RunView }) {
 
       {run && (run.state.buyer_signals?.length ?? 0) > 0 && (
         <ChecksCard issues={run.state.doc_issues ?? []} signals={run.state.buyer_signals ?? []} />
+      )}
+
+      {three.enabled && Boolean(run?.state.docs?.draft) && run && (
+        <Card>
+          <CardHeader title={r.docPack3d} aside={<span className="text-xs text-ink-3">{r.docPack3dNote}</span>} />
+          <DocPack3D draft={run.state.docs!.draft as DraftDocs} issues={run.state.doc_issues ?? []}
+            titles={{ invoice: r.invoice, packing: r.packingList, coo: r.coo }} />
+        </Card>
       )}
 
       {approvals.map((a) => (

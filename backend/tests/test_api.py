@@ -25,7 +25,7 @@ def test_demo_samples_endpoint():
     """The three built-in samples are offered to the demo page."""
     with TestClient(create_app()) as client:
         ids = [s["id"] for s in client.get("/demo/samples").json()]
-    assert ids == ["en_brass_runners", "ar_gift_boxes", "hostile_bank_change"]
+    assert ids == ["en_brass_runners", "ar_gift_boxes", "en_doc_mismatch", "hostile_bank_change"]
 
 
 def test_full_path_over_http_with_sse_and_audit():

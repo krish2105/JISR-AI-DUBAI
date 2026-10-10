@@ -84,6 +84,7 @@ class Settings(BaseSettings):
     # MCP server over HTTP (Phase 10). Empty token = not mounted (stdio mode still works locally).
     mcp_token: str = ""
     mcp_host: str = "127.0.0.1"                # public host name when deployed (DNS-rebinding protection)
+    public_base_url: str = "http://localhost:8000"   # advertised in the A2A Agent Card
 
     # Allowed browser origins for the dashboard (comma-separated in the env var).
     cors_origins: str = "http://localhost:3000"

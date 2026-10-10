@@ -174,8 +174,9 @@ def find_buyer(text: str) -> str:
             return re.split(r",\s*(?=[A-Z؀-ۿ][^,]*$)", m.group(1))[0].strip()
     company = re.compile(r"(llc|fze|fzco|fz llc|trading|co\.|est\.|group|hotels?|gifts|شركة|مؤسسة|محلات|فندق|غاليري|بيت)", re.I)
     for line in reversed(lines):
-        if company.search(line) and len(line) < 80 and not re.search(r"\d{3,}", line):
-            return line
+        seg = re.split(r"\s[—–]\s", line)[-1].strip()      # "email@x.ae — Marina Home Decor LLC" -> the company
+        if company.search(seg) and len(seg) < 80 and not re.search(r"\d{3,}|@|\[EMAIL", seg):
+            return seg
     return "Unknown buyer"
 
 

@@ -18,6 +18,7 @@ import { setUrlParam, useUrlParam } from "@/lib/useUrlParam";
 import { Badge, Button, Card, CardHeader, cx } from "@/components/ui/primitives";
 import dynamic from "next/dynamic";
 import { use3D } from "@/components/three/use3D";
+import { ViewToggle } from "@/components/three/ViewToggle";
 import { AgentGraph2D } from "./AgentGraph2D";
 
 // 3D is loaded only when switched on (no server rendering; the 2D graph is the fallback).
@@ -160,17 +161,7 @@ export function DemoConsole() {
             title={t.demo.graph}
             aside={
                 <div className="flex items-center gap-2 text-xs">
-                  {three.allowed && (
-                    <div role="group" aria-label={t.demo.graphView} className="inline-flex rounded-full border border-line p-0.5">
-                      {(["2d", "3d"] as const).map((mode) => (
-                        <button key={mode} type="button" aria-pressed={(mode === "3d") === three.enabled}
-                          onClick={() => three.setEnabled(mode === "3d")}
-                          className={cx("rounded-full px-2 py-0.5 font-medium uppercase", (mode === "3d") === three.enabled ? "bg-accent text-white" : "text-ink-3")}>
-                          {mode}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <ViewToggle enabled={three.enabled} allowed={three.allowed} onChange={three.setEnabled} label={t.demo.graphView} />
                   {runId && (<>
                   {running && (
                     <span className="inline-flex items-center gap-1 text-accent">

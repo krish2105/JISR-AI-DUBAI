@@ -91,7 +91,11 @@ async def send(db: AsyncSession, *, org_id: str, run_id: str, action_type: str, 
     run = await db.get(Run, run_id) if run_id else None
     contact = await db.get(Contact, run.contact_key) if run is not None and run.contact_key else None
     client = whatsapp_client()
-    if client is not None and contact is not None and contact.channel == "whatsapp":
+    if contact is not None and contact.channel == "a2a":           # a buyer's agent: complete its A2A task
+        from app.interop.a2a_server import deliver
+
+        sent |= await deliver(contact.address, payload, org_id)
+    elif client is not None and contact is not None and contact.channel == "whatsapp":
         if not within_service_window(contact.last_inbound_at):
             await append_audit(db, org_id=org_id, actor="channel:whatsapp", action="send.refused_window",
                                run_id=run_id, details={"action_type": action_type, "approval_id": approval_id})
@@ -99,7 +103,8 @@ async def send(db: AsyncSession, *, org_id: str, run_id: str, action_type: str, 
         sent["provider_message_id"] = await client.send_text(contact.address, text)
         sent["channel"] = "whatsapp"
     action = ("action.autonomous_sent" if autonomous else
-              "message.sent_whatsapp" if sent["channel"] == "whatsapp" else "message.sent_simulated")
+              "message.sent_whatsapp" if sent["channel"] == "whatsapp" else
+              "message.sent_a2a" if sent["channel"] == "a2a" else "message.sent_simulated")
     await append_audit(db, org_id=org_id, actor="channel:simulator", action=action, run_id=run_id,
                        details={"approval_id": approval_id, "by": actor, **sent})
     return sent

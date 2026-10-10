@@ -66,3 +66,18 @@ def test_cepa_annex_pages_are_not_labelled_as_article_18_5(kb):
     annex = [c for c in kb.chunks.values() if c.source_id == "cepa_final" and c.title.startswith("ANNEX 8A")]
     assert annex and all(c.meta.get("page_label", "").startswith("Annex 8A") for c in annex if c.meta.get("page_label"))
     assert not [c for c in kb.chunks.values() if c.title.startswith("ARTICLE 18.5") and (c.page or 0) > 216]
+
+
+async def test_kb_tree_and_locate_api(kb, monkeypatch):
+    from app.api.kb import chapters, locate, tree
+    from app.config import get_settings
+
+    monkeypatch.setenv("KB_ENABLED", "true")       # the autouse test fixture turns the KB off by default
+    get_settings.cache_clear()
+
+    t = await tree("94")
+    heading = next(h for h in t["children"] if h["code"] == "9405")
+    assert heading["rule"]["text"] == "CTH + VA 40%" and heading["rule"]["page_label"] == "Annex 3B-9"
+    found = await locate("brass diya lamps")
+    assert found["candidates"][0]["path"][:2] == ["94", "9405"] and found["needs_human_check"] is True
+    assert len(await chapters()) == 97

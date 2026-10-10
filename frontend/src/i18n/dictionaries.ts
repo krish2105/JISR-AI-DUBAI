@@ -11,7 +11,13 @@ import type { Locale } from "./config";
 
 const en = {
   brand: { name: "Jisr", tagline: "The governed bridge for India–UAE trade" },
-  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact" },
+  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff" },
+  tariff: {
+    title: "Tariff explorer", subtitle: "The UAE tariff (Dubai Customs) with CEPA origin rules (Annex 3B). Search a product to see the path the duty agent takes.",
+    search: "Describe the goods, e.g. brass diya lamps", locate: "Locate", chapter: "Chapter", candidates: "Likely headings", top: "top",
+    tree: "Chapter tree", detail: "Selected", duty: "UAE duty (MFN)", rule: "CEPA origin rule", pick: "Click a node or search a product.",
+    unavailable: "Knowledge base not available on this server.",
+  },
   impact: {
     title: "Impact ledger",
     subtitle: "What Jisr did for the business, computed from the run records. Measured numbers and estimates are kept apart.",
@@ -59,7 +65,7 @@ const en = {
       { title: "Cited", body: "Tariff and origin facts come only from official documents, with dates — or are flagged for a human." },
       { title: "Bilingual", body: "Arabic and English drafts in the buyer's language, right-to-left done properly." },
     ],
-    status: "Phase 1 build: the full path works end to end; specialist agents are being deepened phase by phase.",
+    status: "Every quality number comes from a reproducible evaluation run (gate: passed); bad numbers are published too. Demo data is synthetic.",
   },
   demo: {
     title: "Live demo",
@@ -110,6 +116,9 @@ const en = {
       hsLikely: "Likely HS",
       catalogueDiffers: "Your catalogue says HS",
       docChecks: "Document consistency",
+      docPack3d: "Document pack (draft)",
+      docPack3dNote: "Red beams join fields that disagree.",
+      invoice: "Commercial invoice", packingList: "Packing list", coo: "Certificate of origin",
       docChecksOk: "Draft invoice, packing list and certificate of origin agree (HS codes, quantities, totals).",
       fix: "Fix",
       trust: "Buyer signals",
@@ -180,7 +189,13 @@ export type Dictionary = typeof en;
 
 const ar: Dictionary = {
   brand: { name: "جسر", tagline: "الجسر المحوكم للتجارة بين الهند والإمارات" },
-  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر" },
+  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة" },
+  tariff: {
+    title: "مستكشف التعرفة", subtitle: "التعرفة الجمركية الإماراتية (جمارك دبي) مع قواعد المنشأ في الاتفاقية (الملحق 3B). ابحث عن منتج لترى المسار الذي يسلكه وكيل الرسوم.",
+    search: "صف البضاعة، مثل مصابيح نحاسية", locate: "حدّد الموقع", chapter: "الفصل", candidates: "البنود المرجحة", top: "الأول",
+    tree: "شجرة الفصل", detail: "المحدد", duty: "الرسم الجمركي", rule: "قاعدة المنشأ", pick: "انقر على عقدة أو ابحث عن منتج.",
+    unavailable: "قاعدة المعرفة غير متاحة على هذا الخادم.",
+  },
   impact: {
     title: "سجل الأثر",
     subtitle: "ما أنجزه جسر للشركة، محسوباً من سجلات التشغيل. الأرقام المقاسة منفصلة عن التقديرات.",
@@ -228,7 +243,7 @@ const ar: Dictionary = {
       { title: "موثّق", body: "معلومات التعريفة وقواعد المنشأ تأتي فقط من الوثائق الرسمية مع تواريخها — أو تُحال إلى إنسان." },
       { title: "ثنائي اللغة", body: "مسودات بالعربية والإنجليزية بلغة المشتري، مع اتجاه صحيح من اليمين إلى اليسار." },
     ],
-    status: "بناء المرحلة الأولى: المسار الكامل يعمل من البداية إلى النهاية، ويتم تعميق الوكلاء المتخصصين مرحلة بعد أخرى.",
+    status: "كل رقم للجودة يأتي من تشغيل تقييم قابل للتكرار (البوابة: ناجحة)، وننشر الأرقام الضعيفة أيضاً. بيانات العرض اصطناعية.",
   },
   demo: {
     title: "عرض مباشر",
@@ -279,6 +294,9 @@ const ar: Dictionary = {
       hsLikely: "البند المرجح",
       catalogueDiffers: "الكتالوج الخاص بك يذكر البند",
       docChecks: "اتساق المستندات",
+      docPack3d: "حزمة المستندات (مسودة)",
+      docPack3dNote: "الخطوط الحمراء تربط الحقول المتعارضة.",
+      invoice: "الفاتورة التجارية", packingList: "قائمة التعبئة", coo: "شهادة المنشأ",
       docChecksOk: "مسودات الفاتورة وقائمة التعبئة وشهادة المنشأ متطابقة (البنود والكميات والإجماليات).",
       fix: "الإصلاح",
       trust: "مؤشرات المشتري",

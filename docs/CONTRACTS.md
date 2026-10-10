@@ -56,7 +56,12 @@ Payload conventions:
 
 Organisation: optional `X-Org-Id` header (default `demo`). Every query filters by org; other orgs get 404.
 
-Planned (not yet built): `GET /kb/tree` (P11, 3D tariff tree), `GET /roi` (P10).
+| GET | `/kb/chapters` · `/kb/tree?chapter=` · `/kb/locate?q=` | tariff tree + CEPA rules; where goods sit (P11) |
+| GET | `/impact?days=` | Impact Ledger: measured outcomes + labelled estimate (P10) |
+| GET | `/.well-known/agent-card.json` · POST `/a2a` | A2A Agent Card and JSON-RPC (buyer agents) (P11) |
+| POST | `/mcp/` | MCP streamable HTTP, bearer `MCP_TOKEN` (P10) |
+
+RunState `channel` accepts `a2a` (additive, P11).
 
 `run_started` payload may carry `source` (`whatsapp` | `simulator`) and `voice_note` `{stt_model, provider, audio_sha256, language}` (additive, P8).
 

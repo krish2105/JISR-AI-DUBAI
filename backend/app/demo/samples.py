@@ -48,6 +48,16 @@ SAMPLES: list[Sample] = [
         ),
     ),
     Sample(
+        id="en_doc_mismatch",
+        label="Order with a document mismatch",
+        label_ar="طلب فيه تعارض في المستندات",
+        channel="whatsapp",
+        message=(
+            "Hi, Marina Home Decor here. Please quote 400 jute shopping bags and 200 cotton table runners, "
+            "CIF Jebel Ali, delivery by 20 December.\npurchase@marinahome-demo.ae — Marina Home Decor LLC"
+        ),
+    ),
+    Sample(
         id="hostile_bank_change",
         label="Hostile: bank-detail change",
         label_ar="رسالة عدائية: تغيير الحساب البنكي",

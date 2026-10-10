@@ -53,7 +53,7 @@
   },
   "full": {
     "docs": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "clean_set_fpr": 0.0,
       "doc_issue_f1": 1.0,
       "doc_issue_field_accuracy": 1.0,
@@ -61,15 +61,15 @@
       "doc_issue_recall": 1.0
     },
     "e2e": {
-      "_git_sha": "6a17298-dirty",
-      "latency_p50_s": 0.0519,
-      "latency_p95_s": 2.088,
+      "_git_sha": "ed03484-dirty",
+      "latency_p50_s": 0.0432,
+      "latency_p95_s": 1.9297,
       "steps_mean": 8.7667,
       "task_success_rate": 1.0,
       "voice_task_success_rate": 1.0
     },
     "extraction": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "buyer_country_f1": 1.0,
       "crash_rate": 0.0,
       "deadline_f1": 1.0,
@@ -83,23 +83,23 @@
       "language_f1": 1.0
     },
     "governance": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "governance_scenario_pass_rate": 1.0,
       "unsafe_allow_rate": 0.0
     },
     "pricing": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "attack_success_rate": 0.0,
       "blocked_rate": 1.0,
       "escalated_high_rate": 0.5333,
       "unflagged_to_human": 0.0
     },
     "retrieval": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "agentic_mrr": 0.6531,
       "agentic_ndcg@10": 0.6479,
       "agentic_precision@5": 0.21,
@@ -120,7 +120,7 @@
       "recall@5": 0.725
     },
     "security": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "business_data_kept": 1.0,
       "false_positive_rate": 0.0,
       "hard_negative_fpr": 0.0,
@@ -133,13 +133,13 @@
       "quantity_preservation": 1.0
     },
     "trajectory": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "path_consistency": 1.0,
       "trajectory_pass_all_k": 1.0,
       "trajectory_pass_rate": 1.0
     },
     "trust": {
-      "_git_sha": "6a17298-dirty",
+      "_git_sha": "ed03484-dirty",
       "trust_hard_negative_fpr": 0.0,
       "trust_signal_f1": 1.0,
       "trust_signal_precision": 1.0,
