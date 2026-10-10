@@ -1,0 +1,65 @@
+{
+  "suite": "docs",
+  "git_sha": "9273b38-dirty",
+  "timestamp": "2026-10-10T05:27:08+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v4",
+  "split": "all",
+  "fast": false,
+  "n": 60,
+  "metrics": {
+    "doc_issue_recall": 1.0,
+    "doc_issue_precision": 1.0,
+    "doc_issue_f1": 1.0,
+    "clean_set_fpr": 0.0,
+    "doc_issue_field_accuracy": 1.0
+  },
+  "slices": {
+    "type=consignment_gap": {
+      "recall": 1.0
+    },
+    "type=currency_mismatch": {
+      "recall": 1.0
+    },
+    "type=hs_mismatch": {
+      "recall": 1.0
+    },
+    "type=invoice_total_mismatch": {
+      "recall": 1.0
+    },
+    "type=line_total_mismatch": {
+      "recall": 1.0
+    },
+    "type=missing_coo": {
+      "recall": 1.0
+    },
+    "type=missing_export_declaration": {
+      "recall": 1.0
+    },
+    "type=qty_mismatch": {
+      "recall": 1.0
+    },
+    "type=weight_inconsistency": {
+      "recall": 1.0
+    },
+    "format_noise=no": {
+      "recall": 1.0,
+      "clean_fpr": 0.0
+    },
+    "format_noise=yes": {
+      "recall": 1.0,
+      "clean_fpr": 0.0
+    }
+  },
+  "failures": [],
+  "notes": [
+    "Planted mistakes and checker share an author: this measures correct implementation and robustness to formatting, not coverage of every real-world mistake."
+  ]
+}

@@ -6,8 +6,9 @@ Why this file exists:
     the policies and autonomy level allow automatically (e.g. a fixed-text acknowledgement). Keeping one door means
     one place to enforce the kill switch (checked again here, defence in depth), one audit format and one event.
 
-Phase 7 delivers through the simulator (the text's SHA-256 is recorded, not the text). Phase 8 plugs the real
-WhatsApp Cloud API in behind the same function.
+Delivery: the real WhatsApp Cloud API when it is configured and the run has a WhatsApp contact (within Meta's
+24-hour service window; outside it a template would be needed, so the send is refused and audited), otherwise the
+simulator. The audit records the text's SHA-256, never the text.
 """
 
 import hashlib
@@ -15,12 +16,38 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import OrgSettings
+from app.channels.whatsapp import WhatsAppClient, within_service_window
+from app.config import get_settings
+from app.db.models import Contact, OrgSettings, Run
 from app.governance.audit import append_audit
 
 
 class KillSwitchEngaged(Exception):
     """Raised when something tries to leave while the organisation's kill switch is on."""
+
+
+class OutsideServiceWindow(Exception):
+    """WhatsApp free-form messages are only allowed within 24 h of the buyer's last message."""
+
+
+_client: WhatsAppClient | None = None
+
+
+def whatsapp_client() -> WhatsAppClient | None:
+    """The configured Cloud API client, or None when WhatsApp is not enabled (simulator)."""
+    global _client
+    s = get_settings()
+    if not (s.whatsapp_enabled and s.whatsapp_access_token and s.whatsapp_phone_number_id):
+        return None
+    if _client is None:
+        _client = WhatsAppClient(s.whatsapp_access_token, s.whatsapp_phone_number_id, s.whatsapp_api_version)
+    return _client
+
+
+def set_whatsapp_client(client: WhatsAppClient | None) -> None:
+    """Tests inject a client with a mocked transport."""
+    global _client
+    _client = client
 
 
 async def kill_switch_on(db: AsyncSession, org_id: str) -> bool:
@@ -42,6 +69,15 @@ async def set_kill_switch(db: AsyncSession, org_id: str, engaged: bool, actor: s
     return row
 
 
+async def service_window_open(db: AsyncSession, run_id: str | None) -> bool:
+    """False only when the reply would go to real WhatsApp and the buyer's 24 h window has closed."""
+    run = await db.get(Run, run_id) if run_id else None
+    contact = await db.get(Contact, run.contact_key) if run is not None and run.contact_key else None
+    if whatsapp_client() is None or contact is None or contact.channel != "whatsapp":
+        return True
+    return within_service_window(contact.last_inbound_at)
+
+
 async def send(db: AsyncSession, *, org_id: str, run_id: str, action_type: str, payload: dict, actor: str,
                approval_id: str | None = None, autonomous: bool = False) -> dict:
     """Deliver an allowed action (simulator) and write the audit entry. Raises KillSwitchEngaged when stopped."""
@@ -52,7 +88,18 @@ async def send(db: AsyncSession, *, org_id: str, run_id: str, action_type: str, 
     text = payload.get("text", "")
     sent = {"channel": f"{payload.get('channel', 'form')}_simulator", "action_type": action_type,
             "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()[:16], "autonomous": autonomous}
-    action = "action.autonomous_sent" if autonomous else "message.sent_simulated"
+    run = await db.get(Run, run_id) if run_id else None
+    contact = await db.get(Contact, run.contact_key) if run is not None and run.contact_key else None
+    client = whatsapp_client()
+    if client is not None and contact is not None and contact.channel == "whatsapp":
+        if not within_service_window(contact.last_inbound_at):
+            await append_audit(db, org_id=org_id, actor="channel:whatsapp", action="send.refused_window",
+                               run_id=run_id, details={"action_type": action_type, "approval_id": approval_id})
+            raise OutsideServiceWindow("More than 24 h since the buyer's last message: a template is required.")
+        sent["provider_message_id"] = await client.send_text(contact.address, text)
+        sent["channel"] = "whatsapp"
+    action = ("action.autonomous_sent" if autonomous else
+              "message.sent_whatsapp" if sent["channel"] == "whatsapp" else "message.sent_simulated")
     await append_audit(db, org_id=org_id, actor="channel:simulator", action=action, run_id=run_id,
                        details={"approval_id": approval_id, "by": actor, **sent})
     return sent

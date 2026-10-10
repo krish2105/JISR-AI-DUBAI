@@ -2,6 +2,27 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 8 — Channels: WhatsApp, voice notes, collections ✅ (2026-10-10)
+
+**Built**
+- **WhatsApp Cloud API** (`app/channels/whatsapp.py`, `app/api/channels.py`): verify-token handshake, HMAC-SHA256 signature check on the raw body (unsigned → 401 + audit), text and voice-note parsing, media download, text send; idempotent inbound handling; contacts stored with a hashed key (models never see a phone number); Meta's 24 h window enforced before approval and in the outbox. Founder setup guide: `docs/WHATSAPP_SETUP.md`.
+- **Voice notes → STT → quote**: `router.transcribe` (role `stt`, same free-tier data rule: real audio refused), offline replay of transcripts; **synthetic** demo voice notes (Arabic, English) made with the OS voice; the parser now reads spoken Arabic quantities (ثلاثمئة، مئتي، ألف).
+- **Simulator**: signs a Meta-shaped payload and runs the real handler; dashboard "WhatsApp voice notes" card with audio players; the transcript appears in the timeline.
+- **Outbox → real WhatsApp** when configured (simulator otherwise); approvals refused outside the 24 h window.
+- **Collections** (`app/agents/collections.py`): overdue-invoice reminders EN/AR with tone by lateness, always through the approval inbox, never with bank details (anti-fraud line instead); "Check overdue invoices" on `/approvals`.
+- Additive schema upgrade at start-up (new nullable columns), contacts / inbound_log / invoices tables.
+
+**Known gaps (founder steps)**
+- Real WhatsApp needs your Meta app credentials and an HTTPS URL (`docs/WHATSAPP_SETUP.md`); templates for messages outside the 24 h window are not built.
+- Real voice notes need a paid, no-training speech-to-text before the pilot (the router refuses them on free tiers by design).
+
+**Next: Phase 9**: explainable supervisor routing (clarify when details are missing, CEPA only for UAE destinations), buyer memory, trajectory suite (50 scenarios x 3 runs).
+
+**Tested**
+- `make test` → 268 passed (signature valid / tampered / wrong secret, handshake, parsing, Graph media + send with a mocked transport, duplicate deliveries, voice note → Arabic quote with 2 lines, real audio refused on free tier, 24 h window refusal, collections tone and bank-safety line, spoken Arabic quantities).
+- `make eval` → **Gate: PASSED**. New hard gate: voice notes → quote **1.000** (2 synthetic notes, AR + EN, through the signed inbound path). E2E 300 runs 1.000, p95 2.4 s; governance, red team, docs, trust, retrieval and extraction unchanged.
+- Browser (Arabic): voice note → timeline shows the transcript → 2 lines priced, Incoterm correctly flagged as not stated. Collections: 2 reminders drafted (45 days AR = high risk, 10 days EN), the third invoice not yet due.
+
 ## Phase 7 — Governance: autonomy, kill switch, Agent Passports ✅ (2026-10-10)
 
 **Built**

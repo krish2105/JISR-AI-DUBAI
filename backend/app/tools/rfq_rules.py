@@ -67,6 +67,20 @@ NUMBER_WORD_RE = re.compile(
     r"\b((?:one|two|three|four|five|six|seven|eight|nine|ten|twelve|fifteen|twenty|thirty|forty|fifty)"
     r"(?:\s+(?:hundred|thousand|fifty))+)\b", re.I)
 
+# Arabic round numbers as spoken (voice notes are transcribed to words: "ثلاثمئة مصباح").
+AR_NUMBER_WORDS = {
+    "مئة|مائة": 100, "مئتين|مئتان|مئتي|مائتين|مائتان|مائتي": 200, "ثلاثمئة|ثلاثمائة|ثلاث مئة|ثلاث مائة": 300,
+    "أربعمئة|اربعمئة|أربعمائة|اربعمائة|أربع مئة|اربع مئة": 400, "خمسمئة|خمسمائة|خمس مئة|خمس مائة": 500,
+    "ستمئة|ستمائة|ست مئة": 600, "سبعمئة|سبعمائة|سبع مئة": 700,
+    "ثمانمئة|ثمانمائة|ثمانيمئة|ثماني مئة|ثمان مئة": 800, "تسعمئة|تسعمائة|تسع مئة": 900,
+    "ألف|الف": 1000, "ألفين|ألفان|الفين|الفان": 2000, "عشرين": 20, "ثلاثين": 30, "أربعين|اربعين": 40,
+    "خمسين": 50, "ستين": 60, "سبعين": 70, "ثمانين": 80, "تسعين": 90,
+}
+AR_NUMBER_RE = re.compile(
+    r"(?<![\u0621-\u064a])(و)?(" + "|".join(sorted((w for k in AR_NUMBER_WORDS for w in k.split("|")), key=len,
+                                                    reverse=True)) + r")(?![\u0621-\u064a])")
+AR_NUMBER_VALUE = {w: v for k, v in AR_NUMBER_WORDS.items() for w in k.split("|")}
+
 # Words that end an item description (context that follows the product name).
 STOP_RE = re.compile(
     r"\s(for|to|ship|shipping|delivery|deliver|deliverd|needed|need|required|within|before|by|till|until|asap|"
@@ -222,6 +236,8 @@ def find_items(text: str) -> list[LineItem]:
         value = _words_to_number(phrase)
         if value:
             t = t.replace(phrase, str(value), 1)
+    # "ومئتي مفرش" -> " و 200 مفرش" (the conjunction is kept so the segment split still works)
+    t = AR_NUMBER_RE.sub(lambda m: (" و " if m.group(1) else "") + str(AR_NUMBER_VALUE[m.group(2)]), t)
     segments = re.split(r"\n|;|\||•|\s\+\s|\s&\s|\sand\s|\sn\s|\s+و\s+|،|,\s|\.\s", t)
     items: list[LineItem] = []
     pending_desc: str | None = None                                  # "Dhurrie rugs 4x6 ft | 120" (table rows)

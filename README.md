@@ -52,6 +52,13 @@ make kb         # tariff tree + rules + chunks + embeddings -> data/kb_index/ (f
 the duty card says the knowledge base is unavailable; the retrieval eval suite reports SKIP. Sources, corrections and
 gaps (no official Annex 2B yet, so savings are shown as "up to"): [data/kb_sources/SOURCES_REVIEW.md](data/kb_sources/SOURCES_REVIEW.md).
 
+### WhatsApp and voice notes
+
+The demo page has a **WhatsApp voice notes** card: synthetic Arabic and English voice notes go through the same
+signed webhook path as real messages (speech-to-text → quote). To connect a real WhatsApp test number, follow
+[docs/WHATSAPP_SETUP.md](docs/WHATSAPP_SETUP.md). `/approvals` → "Check overdue invoices" drafts payment reminders
+(never with bank details) for approval.
+
 Optional: `make db` starts Postgres + pgvector in Docker; `make up` runs DB and API in containers (start OrbStack or Docker Desktop first).
 
 ## Model profiles

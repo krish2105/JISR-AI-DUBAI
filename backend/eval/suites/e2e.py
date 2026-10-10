@@ -26,6 +26,41 @@ def _pct(values: list[float], q: float) -> float:
     return ordered[min(len(ordered) - 1, int(q * len(ordered)))]
 
 
+async def _voice_notes(failures: list[dict]) -> tuple[int, int]:
+    """The synthetic WhatsApp voice notes through the real inbound path (signature, STT, pipeline)."""
+    import json as _json
+    import time as _time
+
+    from app.api.channels import VOICE_DIR, process_payload
+    from app.channels.whatsapp import sign
+    from app.config import get_settings
+    from app.llm.router import VOICE_MANIFEST
+
+    if not VOICE_MANIFEST.exists():
+        return 0, 0
+    ok = 0
+    manifest = _json.loads(VOICE_MANIFEST.read_text(encoding="utf-8"))
+    for i, note in enumerate(manifest.values()):
+        msg = {"from": f"97150000{i:04d}", "id": f"wamid.EVAL.voice.{i}.{_time.time_ns()}",
+               "timestamp": str(int(_time.time())), "type": "audio",
+               "audio": {"id": f"media.{i}", "mime_type": note["mime_type"], "voice": True}}
+        raw = _json.dumps({"entry": [{"changes": [{"value": {"messages": [msg]}}]}]}).encode()
+        secret = get_settings().simulator_secret
+        [res] = await process_payload(raw, sign(raw, secret), secret, source="simulator",
+                                      audio=(VOICE_DIR / note["file"]).read_bytes(), mime_type=note["mime_type"],
+                                      wait=True, run_in_background=False)
+        good = False
+        if res.get("run_id"):
+            async with session_scope() as db:
+                run = await db.get(Run, res["run_id"])
+            good = run.status == "needs_approval" and len((run.state.get("quote") or {}).get("lines", [])) >= 2 \
+                and (run.state.get("rfq") or {}).get("language") == note["language"]
+        ok += good
+        if not good:
+            failures.append({"id": f"voice:{note['file']}", "status": res.get("status"), "reason": res.get("reason")})
+    return ok, len(manifest)
+
+
 async def run(ctx: EvalContext) -> SuiteResult:
     """Run a stratified sample of enquiries end to end."""
     rows = load("enquiries", ctx)
@@ -53,8 +88,11 @@ async def run(ctx: EvalContext) -> SuiteResult:
         if not ok:
             failures.append({"id": row["id"], "language": row["language"], "status": run.status,
                              "lines": len(lines), "draft_language": draft_lang})
+    voice_ok, voice_n = await _voice_notes(failures)
     n = len(rows) or 1
-    metrics = {"task_success_rate": successes / n, "latency_p50_s": statistics.median(latencies) if latencies else 0,
+    metrics = {"task_success_rate": successes / n,
+               "voice_task_success_rate": voice_ok / voice_n if voice_n else 0.0,
+               "latency_p50_s": statistics.median(latencies) if latencies else 0,
                "latency_p95_s": _pct(latencies, 0.95), "steps_mean": statistics.mean(steps) if steps else 0}
     slices = {f"lang={k}": {"task_success_rate": v[0] / v[1]} for k, v in sorted(by_lang.items())}
     return SuiteResult("e2e", len(rows), metrics, slices, failures)

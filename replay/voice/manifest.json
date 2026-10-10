@@ -1,0 +1,18 @@
+{
+  "ce6977a831027ffca2807f7c49fb45953481cc52a48ae797cd2b315fc53c1b19": {
+    "file": "ar_voice_lamps.m4a",
+    "voice": "Majed",
+    "language": "ar",
+    "transcript": "مرحبا، معكم شركة الواحة للهدايا في دبي. نحتاج ثلاثمئة مصباح نحاسي ومئتي مفرش طاولة قطني، الشحن إلى جبل علي، قبل نهاية الشهر. أرسلوا لنا السعر من فضلكم.",
+    "mime_type": "audio/mp4",
+    "synthetic": true
+  },
+  "2607d10f9bb251be19579170f903969fb052dc555dc356c7994453715f739463": {
+    "file": "en_voice_shawls.m4a",
+    "voice": "Aman",
+    "language": "en",
+    "transcript": "Hello, this is Marina Home Decor in Dubai. We need two hundred pashmina shawls and one hundred wooden jewellery boxes, CIF Jebel Ali, before the fifteenth of December. Please send your best price.",
+    "mime_type": "audio/mp4",
+    "synthetic": true
+  }
+}

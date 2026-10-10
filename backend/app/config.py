@@ -67,6 +67,16 @@ class Settings(BaseSettings):
     # Organisation used when a request does not name one (the public no-login demo org).
     default_org_id: str = "demo"
 
+    # WhatsApp Cloud API (Phase 8). Disabled -> replies go to the simulator. Secrets live only in .env.
+    whatsapp_enabled: bool = False
+    whatsapp_verify_token: str = ""            # you choose it; paste the same value in the Meta app webhook settings
+    whatsapp_app_secret: str = ""              # Meta app secret: verifies X-Hub-Signature-256 on every webhook
+    whatsapp_access_token: str = ""            # system-user token with whatsapp_business_messaging permission
+    whatsapp_phone_number_id: str = ""         # the test (or production) number's id from the Meta dashboard
+    whatsapp_api_version: str = "v23.0"        # Graph API version; check Meta's changelog and update
+    whatsapp_org_id: str = "demo"              # organisation that receives the number's messages
+    simulator_secret: str = "jisr-simulator-local-only"   # signs simulated webhooks so they take the same path
+
     # Allowed browser origins for the dashboard (comma-separated in the env var).
     cors_origins: str = "http://localhost:3000"
 

@@ -48,5 +48,7 @@ prod:
   fast:   {provider: anthropic, model: claude-haiku-5-5,  effort: low}
   judge:  {provider: anthropic, model: claude-opus-5-5,   effort: high}
   # Claude does not transcribe audio, so speech-to-text stays on a dedicated STT model.
-  # Voice notes are redacted downstream; pilot audio must use a paid no-training STT (Phase 8).
+  # Real voice notes are real customer data: this entry assumes a PAID Groq account whose terms exclude training
+  # on inputs (confirm before the pilot; DECISIONS C3). Until then keep it free_tier: true so the router refuses
+  # real audio, and demo with the synthetic voice notes (simulator).
   stt:    {provider: litellm,   model: groq/whisper-large-v3, free_tier: true}

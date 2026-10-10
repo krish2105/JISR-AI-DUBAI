@@ -61,10 +61,29 @@ def _session_factory() -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(get_engine(), expire_on_commit=False)
 
 
+def _add_missing_columns(sync_conn) -> None:
+    """Additive upgrade: add NULLABLE columns that newer code defines but an older database lacks.
+
+    Never drops or changes anything. Enough until the schema settles and Alembic takes over (DECISIONS C1).
+    """
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(sync_conn)
+    for table in Base.metadata.sorted_tables:
+        if not inspector.has_table(table.name):
+            continue
+        existing = {c["name"] for c in inspector.get_columns(table.name)}
+        for column in table.columns:
+            if column.name not in existing and column.nullable:
+                ddl = column.type.compile(dialect=sync_conn.dialect)
+                sync_conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN {column.name} {ddl}'))
+
+
 async def init_db() -> None:
-    """Create any missing tables (safe to call on every start-up)."""
+    """Create any missing tables and add new nullable columns (safe to call on every start-up)."""
     async with get_engine().begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_add_missing_columns)
 
 
 @asynccontextmanager

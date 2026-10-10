@@ -28,7 +28,7 @@ from langchain_core.runnables import RunnableConfig
 
 from app.agents.state import PendingAction, RunState
 from app.agents.trade_agents import analyse_duty, build_doc_pack, check_draft_documents
-from app.channels.outbox import KillSwitchEngaged, kill_switch_on, send
+from app.channels.outbox import KillSwitchEngaged, OutsideServiceWindow, kill_switch_on, send
 from app.db.models import Approval
 from app.db.session import session_scope
 from app.governance.audit import append_audit
@@ -372,7 +372,7 @@ async def governance(state: RunState, em: RunEmitter, config: RunnableConfig) ->
                     done_alone += 1
                     events.append(("tool_result", {"tool": action.action_type, "autonomous": True,
                                                    "title": action.title, **sent}, "low"))
-                except KillSwitchEngaged:
+                except (KillSwitchEngaged, OutsideServiceWindow):
                     blocked += 1
                     events.append(("blocked", {"action_type": action.action_type, "title": action.title,
                                                "rule_ids": ["P-KILL-001"], "reasons": ["Kill switch is on."]}, "high"))

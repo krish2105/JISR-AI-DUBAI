@@ -115,8 +115,12 @@ export function describe(e: RunEvent): string {
       return String(p.title ?? p.action_type ?? "");
     case "approval_decided":
       return `${String(p.decision)}${p.edited ? " (edited)" : ""}`;
-    case "run_started":
-      return String(p.channel ?? "");
+    case "run_started": {
+      const voice = p.voice_note as { stt_model?: string } | undefined;
+      return voice
+        ? `${String(p.channel ?? "")} · voice note → “${String(p.message_redacted ?? "").slice(0, 120)}” (${voice.stt_model ?? "stt"})`
+        : String(p.channel ?? "");
+    }
     case "error":
       return String(p.message ?? "");
     case "done":

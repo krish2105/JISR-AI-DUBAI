@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api import approvals, audit, demo, governance, runs
+from app.api import approvals, audit, channels, collections, demo, governance, runs
 from app.config import get_settings
 from app.db.session import get_engine, init_db
 from app.llm.router import get_router
@@ -29,6 +29,10 @@ from app.llm.router import get_router
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Runs once at start-up (create tables) and once at shutdown (close DB connections)."""
     await init_db()
+    if get_settings().default_org_id == "demo":
+        from app.agents.collections import seed_demo_invoices
+
+        await seed_demo_invoices("demo")         # synthetic invoices for the collections demo
     yield
     await get_engine().dispose()
 
@@ -51,7 +55,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    for module in (runs, approvals, audit, demo, governance):
+    for module in (runs, approvals, audit, demo, governance, channels, collections):
         app.include_router(module.router)
 
     @app.get("/health", tags=["system"])

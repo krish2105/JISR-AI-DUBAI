@@ -9,9 +9,9 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Play, ShieldAlert } from "lucide-react";
+import { Loader2, Mic, Play, ShieldAlert } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
-import { api, type Sample } from "@/lib/api";
+import { API_URL, api, type Sample, type VoiceSample } from "@/lib/api";
 import { deriveRunView } from "@/lib/runView";
 import { useRunEvents } from "@/lib/useRunEvents";
 import { setUrlParam, useUrlParam } from "@/lib/useUrlParam";
@@ -31,6 +31,7 @@ function savingFromEvents(events: { agent: string; kind: string; payload: Record
 export function DemoConsole() {
   const { t, locale } = useI18n();
   const [samples, setSamples] = useState<Sample[]>([]);
+  const [voices, setVoices] = useState<VoiceSample[]>([]);
   const runId = useUrlParam("run");                       // the URL is the source of truth
   const [custom, setCustom] = useState("");
   const [starting, setStarting] = useState(false);
@@ -42,7 +43,22 @@ export function DemoConsole() {
   // Load the sample enquiries once.
   useEffect(() => {
     api.samples().then(setSamples).catch(() => setError(t.common.error));
+    api.voiceSamples().then(setVoices).catch(() => setVoices([]));
   }, [t.common.error]);
+
+  async function sendVoice(name: string) {
+    setStarting(true);
+    setError(null);
+    try {
+      const r = await api.simulateWhatsApp({ voice_sample: name });
+      if (r.run_id) setUrlParam("run", r.run_id);
+      else setError(r.reason ?? t.common.error);
+    } catch {
+      setError(t.common.error);
+    } finally {
+      setStarting(false);
+    }
+  }
 
   async function start(body: { sample_id?: string; message?: string }) {
     setStarting(true);
@@ -91,6 +107,24 @@ export function DemoConsole() {
             ))}
           </div>
         </Card>
+
+        {voices.length > 0 && (
+          <Card>
+            <CardHeader title={<span className="inline-flex items-center gap-2"><Mic className="h-4 w-4 text-accent" aria-hidden />{t.demo.voiceTitle}</span>} />
+            <div className="space-y-3 p-3">
+              {voices.map((v) => (
+                <div key={v.name} className="space-y-1.5 rounded-xl border border-line p-2.5">
+                  <p className="text-sm font-medium text-ink">{v.language === "ar" ? t.demo.voiceArabic : t.demo.voiceEnglish}</p>
+                  <audio controls preload="none" src={`${API_URL}${v.audio_url}`} className="h-8 w-full" />
+                  <Button variant="secondary" className="w-full" disabled={starting || running} onClick={() => sendVoice(v.name)}>
+                    <Mic className="h-4 w-4" aria-hidden /> {t.demo.sendVoice}
+                  </Button>
+                </div>
+              ))}
+              <p className="text-[11px] text-ink-3">{t.demo.voiceNote}</p>
+            </div>
+          </Card>
+        )}
 
         <Card>
           <CardHeader title={t.demo.custom} />

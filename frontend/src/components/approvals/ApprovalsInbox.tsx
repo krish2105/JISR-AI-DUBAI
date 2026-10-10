@@ -17,6 +17,7 @@ export function ApprovalsInbox() {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch data; state is only set in the promise callbacks (never synchronously in an effect).
+  const [collections, setCollections] = useState<number | null>(null);
   const load = useCallback(() => {
     api.approvals("all").then(setItems).catch(() => setError(t.common.error));
   }, [t.common.error]);
@@ -28,9 +29,21 @@ export function ApprovalsInbox() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t.approvals.title}</h1>
-        <p className="mt-1 text-sm text-ink-2">{t.approvals.subtitle}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{t.approvals.title}</h1>
+          <p className="mt-1 text-sm text-ink-2">{t.approvals.subtitle}</p>
+        </div>
+        <div className="text-end">
+          <Button variant="secondary" onClick={() => api.runCollections()
+            .then((r) => { setCollections(r.drafted); load(); })
+            .catch(() => setError(t.common.error))}>
+            {t.approvals.collections}
+          </Button>
+          {collections !== null && (
+            <p className="mt-1 text-xs text-ink-3"><bdi>{collections}</bdi> {t.approvals.collectionsDone}</p>
+          )}
+        </div>
       </div>
 
       {error && (

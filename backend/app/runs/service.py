@@ -21,7 +21,7 @@ from sqlalchemy import select
 
 from app.agents.graph import build_graph
 from app.agents.state import RunState
-from app.channels.outbox import kill_switch_on, send
+from app.channels.outbox import OutsideServiceWindow, kill_switch_on, send, service_window_open
 from app.config import get_settings
 from app.db.models import Approval, Run
 from app.db.session import session_scope
@@ -38,7 +38,8 @@ class ApprovalError(Exception):
 
 
 async def create_run(*, message: str, channel: str = "form", org_id: str | None = None,
-                     sample_id: str | None = None, background: bool = True) -> str:
+                     sample_id: str | None = None, background: bool = True, contact_key: str | None = None,
+                     meta: dict | None = None) -> str:
     """Store a new run (redacted text only) and start its agents. Returns the run id."""
     settings = get_settings()
     org_id = org_id or settings.default_org_id
@@ -48,11 +49,12 @@ async def create_run(*, message: str, channel: str = "form", org_id: str | None 
     state = RunState(run_id=run_id, org_id=org_id, raw_message_redacted=redaction.text, channel=channel)
     async with session_scope() as db:
         db.add(Run(id=run_id, org_id=org_id, status="new", channel=channel, sample_id=sample_id,
-                   raw_redacted=redaction.text, state=state.model_dump(mode="json")))
+                   raw_redacted=redaction.text, state=state.model_dump(mode="json"), contact_key=contact_key))
         await append_audit(db, org_id=org_id, actor="system", action="run.created", run_id=run_id,
-                           details={"channel": channel, "sample_id": sample_id, "masked": redaction.counts})
+                           details={"channel": channel, "sample_id": sample_id, "masked": redaction.counts,
+                                    **(meta or {})})
     await emit(run_id, "system", "run_started",
-               {"channel": channel, "sample_id": sample_id, "message_redacted": redaction.text})
+               {"channel": channel, "sample_id": sample_id, "message_redacted": redaction.text, **(meta or {})})
 
     job = execute_run(run_id, redaction_counts=redaction.counts)
     if background:
@@ -102,6 +104,9 @@ async def decide(approval_id: str, *, org_id: str, decision: Literal["approve", 
             raise ApprovalError(f"Approval already {approval.status}")
         if decision == "approve" and await kill_switch_on(db, org_id):
             raise ApprovalError("Kill switch is on: nothing can be sent until it is turned off.")
+        if decision == "approve" and approval.action_type.startswith("send_") and \
+                not await service_window_open(db, approval.run_id):
+            raise ApprovalError("More than 24 h since the buyer's last WhatsApp message: a template is required.")
 
         edited = edited_text is not None and edited_text != approval.payload.get("text")
         if edited:
@@ -115,8 +120,11 @@ async def decide(approval_id: str, *, org_id: str, decision: Literal["approve", 
                                     "edited": edited, "note": note})
         sent = None
         if approval.status == "approved" and approval.action_type.startswith("send_"):
-            sent = await send(db, org_id=org_id, run_id=approval.run_id, action_type=approval.action_type,
-                              payload=approval.payload, actor=actor, approval_id=approval.id)
+            try:
+                sent = await send(db, org_id=org_id, run_id=approval.run_id, action_type=approval.action_type,
+                                  payload=approval.payload, actor=actor, approval_id=approval.id)
+            except OutsideServiceWindow as exc:          # window closed between the check and the send
+                raise ApprovalError(str(exc)) from exc
 
         remaining = await db.scalar(
             select(Approval.id).where(Approval.run_id == approval.run_id, Approval.status == "pending",

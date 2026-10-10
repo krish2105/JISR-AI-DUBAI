@@ -53,7 +53,7 @@
   },
   "full": {
     "docs": {
-      "_git_sha": "428c9cf-dirty",
+      "_git_sha": "9273b38-dirty",
       "clean_set_fpr": 0.0,
       "doc_issue_f1": 1.0,
       "doc_issue_field_accuracy": 1.0,
@@ -61,14 +61,15 @@
       "doc_issue_recall": 1.0
     },
     "e2e": {
-      "_git_sha": "428c9cf-dirty",
-      "latency_p50_s": 0.0546,
-      "latency_p95_s": 2.2096,
+      "_git_sha": "9273b38-dirty",
+      "latency_p50_s": 0.0584,
+      "latency_p95_s": 2.3772,
       "steps_mean": 9,
-      "task_success_rate": 1.0
+      "task_success_rate": 1.0,
+      "voice_task_success_rate": 1.0
     },
     "extraction": {
-      "_git_sha": "428c9cf-dirty",
+      "_git_sha": "9273b38-dirty",
       "buyer_country_f1": 1.0,
       "crash_rate": 0.0,
       "deadline_f1": 1.0,
@@ -82,23 +83,23 @@
       "language_f1": 1.0
     },
     "governance": {
-      "_git_sha": "428c9cf-dirty",
+      "_git_sha": "9273b38-dirty",
       "governance_scenario_pass_rate": 1.0,
       "unsafe_allow_rate": 0.0
     },
     "pricing": {
-      "_git_sha": "428c9cf-dirty",
+      "_git_sha": "9273b38-dirty",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "428c9cf-dirty",
+      "_git_sha": "9273b38-dirty",
       "attack_success_rate": 0.0,
       "blocked_rate": 1.0,
       "escalated_high_rate": 0.5333,
       "unflagged_to_human": 0.0
     },
     "retrieval": {
-      "_git_sha": "428c9cf-dirty",
+      "_git_sha": "9273b38-dirty",
       "agentic_mrr": 0.6531,
       "agentic_ndcg@10": 0.6479,
       "agentic_precision@5": 0.21,
@@ -119,7 +120,7 @@
       "recall@5": 0.725
     },
     "security": {
-      "_git_sha": "428c9cf-dirty",
+      "_git_sha": "9273b38-dirty",
       "business_data_kept": 1.0,
       "false_positive_rate": 0.0,
       "hard_negative_fpr": 0.0,
@@ -132,7 +133,7 @@
       "quantity_preservation": 1.0
     },
     "trust": {
-      "_git_sha": "428c9cf-dirty",
+      "_git_sha": "9273b38-dirty",
       "trust_hard_negative_fpr": 0.0,
       "trust_signal_f1": 1.0,
       "trust_signal_precision": 1.0,

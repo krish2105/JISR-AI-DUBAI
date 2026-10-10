@@ -48,10 +48,17 @@ Payload conventions:
 | POST | `/governance/kill-switch` | body `{engaged, reason?}`; audited; while on, nothing leaves (P7) |
 | GET | `/governance/autonomous?hours=24` | actions done without a human + blocks, from the audit chain (P7) |
 | GET | `/passports` | Agent Passports: enforced tools, data, autonomy, live eval metrics, 24 h activity (P7) |
+| GET | `/channels/whatsapp/webhook` | Meta verification handshake (`hub.mode`, `hub.verify_token`, `hub.challenge`) (P8) |
+| POST | `/channels/whatsapp/webhook` | signed deliveries (`X-Hub-Signature-256`); 401 if unsigned (P8) |
+| POST | `/channels/whatsapp/simulate?sync=` | `{text}` or `{voice_sample}` → same path as a real delivery → `{status, run_id}` (P8) |
+| GET | `/channels/whatsapp/voice-samples` · `/channels/whatsapp/voice/{name}` | synthetic voice notes and their audio (P8) |
+| GET | `/collections/invoices` · POST `/collections/run` | invoices; draft overdue reminders into the approval inbox (P8) |
 
 Organisation: optional `X-Org-Id` header (default `demo`). Every query filters by org; other orgs get 404.
 
-Planned (not yet built): `GET /kb/tree` (P11, 3D tariff tree), `POST /channels/whatsapp/webhook` (P8), `GET /roi` (P10).
+Planned (not yet built): `GET /kb/tree` (P11, 3D tariff tree), `GET /roi` (P10).
+
+`run_started` payload may carry `source` (`whatsapp` | `simulator`) and `voice_note` `{stt_model, provider, audio_sha256, language}` (additive, P8).
 
 ## 3. RunState
 

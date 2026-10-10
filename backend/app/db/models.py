@@ -65,6 +65,7 @@ class Run(Base):
     channel: Mapped[str] = mapped_column(String(20), default="form")
     sample_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
     raw_redacted: Mapped[str] = mapped_column(Text)        # never the unredacted message
+    contact_key: Mapped[str | None] = mapped_column(String(64), nullable=True)   # who to reply to (Phase 8)
     state: Mapped[dict] = mapped_column(JSON, default=dict)  # latest RunState as JSON
 
 
@@ -132,3 +133,67 @@ class OrgSettings(Base):
     kill_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class Contact(Base):
+    """A buyer reachable on a channel. The phone number is needed to reply, so it is stored, but never shown to a
+    model (runs only reference `contact_key`, a salted hash)."""
+
+    __tablename__ = "contacts"
+
+    contact_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    org_id: Mapped[str] = mapped_column(String(40), index=True)
+    channel: Mapped[str] = mapped_column(String(20), default="whatsapp")
+    address: Mapped[str] = mapped_column(String(64))                 # WhatsApp id (phone number)
+    display_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    last_inbound_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)   # 24 h window
+
+
+class InboundLog(Base):
+    """Inbound message ids already handled (webhooks can be delivered more than once)."""
+
+    __tablename__ = "inbound_log"
+
+    message_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    org_id: Mapped[str] = mapped_column(String(40), index=True)
+    received_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    run_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    kind: Mapped[str] = mapped_column(String(20))
+
+
+class Invoice(Base):
+    """An issued export invoice (collections). Demo data is synthetic and seeded for the demo org only."""
+
+    __tablename__ = "invoices"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    org_id: Mapped[str] = mapped_column(String(40), index=True)
+    buyer_name: Mapped[str] = mapped_column(String(160))
+    contact_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    language: Mapped[str] = mapped_column(String(5), default="en")
+    amount_aed: Mapped[float] = mapped_column()
+    issued_on: Mapped[datetime] = mapped_column(UTCDateTime())
+    due_on: Mapped[datetime] = mapped_column(UTCDateTime())
+    status: Mapped[str] = mapped_column(String(20), default="open")          # open | paid (paid only by a human)
+    last_reminder_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class BuyerMemory(Base):
+    """What Jisr remembers about a buyer across runs (per organisation, keyed by the hashed contact).
+
+    Facts only (counts, last Incoterm, languages, last quote total, past high-risk signals): no message text and no
+    personal data, so it can be shown to the owner and used by agents safely.
+    """
+
+    __tablename__ = "buyer_memory"
+
+    contact_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    org_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    first_seen: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    last_seen: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    runs: Mapped[int] = mapped_column(default=0)
+    quotes_sent: Mapped[int] = mapped_column(default=0)                 # approved and delivered
+    last_incoterm: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    last_quote_total_aed: Mapped[float | None] = mapped_column(nullable=True)
+    languages: Mapped[list] = mapped_column(JSON, default=list)
+    risk_signals: Mapped[list] = mapped_column(JSON, default=list)      # high-risk signal names ever raised

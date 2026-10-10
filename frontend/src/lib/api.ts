@@ -113,6 +113,8 @@ export type Passport = {
   activity_24h: Record<string, number>;
 };
 
+export type VoiceSample = { name: string; language: "ar" | "en"; transcript: string; audio_url: string };
+
 export type Approval = {
   id: string; run_id: string; created_at: string; action_type: string; title: string;
   payload: { text?: string; language?: string; channel?: string; edited_by_human?: boolean };
@@ -159,4 +161,9 @@ export const api = {
     call<Governance>("/governance/kill-switch", { method: "POST", body: JSON.stringify({ engaged, reason }) }),
   autonomous: (hours = 24) => call<AutonomousLog>(`/governance/autonomous?hours=${hours}`),
   passports: () => call<Passport[]>("/passports"),
+  voiceSamples: () => call<VoiceSample[]>("/channels/whatsapp/voice-samples"),
+  simulateWhatsApp: (body: { text?: string; voice_sample?: string }) =>
+    call<{ status: string; run_id?: string; reason?: string }>("/channels/whatsapp/simulate", { method: "POST", body: JSON.stringify(body) }),
+  runCollections: () => call<{ drafted: number; reminders: { invoice_id: string; days_overdue: number; tone: string }[] }>(
+    "/collections/run", { method: "POST" }),
 };

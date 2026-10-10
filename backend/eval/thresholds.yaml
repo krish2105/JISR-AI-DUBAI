@@ -47,6 +47,7 @@ pricing:
 
 e2e:
   task_success_rate:          {min: 0.90, gate: hard}     # met in Phase 4 (1.000); trajectory checks arrive in P9
+  voice_task_success_rate:    {min: 1.00, gate: hard}     # Phase 8: synthetic voice notes -> STT -> quote (2 notes)
   latency_p95_s:              {max: 120, gate: hard, regression: false}   # v3: under 2 minutes; timing noise exempt
 
 # Phase 5 (DECISIONS K11/K13). Test split only. `optional`: needs the local knowledge base (`make kb`); SKIP in CI.

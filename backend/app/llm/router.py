@@ -427,6 +427,30 @@ class LLMRouter:
             self._record(req, response)
         return response
 
+    async def transcribe(self, req: TranscribeRequest) -> Transcript:
+        """Speech-to-text for a voice note, under the same data rules as text requests."""
+        cfg = self.config_for("stt")
+        if cfg.free_tier and req.data_class != "synthetic":
+            raise LLMPolicyError(f"Blocked: {req.data_class!r} audio may not be sent to free-tier model {cfg.model}.")
+        sha = hashlib.sha256(req.audio).hexdigest()
+        started = time.perf_counter()
+        out = await _transcribe_with(self, cfg, req, sha)
+        out.latency_ms = round((time.perf_counter() - started) * 1000, 2)
+        trace_dir = Path(self.settings.trace_dir)
+        trace_dir.mkdir(parents=True, exist_ok=True)
+        with (trace_dir / "llm_calls.jsonl").open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"ts": datetime.now(UTC).isoformat(), "profile": self.settings.llm_profile,
+                                 "role": "stt", "purpose": req.purpose, "provider": out.provider, "model": out.model,
+                                 "data_class": req.data_class, "audio_sha256": sha[:16],
+                                 "latency_ms": out.latency_ms}) + "\n")
+        if self.settings.llm_record and req.data_class != "real" and self.settings.llm_cassette:
+            path = Path(self.settings.llm_cassette)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps({"key": f"stt:{sha}", "role": "stt", "purpose": req.purpose, "text": out.text,
+                                     "language": out.language, "model": out.model}, ensure_ascii=False) + "\n")
+        return out
+
     def _record(self, req: LLMRequest, resp: LLMResponse) -> None:
         """Append this answer to the cassette so it can be replayed offline later.
 
@@ -471,6 +495,69 @@ class LLMRouter:
         }
         with (trace_dir / "llm_calls.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record) + "\n")
+
+
+# --------------------------------------------------------------------------------------
+# Speech-to-text (voice notes). Same rules as text: role config, free-tier data policy, call log, replay.
+# --------------------------------------------------------------------------------------
+
+VOICE_MANIFEST = Path(__file__).resolve().parents[3] / "replay" / "voice" / "manifest.json"
+
+
+class TranscribeRequest(BaseModel):
+    """Audio to transcribe. The bytes are never logged or recorded; only their SHA-256."""
+
+    audio: bytes = Field(exclude=True)
+    mime_type: str = "audio/ogg"
+    data_class: DataClass = "synthetic"
+    language_hint: str | None = None            # "ar" / "en" / None = let the model detect
+    purpose: str = "voice_note"
+
+
+class Transcript(BaseModel):
+    """What speech-to-text gives back."""
+
+    text: str
+    language: str | None = None
+    provider: str
+    model: str
+    audio_sha256: str
+    latency_ms: float = 0.0
+
+
+def _fake_transcripts() -> dict[str, str]:
+    """Synthetic demo voice notes (generated from text with the OS voice): audio SHA-256 -> the script used."""
+    if VOICE_MANIFEST.exists():
+        return {k: v["transcript"] for k, v in json.loads(VOICE_MANIFEST.read_text(encoding="utf-8")).items()}
+    return {}
+
+
+async def _transcribe_with(router: LLMRouter, cfg: RoleConfig, req: TranscribeRequest, sha: str) -> Transcript:
+    """Call the configured STT provider."""
+    if cfg.provider == "fake":
+        text = _fake_transcripts().get(sha)
+        if text is None:
+            raise LLMBackendError("fake STT only knows the synthetic demo voice notes (replay/voice/manifest.json)")
+        return Transcript(text=text, provider="fake", model=cfg.model, audio_sha256=sha)
+    if cfg.provider == "replay":
+        entry = router.backends["replay"]._load().get(f"stt:{sha}")       # type: ignore[attr-defined]
+        if entry is None:
+            raise LLMBackendError(f"No recorded transcript for audio {sha[:12]}; re-record with LLM_RECORD=true.")
+        return Transcript(text=entry["text"], language=entry.get("language"), provider="replay",
+                          model=f"replay:{entry['model']}", audio_sha256=sha)
+    if cfg.provider == "litellm":
+        import litellm
+
+        ext = {"audio/ogg": "ogg", "audio/mpeg": "mp3", "audio/mp4": "m4a", "audio/aac": "aac",
+               "audio/wav": "wav", "audio/x-wav": "wav"}.get(req.mime_type.split(";")[0], "ogg")
+        try:
+            resp = await litellm.atranscription(model=cfg.model, file=(f"voice.{ext}", req.audio),
+                                                **({"language": req.language_hint} if req.language_hint else {}))
+        except Exception as exc:
+            raise LLMBackendError(f"{cfg.model} transcription failed: {exc}") from exc
+        return Transcript(text=getattr(resp, "text", "") or "", language=getattr(resp, "language", None),
+                          provider="litellm", model=cfg.model, audio_sha256=sha)
+    raise LLMBackendError(f"Provider {cfg.provider!r} cannot transcribe audio")
 
 
 @lru_cache
