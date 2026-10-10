@@ -77,8 +77,40 @@ export type RunDetail = {
     quote?: Quote | null; drafts?: { language: string; text: string }[]; impact?: Record<string, number>;
     duty?: DutyAnalysis | null;
     docs?: { status: string; documents: { document: string; citation: Citation | null }[]; note?: string } | null;
+    doc_issues?: DocIssue[];
+    buyer_signals?: BuyerSignal[];
   };
   approvals: { id: string; title: string; status: string; risk: Risk }[];
+};
+
+export type DocIssue = {
+  type: string; field: string; severity: "high" | "medium" | "low"; message: string; fix: string;
+  expected?: unknown; found?: unknown; rule_ref?: string | null; citation?: Citation | null;
+};
+
+export type BuyerSignal = {
+  signal: string; risk: "high" | "medium" | "low" | "positive" | "info"; evidence: string; why: string; source?: string;
+};
+
+export type Governance = {
+  kill_switch: boolean; kill_reason: string | null; updated_by: string | null; updated_at: string | null;
+  policies: { id: string; description: string; effect: "allow" | "require_approval" | "block"; risk: Risk;
+              when: Record<string, unknown> }[];
+  default_effect: string;
+  autonomy: { action_type: string; level: string; why: string }[];
+  default_level: string;
+};
+
+export type AutonomousLog = {
+  since: string; done_alone: number; blocked: number;
+  items: { id: number; ts: string; action: string; run_id: string | null; details: Record<string, unknown> }[];
+};
+
+export type Passport = {
+  id: string; name: string; purpose: string; tools: string[]; data: string[]; models: string[]; actions: string[];
+  autonomy: Record<string, string>;
+  metrics: { suite: string; metric: string; value: number | null; result_file: string | null; git_sha: string | null }[];
+  activity_24h: Record<string, number>;
 };
 
 export type Approval = {
@@ -122,4 +154,9 @@ export const api = {
   audit: (limit = 100) => call<AuditEntry[]>(`/audit?limit=${limit}`),
   verifyAudit: () => call<ChainReport>("/audit/verify"),
   eventsUrl: (runId: string) => `${API_URL}/runs/${runId}/events`,
+  governance: () => call<Governance>("/governance"),
+  killSwitch: (engaged: boolean, reason?: string) =>
+    call<Governance>("/governance/kill-switch", { method: "POST", body: JSON.stringify({ engaged, reason }) }),
+  autonomous: (hours = 24) => call<AutonomousLog>(`/governance/autonomous?hours=${hours}`),
+  passports: () => call<Passport[]>("/passports"),
 };

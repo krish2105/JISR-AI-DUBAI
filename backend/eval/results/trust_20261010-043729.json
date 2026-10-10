@@ -1,0 +1,56 @@
+{
+  "suite": "trust",
+  "git_sha": "e6dfe3d-dirty",
+  "timestamp": "2026-10-10T04:37:29+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v4",
+  "split": "all",
+  "fast": false,
+  "n": 80,
+  "metrics": {
+    "trust_signal_recall": 1.0,
+    "trust_signal_precision": 1.0,
+    "trust_signal_f1": 1.0,
+    "trust_hard_negative_fpr": 0.0
+  },
+  "slices": {
+    "signal=bank_change_request": {
+      "recall": 1.0
+    },
+    "signal=business_email_domain": {
+      "recall": 1.0
+    },
+    "signal=credit_terms_request": {
+      "recall": 1.0
+    },
+    "signal=free_mail_domain": {
+      "recall": 1.0
+    },
+    "signal=pressure_urgency": {
+      "recall": 1.0
+    },
+    "signal=third_party_payment": {
+      "recall": 1.0
+    },
+    "signal=trade_licence_given": {
+      "recall": 1.0
+    },
+    "lang=ar": {
+      "recall": 1.0
+    },
+    "lang=en": {
+      "recall": 1.0
+    }
+  },
+  "failures": [],
+  "notes": [
+    "Phrases and detector share an author: this measures correctness and look-alike false alarms, not coverage of real fraud wording (needs pilot data)."
+  ]
+}

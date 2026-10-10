@@ -14,6 +14,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { api, type Approval, type RunDetail } from "@/lib/api";
 import type { RunView } from "@/lib/runView";
 import { ApprovalCard } from "@/components/approvals/ApprovalCard";
+import { ChecksCard } from "./ChecksCard";
 import { DutyCard } from "./DutyCard";
 import { Badge, Card, CardHeader } from "@/components/ui/primitives";
 
@@ -120,6 +121,10 @@ export function ResultPanel({ runId, view }: { runId: string; view: RunView }) {
       )}
 
       {run?.state.duty && <DutyCard duty={run.state.duty} docs={run.state.docs} />}
+
+      {run && (run.state.buyer_signals?.length ?? 0) > 0 && (
+        <ChecksCard issues={run.state.doc_issues ?? []} signals={run.state.buyer_signals ?? []} />
+      )}
 
       {approvals.map((a) => (
         <ApprovalCard key={a.id} approval={a} />

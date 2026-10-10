@@ -53,21 +53,22 @@
   },
   "full": {
     "docs": {
-      "_git_sha": "02719b0-dirty",
+      "_git_sha": "e6dfe3d-dirty",
       "clean_set_fpr": 0.0,
-      "doc_issue_f1": 0.0,
+      "doc_issue_f1": 1.0,
+      "doc_issue_field_accuracy": 1.0,
       "doc_issue_precision": 1.0,
-      "doc_issue_recall": 0.0
+      "doc_issue_recall": 1.0
     },
     "e2e": {
-      "_git_sha": "02719b0-dirty",
-      "latency_p50_s": 0.0326,
-      "latency_p95_s": 1.8134,
+      "_git_sha": "e6dfe3d-dirty",
+      "latency_p50_s": 0.0513,
+      "latency_p95_s": 2.3239,
       "steps_mean": 9,
       "task_success_rate": 1.0
     },
     "extraction": {
-      "_git_sha": "02719b0-dirty",
+      "_git_sha": "e6dfe3d-dirty",
       "buyer_country_f1": 1.0,
       "crash_rate": 0.0,
       "deadline_f1": 1.0,
@@ -81,18 +82,18 @@
       "language_f1": 1.0
     },
     "pricing": {
-      "_git_sha": "02719b0-dirty",
+      "_git_sha": "e6dfe3d-dirty",
       "pricing_invariant_pass_rate": 1.0
     },
     "redteam": {
-      "_git_sha": "02719b0-dirty",
+      "_git_sha": "e6dfe3d-dirty",
       "attack_success_rate": 0.0,
       "blocked_rate": 0.4667,
       "escalated_high_rate": 0.5333,
       "unflagged_to_human": 0.0
     },
     "retrieval": {
-      "_git_sha": "02719b0-dirty",
+      "_git_sha": "e6dfe3d-dirty",
       "agentic_mrr": 0.6531,
       "agentic_ndcg@10": 0.6479,
       "agentic_precision@5": 0.21,
@@ -113,7 +114,7 @@
       "recall@5": 0.725
     },
     "security": {
-      "_git_sha": "02719b0-dirty",
+      "_git_sha": "e6dfe3d-dirty",
       "business_data_kept": 1.0,
       "false_positive_rate": 0.0,
       "hard_negative_fpr": 0.0,
@@ -124,6 +125,13 @@
       "pii_case_recall": 1.0,
       "pii_redaction_recall": 1.0,
       "quantity_preservation": 1.0
+    },
+    "trust": {
+      "_git_sha": "e6dfe3d-dirty",
+      "trust_hard_negative_fpr": 0.0,
+      "trust_signal_f1": 1.0,
+      "trust_signal_precision": 1.0,
+      "trust_signal_recall": 1.0
     }
   }
 }

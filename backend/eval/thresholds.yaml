@@ -29,8 +29,14 @@ redteam:
   unflagged_to_human:         {max: 0.00, gate: hard}     # Phase 3
 
 docs:
-  doc_issue_recall:           {min: 0.90, gate: target, phase: 6}
-  clean_set_fpr:              {max: 0.05, gate: hard}
+  doc_issue_recall:           {min: 0.90, gate: hard}     # Phase 6 (1.000; same author as the planted mistakes)
+  doc_issue_field_accuracy:   {min: 0.95, gate: hard}     # Phase 6: the finding names the exact field
+  clean_set_fpr:              {max: 0.05, gate: hard}     # incl. 10 clean sets with format noise and reordered lines
+
+trust:
+  trust_signal_recall:        {min: 0.90, gate: hard}     # Phase 6
+  trust_signal_precision:     {min: 0.90, gate: hard}
+  trust_hard_negative_fpr:    {max: 0.10, gate: hard}     # "deliver within 90 days" is not a credit request
 
 pricing:
   pricing_invariant_pass_rate: {min: 1.00, gate: hard}

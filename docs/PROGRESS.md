@@ -2,6 +2,28 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+## Phase 6 — Document Consistency Checker + Buyer Trust ✅ (2026-10-10)
+
+**Built**
+- **Document Consistency Checker** (`app/tools/doc_checker.py`, deterministic): 9 mistake types (HS mismatch across invoice / packing list / certificate, quantity, line and invoice totals, missing CoO when CEPA is claimed, missing shipping bill, currency vs quote/LC, net > gross weight, transshipment without a through bill of lading). Values normalised; lines matched by description and HS so a different line order is not a mistake; HS compared at the level both documents give. Each finding: field, expected, found, fix, CEPA article (cited from the KB). `draft` stage for quote-time packs.
+- **Docs agent** drafts the invoice and packing list (seller's catalogue HS) and the CoO (cited classification) from the run and checks them: a catalogue code that disagrees with the cited classification shows up before anything is issued.
+- **Buyer Trust** (`app/tools/buyer_trust.py`): explainable signals with evidence (email domain, credit / bank-change / third-party payment / pressure phrases EN+AR, trade licence, destination, order size) and a UN Security Council Consolidated List name check (`make sanctions`; "list not loaded" when absent). Never a score or verdict; positive signals shown.
+- Policy **P-TRUST-001**: a possible sanctions match, bank-detail change or third-party payment makes every action high risk + owner approval.
+- Dashboard: **ChecksCard** (document findings with fixes and citations; buyer signals) in EN and AR.
+- Data `synthetic-v4`: 20 docsets with format noise and reordered lines, 80 trust rows (20 hard negatives).
+
+**Tested** (`make eval`, commit of this phase)
+- `make test` → 237 passed (each mistake type: trigger on the exact field + formatting / reordering non-triggers; draft vs shipment stage; trust triggers and look-alikes; sanctions loader and conservative matching; policy trigger / non-trigger).
+- `make eval` → **Gate: PASSED**. Docs: recall **1.000**, field accuracy **1.000**, clean-set false alarms **0.000** (incl. noisy sets). Trust: recall **1.000**, precision **1.000**, hard-negative false alarms **0.000**. All earlier gates unchanged (retrieval, security, extraction, e2e 1.000, p95 2.3 s).
+- Honesty note: mistakes / phrases and checks share an author; these numbers prove correct implementation and robustness to formatting, not real-world coverage (pilot documents needed).
+- Browser (Arabic RTL): consistency card "documents agree", buyer signals with evidence.
+
+**Known gaps**
+- Signal and finding explanations are English only for now.
+- The UN list must be downloaded (`make sanctions`) for real screening; matching is name-only.
+
+**Next: Phase 7, governance**: autonomy levels, kill switch, Agent Passports with enforced tool allow-lists, single outbound path, Seal readiness.
+
 ## Phase 5 — Knowledge base + CEPA Duty + Docs agents ✅ (2026-10-09)
 
 **Built**

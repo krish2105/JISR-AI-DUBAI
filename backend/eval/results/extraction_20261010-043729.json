@@ -1,0 +1,110 @@
+{
+  "suite": "extraction",
+  "git_sha": "e6dfe3d-dirty",
+  "timestamp": "2026-10-10T04:37:29+00:00",
+  "llm_profile": "fake",
+  "models": {
+    "smart": "fake-smart",
+    "worker": "fake-worker",
+    "fast": "fake-fast",
+    "judge": "fake-judge",
+    "stt": "fake-stt"
+  },
+  "dataset_version": "synthetic-v4",
+  "split": "all",
+  "fast": false,
+  "n": 330,
+  "metrics": {
+    "extraction_f1": 1.0,
+    "extraction_precision": 1.0,
+    "extraction_recall": 1.0,
+    "items_f1": 1.0,
+    "buyer_country_f1": 1.0,
+    "incoterm_f1": 1.0,
+    "deadline_f1": 1.0,
+    "language_f1": 1.0,
+    "crash_rate": 0.0,
+    "extraction_f1_handwritten": 0.9764,
+    "items_f1_handwritten": 0.9592
+  },
+  "slices": {
+    "difficulty=easy": {
+      "extraction_f1": 1.0
+    },
+    "difficulty=hard": {
+      "extraction_f1": 1.0
+    },
+    "difficulty=medium": {
+      "extraction_f1": 1.0
+    },
+    "lang=ar": {
+      "extraction_f1": 1.0
+    },
+    "lang=en": {
+      "extraction_f1": 1.0
+    },
+    "lang=mixed": {
+      "extraction_f1": 1.0
+    },
+    "split=dev": {
+      "extraction_f1": 1.0
+    },
+    "split=test": {
+      "extraction_f1": 1.0
+    },
+    "split=train": {
+      "extraction_f1": 1.0
+    },
+    "handwritten/lang=ar": {
+      "extraction_f1": 0.9892
+    },
+    "handwritten/lang=en": {
+      "extraction_f1": 0.9726
+    },
+    "handwritten/lang=mixed": {
+      "extraction_f1": 0.9655
+    }
+  },
+  "failures": [
+    {
+      "id": "hw_04",
+      "language": "en",
+      "difficulty": "handwritten",
+      "errors": 2,
+      "wrong": [
+        "items"
+      ],
+      "error": null,
+      "text": "Item | Qty\nDhurrie rugs 4x6 ft | 120\nJute storage baskets | 600\nTerms: DAP Doha. Delivery before 15 Jan.\n— Al Bidda Home Trading",
+      "set": "handwritten"
+    },
+    {
+      "id": "hw_23",
+      "language": "mixed",
+      "difficulty": "handwritten",
+      "errors": 2,
+      "wrong": [
+        "language"
+      ],
+      "error": null,
+      "text": "مرحبا team, we need 400 pcs brass diyas و 400 pcs tea light holders for Diwali stock. CIF Jebel Ali, before 1 Nov please.\n— Al Karama Festive Supplies",
+      "set": "handwritten"
+    },
+    {
+      "id": "hw_08",
+      "language": "en",
+      "difficulty": "handwritten",
+      "errors": 1,
+      "wrong": [
+        "items"
+      ],
+      "error": null,
+      "text": "Subject: RFQ 2026/118 – brass lanterns\n\nQuantity: 900 units\nIncoterm: CIF Jebel Ali\nRequired by: 10 Dec\n\nBuyer: Marina Souk Trading LLC",
+      "set": "handwritten"
+    }
+  ],
+  "notes": [
+    "Extraction sources: {'llm+rules': 300}. Hybrid tool app.tools.rfq.extract_rfq with the active LLM profile (fake = deterministic parser only).",
+    "The parser was developed on the TRAIN split only; dev/test and the 30 hand-written enquiries were not used for tuning."
+  ]
+}
