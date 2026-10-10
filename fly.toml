@@ -7,7 +7,8 @@ primary_region = "bom"                 # Mumbai: close to both India and the UAE
 
 [env]
   APP_ENV = "prod"
-  LLM_PROFILE = "prod"                 # Claude (set ANTHROPIC_API_KEY as a secret)
+  LLM_PROFILE = "fake"                 # offline deterministic model (no key, no cost). Switch to Claude later:
+                                       #   fly secrets set ANTHROPIC_API_KEY=... && fly deploy --env LLM_PROFILE=prod
   FX_PROVIDER = "live"
   DEMO_STEP_DELAY_MS = "300"
   PUBLIC_RUNS_PER_HOUR = "20"          # no-login demo: per visitor IP
@@ -31,5 +32,5 @@ primary_region = "bom"                 # Mumbai: close to both India and the UAE
     timeout = "5s"
 
 [[vm]]
-  size = "performance-2x"              # 4 GB RAM: e5-large + reranker on CPU
-  memory = "4gb"
+  size = "shared-cpu-2x"               # founder choice 2026-10-10: cheaper; retrieval a few seconds slower
+  memory = "4gb"                       # e5-large + reranker on CPU need ~4 GB

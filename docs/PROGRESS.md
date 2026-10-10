@@ -2,6 +2,10 @@
 
 Updated after every phase: what was built, what was tested, what is next.
 
+> **Next plan:** `docs/PLAN_95.md` (phases 13–21: auth + RBAC, deploy + Claude, SaaS core, UI/UX, outputs, pilot,
+> business, hardening, submission v2). Current honest scores and the full gap list: `docs/SCORECARD.md`.
+
+
 ## Phase 12 — Submission pack ✅ (2026-10-10)
 
 **Built**
