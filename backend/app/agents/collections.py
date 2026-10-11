@@ -108,6 +108,7 @@ async def run_collections(org_id: str, today: datetime | None = None, actor: str
                        sample_id="collections", raw_redacted=note, contact_key=inv.contact_key,
                        state={"run_id": run_id, "org_id": org_id, "raw_message_redacted": note,
                               "status": "needs_approval", "plan": ["collections", "governance"]}))
+            await db.flush()     # the run row must exist before its approval (Postgres enforces the foreign key)
             approval = Approval(id=f"apr_{uuid.uuid4().hex[:12]}", run_id=run_id, org_id=org_id,
                                 action_type=action.action_type, title=action.title, payload=action.payload,
                                 reason=action.reason, evidence=action.evidence, risk=risk,

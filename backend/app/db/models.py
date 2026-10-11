@@ -43,10 +43,12 @@ class UTCDateTime(TypeDecorator):
         return value.astimezone(UTC) if value is not None else None
 
     def process_result_value(self, value: datetime | None, dialect) -> datetime | None:
-        """On load: attach UTC if the database dropped the zone."""
-        if value is not None and value.tzinfo is None:
+        """On load: always UTC. Postgres returns the server's zone (not always UTC), SQLite drops it."""
+        if value is None:
+            return None
+        if value.tzinfo is None:
             value = value.replace(tzinfo=UTC)
-        return value
+        return value.astimezone(UTC)
 
 
 class Base(DeclarativeBase):
@@ -144,7 +146,7 @@ class Contact(Base):
     contact_key: Mapped[str] = mapped_column(String(64), primary_key=True)
     org_id: Mapped[str] = mapped_column(String(40), index=True)
     channel: Mapped[str] = mapped_column(String(20), default="whatsapp")
-    address: Mapped[str] = mapped_column(String(64))                 # WhatsApp id (phone number)
+    address: Mapped[str] = mapped_column(String(255))                # WhatsApp id, or A2A "task|context" ids
     display_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     last_inbound_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)   # 24 h window
 
