@@ -98,3 +98,20 @@ fly scale memory 4096 --app jisr-ai-api
 vercel ls                             # deployments
 vercel rollback                       # previous production deployment
 ```
+
+## Alternative host (free, no card): Hugging Face Space
+Used when Fly needs a card. Same image, 2 vCPU / 16 GB RAM, sleeps after ~48 h without traffic.
+1. Account + write token: https://huggingface.co/settings/tokens (role: Write).
+2. Upload (asks for the token once, hidden input):
+   ```bash
+   cd "/Users/krishnamathurm4pro/Desktop/JISR AI DUBAI WIN/jisr-ai"
+   uv run --with huggingface_hub python scripts/hf_space_deploy.py
+   ```
+3. Space -> Settings -> **Variables and secrets**:
+   - Secret `DATABASE_URL` = the Neon pooled string (as copied; the backend adds `+psycopg`).
+   - Secret `MCP_TOKEN` = `openssl rand -hex 32`.
+   - Variables `CORS_ORIGINS=https://jisr-ai-eta.vercel.app`, `MCP_HOST=<user>-jisr-ai-api.hf.space`,
+     `PUBLIC_BASE_URL=https://<user>-jisr-ai-api.hf.space`.
+4. Wait for the build (15-30 min), then open `https://<user>-jisr-ai-api.hf.space/health`.
+5. Vercel: `NEXT_PUBLIC_API_URL=https://<user>-jisr-ai-api.hf.space`, redeploy with `vercel deploy --prod`.
+Caveat: a free Space is public, so the staged code, the public-document index and synthetic data are visible.

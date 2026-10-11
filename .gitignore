@@ -37,3 +37,6 @@ data/sanctions_public/*
 
 # knowledge-base index built from git-ignored sources (make kb)
 data/kb_index/
+
+# Hugging Face Space staging folder (generated)
+.hf-space-stage/
