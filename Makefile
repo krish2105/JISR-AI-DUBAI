@@ -6,10 +6,10 @@
 BACKEND := backend
 UV := uv --directory $(BACKEND)
 
-.PHONY: sanctions kb help setup test test-backend test-postgres test-frontend lint fmt run db up down data eval eval-fast eval-gate eval-baseline demo replay record build clean
+.PHONY: sanctions kb help setup test test-backend test-postgres test-frontend lint fmt run db up down data e2e eval eval-fast eval-gate eval-baseline demo replay record build clean
 
 help: ## Show this list of commands
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
 setup: ## Install backend and frontend dependencies, create .env
 	$(UV) sync --python 3.12
@@ -64,6 +64,9 @@ eval: ## Full evaluation (all suites, all splits) -> docs/EVAL_REPORT.md, then t
 eval-fast: ## Quick evaluation on the test split (what CI runs on every change), then the gate
 	$(UV) run python -m eval.run --fast
 	$(UV) run python -m eval.gate
+
+e2e: ## End-to-end checks, offline (fake model, no keys): full agent graph, trajectories, governance, security
+	$(UV) run python -m eval.run --suite e2e,trajectory,governance,security --fast --no-report
 
 eval-gate: ## Only re-check the latest results against thresholds and the baseline
 	$(UV) run python -m eval.gate

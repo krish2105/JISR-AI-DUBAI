@@ -55,6 +55,9 @@ async def main_async(args: argparse.Namespace) -> int:
         shown = ", ".join(f"{k}={v:.3f}" for k, v in result.metrics.items())
         print(f"  {name:<11} n={result.n:<4} {shown}  ({time.perf_counter() - started:.1f}s) -> {path.name}")
     await get_engine().dispose()
+    if args.no_report:
+        print("Report not written (--no-report): docs/EVAL_REPORT.md keeps the last full run")
+        return 0
     report.write()
     print(f"Report: {report.REPORT}")
     return 0
@@ -69,6 +72,8 @@ def main() -> int:
     parser.add_argument("--profile", default=os.environ.get("EVAL_PROFILE", "fake"),
                         choices=["fake", "dev", "prod", "replay"])
     parser.add_argument("--concurrency", type=int, default=8)
+    parser.add_argument("--no-report", action="store_true",
+                        help="do not rewrite docs/EVAL_REPORT.md (partial runs)")
     args = parser.parse_args()
     configure_environment(args.profile)
     return asyncio.run(main_async(args))
