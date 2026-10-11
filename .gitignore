@@ -40,3 +40,9 @@ data/kb_index/
 
 # Hugging Face Space staging folder (generated)
 .hf-space-stage/
+
+# Never commit downloaded credential files
+env.txt
+*.env
+.env*
+!.env.example
