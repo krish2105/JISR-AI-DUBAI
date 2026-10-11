@@ -26,7 +26,7 @@ test-postgres: ## Backend tests against Postgres in Docker (make db first; uses 
 	TEST_DATABASE_URL=postgresql+psycopg://jisr:jisr_local_only@localhost:55432/jisr_test $(UV) run pytest -q
 
 test-frontend: ## Frontend type-check and lint
-	cd frontend && npx tsc --noEmit && npm run lint
+	cd frontend && npm run typecheck && npm run lint
 
 lint: ## Check code style (ruff + eslint)
 	$(UV) run ruff check .
