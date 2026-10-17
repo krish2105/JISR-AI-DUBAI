@@ -129,7 +129,7 @@ Run `make help` for the full list.
 Quality is measured, not claimed. Every number comes from a result file with its commit, dataset version and split,
 and a quality gate fails the build on any hard-threshold breach or regression against the committed baseline.
 
-Latest full run: commit `1a0adc7`, profile `fake`, dataset `synthetic-v4`. Gate: **PASSED**.
+Latest full run: commit `9b22f27`, profile `fake`, dataset `synthetic-v4`. Gate: **PASSED**.
 
 | Area | Metric | Result |
 |---|---|---|
@@ -146,7 +146,7 @@ Latest full run: commit `1a0adc7`, profile `fake`, dataset `synthetic-v4`. Gate:
 | HS classification (seller phrases) | Top-1 / top-3 | 0.868 / 0.962 |
 | Refusals | Correct refusals / false refusals | 0.750 / 0.025 |
 
-Latency depends on the machine: the full run recorded a p95 of 2.4 s on an idle laptop, and it rises several-fold
+Latency depends on the machine: the full run recorded a p95 of 2.5 s on an idle laptop, and it rises several-fold
 under load. Read the caveats in [docs/EVAL_REPORT.md](docs/EVAL_REPORT.md) before quoting any number. The synthetic
 datasets are described in [data/synthetic/README.md](data/synthetic/README.md). Real Claude runs are not yet in this
 report.
