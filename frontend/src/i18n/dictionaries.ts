@@ -11,7 +11,7 @@ import type { Locale } from "./config";
 
 const en = {
   brand: { name: "Jisr", tagline: "The governed bridge for India–UAE trade" },
-  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff", team: "Team", settings: "Settings" },
+  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff", team: "Team", settings: "Settings", today: "Today" },
   tariff: {
     title: "Tariff explorer", subtitle: "The UAE tariff (Dubai Customs) with CEPA origin rules (Annex 3B). Search a product to see the path the duty agent takes.",
     search: "Describe the goods, e.g. brass diya lamps", locate: "Locate", chapter: "Chapter", candidates: "Likely headings", top: "top",
@@ -247,6 +247,27 @@ const en = {
       viewer: "Viewer: read-only.",
     } as Record<string, string>,
   },
+  inbox: {
+    whyYou: "Why this needs you", shortcuts: "Keyboard: J / K move, A approve, R reject, E edit", sorted: "Highest risk and oldest first",
+    waiting: "waiting", minutes: "min", hours: "h",
+  },
+  home: {
+    title: "Today", subtitle: "What needs you now, and what Jisr did since yesterday.",
+    needsYou: "Needs you now", noneWaiting: "Nothing is waiting for you.", openInbox: "Open the inbox",
+    today: "Last 24 hours", enquiries: "Enquiries", quotes: "Quotes drafted", sent: "Approved & sent", blocked: "Blocked by policy",
+    alone: "Done on its own", alerts: "Alerts", killOn: "Kill switch is ON: nothing leaves Jisr.", budget: "Model budget used up: answers come from the offline model.",
+    allClear: "No alerts.", recent: "Recent enquiries", setup: "Finish setting up your business", high: "high risk",
+  },
+  tour: {
+    title: "Guided demo", skip: "Hide the guide", next: "Next", back: "Back", done: "Done", step: "Step",
+    steps: [
+      { h: "1. Send an enquiry", b: "Pick a sample on the left (English, Arabic, a document mismatch) or a WhatsApp voice note." },
+      { h: "2. Watch the agents", b: "The graph and timeline show each agent: quote, CEPA duty with citations, documents, buyer signals." },
+      { h: "3. Read the result", b: "Prices in INR and AED, the origin rule and evidence, document issues and a bilingual reply draft." },
+      { h: "4. You decide", b: "Nothing is sent until you approve in the inbox. Open the full record to print the quotation." },
+      { h: "5. Try to break it", b: "Run the hostile sample (bank-detail change) and see the governance gate block it; then open Governance." },
+    ],
+  },
   runDetail: {
     title: "Enquiry", back: "Back", status: "Status", channel: "Channel", created: "Received", open: "Open full record",
     documents: "Documents", print: "Print / save as PDF", issue: "Issue final", issued: "Issued: checksum recorded in the audit log",
@@ -304,7 +325,7 @@ export type Dictionary = typeof en;
 
 const ar: Dictionary = {
   brand: { name: "جسر", tagline: "الجسر المحوكم للتجارة بين الهند والإمارات" },
-  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة", team: "الفريق", settings: "الإعدادات" },
+  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة", team: "الفريق", settings: "الإعدادات", today: "اليوم" },
   tariff: {
     title: "مستكشف التعرفة", subtitle: "التعرفة الجمركية الإماراتية (جمارك دبي) مع قواعد المنشأ في الاتفاقية (الملحق 3B). ابحث عن منتج لترى المسار الذي يسلكه وكيل الرسوم.",
     search: "صف البضاعة، مثل مصابيح نحاسية", locate: "حدّد الموقع", chapter: "الفصل", candidates: "البنود المرجحة", top: "الأول",
@@ -539,6 +560,27 @@ const ar: Dictionary = {
       auditor: "المدقّق: يقرأ كل شيء ويصدّر سجل التدقيق؛ لا ينفّذ إجراءات.",
       viewer: "المشاهد: قراءة فقط.",
     },
+  },
+  inbox: {
+    whyYou: "لماذا يحتاج هذا إليك", shortcuts: "لوحة المفاتيح: J / K للتنقل، A للموافقة، R للرفض، E للتحرير", sorted: "الأعلى خطورة والأقدم أولًا",
+    waiting: "في الانتظار", minutes: "د", hours: "س",
+  },
+  home: {
+    title: "اليوم", subtitle: "ما يحتاج إليك الآن، وما فعله جسر منذ الأمس.",
+    needsYou: "يحتاج إليك الآن", noneWaiting: "لا شيء بانتظارك.", openInbox: "فتح صندوق الموافقات",
+    today: "آخر 24 ساعة", enquiries: "الاستفسارات", quotes: "عروض أُعدّت", sent: "اعتُمدت وأُرسلت", blocked: "حجبتها السياسات",
+    alone: "تم تلقائيًا", alerts: "التنبيهات", killOn: "مفتاح الإيقاف مُفعّل: لا يخرج شيء من جسر.", budget: "نفدت ميزانية النماذج: الإجابات من النموذج دون اتصال.",
+    allClear: "لا تنبيهات.", recent: "أحدث الاستفسارات", setup: "أكمل إعداد نشاطك", high: "مخاطر عالية",
+  },
+  tour: {
+    title: "جولة إرشادية", skip: "إخفاء الدليل", next: "التالي", back: "رجوع", done: "تم", step: "الخطوة",
+    steps: [
+      { h: "1. أرسل استفسارًا", b: "اختر مثالًا على اليسار (إنجليزي، عربي، عدم تطابق مستندات) أو رسالة صوتية عبر واتساب." },
+      { h: "2. راقب الوكلاء", b: "يعرض المخطط والجدول الزمني كل وكيل: التسعير، رسوم سيبا مع المراجع، المستندات، إشارات المشتري." },
+      { h: "3. اقرأ النتيجة", b: "الأسعار بالروبية والدرهم، قاعدة المنشأ والأدلة، مشكلات المستندات ومسودة رد بلغتين." },
+      { h: "4. القرار لك", b: "لا يُرسل شيء قبل موافقتك في صندوق الموافقات. افتح السجل الكامل لطباعة عرض السعر." },
+      { h: "5. حاول كسره", b: "شغّل المثال العدائي (تغيير بيانات البنك) وشاهد بوابة الحوكمة تحجبه، ثم افتح صفحة الحوكمة." },
+    ],
   },
   runDetail: {
     title: "الاستفسار", back: "رجوع", status: "الحالة", channel: "القناة", created: "وقت الاستلام", open: "فتح السجل الكامل",

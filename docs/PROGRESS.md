@@ -6,6 +6,25 @@ Updated after every phase: what was built, what was tested, what is next.
 > business, hardening, submission v2). Current honest scores and the full gap list: `docs/SCORECARD.md`.
 
 
+## Phase 16 (part) — Owner and judge experience ✅ (2026-10-17)
+
+**Built**
+- **Approval inbox v2**: highest risk then oldest first; "why this needs you" with the policy rule in plain words; time
+  waiting; keyboard (J/K move, A approve, R reject, E edit); a pending-count badge on "Approvals" in the top bar
+  (refreshed every 30 s).
+- **Today** (`/today`): needs-you-now list, last-24-hour numbers linking to their source pages, alerts (kill switch,
+  model budget fallback), recent enquiries. Signed-in owners land here; sandboxes land on the live demo.
+- **Guided demo** for sandboxes: five skippable steps on `/demo` (enquiry → agents → result → approve → try to break it).
+- **Installable**: web app manifest (`/manifest.webmanifest`, start page = inbox) and an SVG app icon.
+
+**Tested**: browser: tour visible in a fresh sandbox, badge "2" after a collections check, inbox sorted high-risk first
+with the rule text and waiting time, J moves focus, Today shows the 24 h numbers; fresh tab console clean; typecheck,
+lint and build clean.
+
+**Not done (Phase 16 remainder)**: left sidebar re-layout, buyers page, documents page, Playwright + axe + Lighthouse CI,
+visual regression, usability test with exporters (needs people), backend explanations in Arabic (Phase 20).
+
+
 ## Phase 17 (part) — Documents and the enquiry page ✅ (2026-10-17)
 
 **Built**

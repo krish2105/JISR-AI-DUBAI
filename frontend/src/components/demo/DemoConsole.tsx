@@ -27,6 +27,7 @@ const AgentGraph3D = dynamic(() => import("@/components/three/AgentGraph3D"), { 
 import { Counters } from "./Counters";
 import { ResultPanel } from "./ResultPanel";
 import { Timeline } from "./Timeline";
+import { DemoTour } from "./DemoTour";
 
 /** The duty agent reports its "up to" saving in its finished event (no extra fetch needed). */
 function savingFromEvents(events: { agent: string; kind: string; payload: Record<string, unknown> }[]): number | null {
@@ -85,6 +86,7 @@ export function DemoConsole() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+      {me?.org.is_sandbox && <div className="lg:col-span-full"><DemoTour /></div>}
       {/* ---------- Side: inputs ---------- */}
       <aside className="space-y-4">
         <div>

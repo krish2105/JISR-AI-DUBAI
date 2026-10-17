@@ -298,6 +298,9 @@ export const api = {
   apiKeys: () => call<ApiKey[]>("/team/api-keys"),
   createApiKey: (name: string) => call<ApiKey & { key: string }>("/team/api-keys", post({ name })),
   revokeApiKey: (id: string) => call<{ ok: boolean }>(`/team/api-keys/${id}`, { method: "DELETE" }),
+  health: () => call<{ status: string; llm_profile: string; budget?: { fallback_active?: boolean } }>("/health"),
+  runs: (limit = 5) =>
+    call<{ id: string; status: string; channel: string; sample_id: string | null; created_at: string }[]>(`/runs?limit=${limit}`),
   // --- Phase 17: documents and the run's own audit trail
   documents: (runId: string) => call<Record<TradeDocument["kind"], TradeDocument>>(`/runs/${runId}/documents`),
   issueDocument: (runId: string, kind: string) =>

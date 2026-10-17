@@ -29,6 +29,7 @@ const plexArabic = IBM_Plex_Sans_Arabic({
 
 export const metadata: Metadata = {
   title: { default: "Jisr AI — governed India–UAE trade agent", template: "%s · Jisr AI" },
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
   description:
     "Jisr turns India-to-UAE buyer enquiries into approved quotes, cited CEPA duty checks, export documents and bilingual replies, with human approval and a hash-chained audit trail.",
 };

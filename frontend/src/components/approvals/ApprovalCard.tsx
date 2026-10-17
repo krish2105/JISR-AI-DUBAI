@@ -16,7 +16,9 @@ import { ApiError, api, type Approval } from "@/lib/api";
 import { Badge, Button, Card, RiskBadge } from "@/components/ui/primitives";
 import { useCan } from "@/components/auth/SessionProvider";
 
-export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDecided?: (a: Approval) => void }) {
+export function ApprovalCard({ approval, onDecided, why = [], waited }: {
+  approval: Approval; onDecided?: (a: Approval) => void; why?: string[]; waited?: string;
+}) {
   const { t, locale } = useI18n();
   const [text, setText] = useState(approval.payload.text ?? "");
   const [editing, setEditing] = useState(false);
@@ -53,6 +55,7 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
         <h3 dir="auto" className="me-auto font-semibold text-ink">{current.title}</h3>
         <RiskBadge risk={current.risk} label={t.risk[current.risk]} />
+        {waited && current.status === "pending" && <span className="text-xs text-ink-3">{t.inbox.waiting} <bdi>{waited}</bdi></span>}
         <Badge tone="neutral" title={t.approvals.rule}>
           <bdi>{current.rule_id}</bdi>
         </Badge>
@@ -66,6 +69,12 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
           <span className="font-medium text-ink">{t.approvals.reason}: </span>
           <span dir="auto">{current.reason}</span>
         </p>
+        {why.length > 0 && current.status === "pending" && (
+          <div className="rounded-lg border border-line bg-muted/60 px-3 py-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-3">{t.inbox.whyYou}</p>
+            <ul className="mt-1 list-disc ps-5 text-ink-2">{why.map((w, i) => <li key={i}>{w}</li>)}</ul>
+          </div>
+        )}
         {current.evidence.length > 0 && (
           <p className="text-ink-2">
             <span className="font-medium text-ink">{t.approvals.evidence}: </span>
@@ -78,7 +87,7 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
             <div className="mb-1 flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wide text-ink-3">{t.demo.result.draft}</span>
               {current.status === "pending" && canEdit && canDecide && (
-                <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setEditing((v) => !v)}>
+                <Button variant="ghost" className="px-2 py-1 text-xs" data-action="edit" onClick={() => setEditing((v) => !v)}>
                   <Pencil className="h-3.5 w-3.5" aria-hidden /> {t.demo.result.edit}
                 </Button>
               )}
@@ -117,10 +126,10 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
       <div className="flex flex-wrap items-center gap-2 border-t border-line bg-muted/50 px-4 py-3">
         {current.status === "pending" ? (
           <>
-            <Button onClick={() => decide("approve")} disabled={busy || !canDecide || fourEyes}>
+            <Button data-action="approve" onClick={() => decide("approve")} disabled={busy || !canDecide || fourEyes}>
               <Check className="h-4 w-4" aria-hidden /> {t.demo.result.approve}
             </Button>
-            <Button variant="secondary" onClick={() => decide("reject")} disabled={busy || !canDecide}>
+            <Button variant="secondary" data-action="reject" onClick={() => decide("reject")} disabled={busy || !canDecide}>
               <X className="h-4 w-4" aria-hidden /> {t.demo.result.reject}
             </Button>
             {!canDecide && (

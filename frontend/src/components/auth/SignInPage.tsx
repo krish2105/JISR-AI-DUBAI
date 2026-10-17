@@ -15,7 +15,9 @@ export function SignInPage() {
   const { locale, t } = useI18n();
   const router = useRouter();
   useEffect(() => {
-    if (status === "signed-in") router.replace(`/${locale}/${me?.onboarding && !me.onboarding.done ? "onboarding" : "demo"}`);
+    if (status !== "signed-in") return;
+    const next = me?.onboarding && !me.onboarding.done ? "onboarding" : me?.org.is_sandbox ? "demo" : "today";
+    router.replace(`/${locale}/${next}`);
   }, [status, me, locale, router]);
   if (status === "signed-in") return <p className="py-16 text-center text-sm text-ink-3">{t.common.loading}</p>;
   return <SignInPanel />;
