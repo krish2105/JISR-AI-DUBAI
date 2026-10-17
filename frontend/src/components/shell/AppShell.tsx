@@ -20,7 +20,7 @@ import { currentTheme, setTheme } from "./theme";
 import { JisrMark } from "./JisrMark";
 
 /** Pages that show organisation data: they need a session (the landing, tariff and privacy pages are public). */
-const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team", "/settings", "/onboarding", "/run", "/print", "/today"];
+const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team", "/settings", "/onboarding", "/run", "/print", "/today", "/buyers"];
 
 /** Pending approvals for the badge, refreshed every 30 s while signed in. */
 function usePendingCount(enabled: boolean): number {
@@ -57,6 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: `/${locale}/impact`, label: t.nav.impact, active: rest.startsWith("/impact") },
     ...(status === "signed-in"
       ? [{ href: `/${locale}/today`, label: t.nav.today, active: rest.startsWith("/today") },
+         ...(can("buyers.read") ? [{ href: `/${locale}/buyers`, label: t.nav.buyers, active: rest.startsWith("/buyers") }] : []),
          { href: `/${locale}/settings`, label: t.nav.settings, active: rest.startsWith("/settings") },
          { href: `/${locale}/team`, label: t.nav.team, active: rest.startsWith("/team") }] : []),
   ];

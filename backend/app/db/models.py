@@ -296,3 +296,13 @@ class ApiKey(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     last_used_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class RateCounter(Base):
+    """Fixed-window request counters shared by every API machine (rate limits, Phase 20). Old windows are pruned."""
+
+    __tablename__ = "rate_counters"
+
+    key: Mapped[str] = mapped_column(String(200), primary_key=True)     # bucket:subject:window
+    window_start: Mapped[int] = mapped_column(Integer, index=True)       # epoch seconds
+    count: Mapped[int] = mapped_column(Integer, default=0)

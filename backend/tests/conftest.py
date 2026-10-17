@@ -60,6 +60,7 @@ def isolated_env(monkeypatch, tmp_path):
     monkeypatch.setenv("DEMO_STEP_DELAY_MS", "0")
     monkeypatch.setenv("KB_ENABLED", "false")       # unit tests never depend on the local knowledge base
     monkeypatch.setenv("LOGIN_ATTEMPTS_PER_MINUTE", "0")   # the login limit is tested on its own
+    monkeypatch.setenv("DB_MIGRATIONS", "false")           # fast create_all; migrations have their own test
     _clear_caches()
     yield
     _clear_caches()

@@ -87,17 +87,14 @@ def test_not_mounted_without_a_token(monkeypatch):
 
 def test_public_rate_limit_and_budget_fallback(monkeypatch):
     monkeypatch.setenv("PUBLIC_RUNS_PER_HOUR", "2")
-    from app.api import ratelimit
     from app.config import get_settings
 
-    get_settings.cache_clear()
-    ratelimit._hits.clear()
+    get_settings.cache_clear()                          # counters live in this test's own database (Phase 20)
     from app.main import create_app
 
     with TestClient(create_app()) as c:
         codes = [c.post("/runs", json={"message": "We need 10 brass lamps CIF Dubai"}).status_code for _ in range(3)]
         assert codes == [201, 201, 429]
-    ratelimit._hits.clear()
 
 
 async def test_budget_exhausted_falls_back_to_the_offline_model(monkeypatch):

@@ -32,6 +32,7 @@ def configure_environment(profile: str) -> None:
         "DEMO_STEP_DELAY_MS": "0",
         "LLM_RECORD": "false",
         "APP_ENV": "test",
+        "DB_MIGRATIONS": "false",
     })
 
 

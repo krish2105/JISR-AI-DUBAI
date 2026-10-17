@@ -21,12 +21,12 @@ sentences, so they are grounded by construction. With a real model (dev/prod) th
 the same grounding check applies.
 """
 
-import asyncio
 import re
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.rag.heavy import run_heavy
 from app.rag.ingest_psr import rule_for
 from app.rag.retriever import Retriever, classify_hs, get_retriever
 
@@ -405,4 +405,4 @@ def answer_question_sync(question: str, retriever: Retriever | None = None, budg
 
 async def answer_question(question: str, budget: Budget | None = None) -> Answer:
     """Async wrapper: retrieval is CPU-bound, so it runs in a worker thread."""
-    return await asyncio.to_thread(answer_question_sync, question, None, budget)
+    return await run_heavy(answer_question_sync, question, None, budget)

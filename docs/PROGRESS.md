@@ -6,6 +6,22 @@ Updated after every phase: what was built, what was tested, what is next.
 > business, hardening, submission v2). Current honest scores and the full gap list: `docs/SCORECARD.md`.
 
 
+## Phase 20 (part) — Hardening ✅ (2026-10-17)
+
+**Built**: Alembic migrations with legacy adoption (H1); security headers on API and dashboard (H2); database-backed
+rate limits (H3); buyer data rights — list, export, erasure — with a `/buyers` page (H4); CI security job: pip-audit,
+npm audit, gitleaks (H5); bounded heavy retrieval + `scripts/load_test.py` (H6); `docs/THREAT_MODEL.md` (STRIDE per
+entry point, ASVS L1 status).
+
+**Tested**: `test_migrations.py` (fresh, downgrade/upgrade, legacy adoption; Postgres variant), `test_hardening.py`
+(headers, shared limits, export/erasure with chain still verified). Backend **353 passed** on SQLite and on Postgres 17.
+The local pre-migration `jisr.db` was adopted (`stamp head`) on start-up. Production dashboard build checked for CSP
+violations (none). Load test: 20 concurrent cold enquiries → 20/20 reached approval, p95 50.3 s (laptop).
+
+**Not done (Phase 20 remainder)**: Neon backups + restore drill (needs the database), Redis for the token budget and
+A2A tasks (single machine for now), backend explanations in Arabic, retention job, MFA and password reset.
+
+
 ## Phase 16 (part) — Owner and judge experience ✅ (2026-10-17)
 
 **Built**

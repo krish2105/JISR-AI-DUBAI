@@ -36,6 +36,7 @@ from app.governance.audit import append_audit
 from app.governance.policy_engine import PolicyContext, get_policy_engine
 from app.llm.router import LLMRequest, get_router
 from app.profile import get_business_profile
+from app.rag.heavy import run_heavy
 from app.runs.emitter import RunEmitter
 from app.security.classifier import classify, extra_flags
 from app.security.injection_guard import scan_rules
@@ -272,11 +273,11 @@ async def duty(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepR
 @agent_step("docs")
 async def docs(state: RunState, em: RunEmitter, config: RunnableConfig) -> StepResult:
     """Docs agent: cited document pack, a draft document set, and the deterministic consistency check."""
-    pack = await asyncio.to_thread(build_doc_pack, state.duty or {})
+    pack = await run_heavy(build_doc_pack, state.duty or {})
     findings: list[dict] = []
     if state.quote and state.quote.get("lines"):
         await em.emit("docs", "tool_call", {"tool": "doc_checker.check_document_set", "stage": "draft"})
-        draft, findings = await asyncio.to_thread(check_draft_documents, state.rfq, state.quote, state.duty or {})
+        draft, findings = await run_heavy(check_draft_documents, state.rfq, state.quote, state.duty or {})
         pack["draft"] = draft
         await em.emit("docs", "tool_result", {"tool": "doc_checker.check_document_set", "findings": len(findings),
                                               "types": [f["type"] for f in findings]},

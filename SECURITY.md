@@ -48,7 +48,8 @@ These are documented, deliberate gaps on the road to a production system, not un
 - **Data.** All data in the repository and the demo is synthetic or public. Do not send real personal data to the demo.
 - **Model providers.** Free-tier model profiles are restricted to synthetic data by code (`LLM_PROFILE=dev`); real data
   is only allowed with a paid, no-training provider.
-- **In-memory state.** A2A tasks and rate-limit counters live in process memory and reset on restart.
+- **In-memory state.** A2A tasks and the daily model-token budget live in process memory (rate limits are in the
+  database); run one API machine until they move to shared storage.
 
 ## Security design (what is already enforced)
 
@@ -65,3 +66,6 @@ These are documented, deliberate gaps on the road to a production system, not un
   (see [docs/EVAL_REPORT.md](docs/EVAL_REPORT.md)).
 - WhatsApp webhooks verify the `X-Hub-Signature-256` HMAC and are idempotent.
 - MCP tools can analyse and read only; they cannot approve or send.
+- Security headers on the API and the dashboard (CSP, frame denial, nosniff, HSTS in production); dependency audits
+  and secret scanning in CI; database migrations under version control; per-buyer export and erasure.
+- Threat model and OWASP ASVS level 1 status: [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).

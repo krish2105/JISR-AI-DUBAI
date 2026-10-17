@@ -6,6 +6,8 @@
 BACKEND := backend
 UV := uv --directory $(BACKEND)
 
+
+.PHONY: migrate migration
 .PHONY: sanctions kb help setup test test-backend test-postgres test-frontend lint fmt run db up down data e2e eval eval-fast eval-gate eval-baseline demo replay record build clean
 
 help: ## Show this list of commands
@@ -38,6 +40,12 @@ fmt: ## Auto-fix code style
 
 run: ## Start only the API on http://localhost:8000 (auto-reloads on code changes)
 	$(UV) run uvicorn app.main:app --reload --port 8000
+
+migrate: ## Apply database migrations to DATABASE_URL (the API also does this at start-up)
+	$(UV) run alembic upgrade head
+
+migration: ## New migration from model changes: make migration m="what changed"
+	$(UV) run alembic revision --autogenerate -m "$(m)"
 
 db: ## Start Postgres + pgvector in Docker
 	docker compose up -d db

@@ -6,8 +6,7 @@ Why this file exists:
     never worries about drivers. This file turns the configured DATABASE_URL into the right
     async driver URL (aiosqlite for SQLite, psycopg for Postgres/Neon) and creates tables.
 
-Note: Phase 1 creates tables with `create_all`. Alembic migrations are introduced once the
-schema settles (see docs/DECISIONS.md).
+Schema changes are Alembic migrations (backend/migrations, Phase 20); see app/db/migrate.py.
 """
 
 from collections.abc import AsyncIterator
@@ -80,7 +79,19 @@ def _add_missing_columns(sync_conn) -> None:
 
 
 async def init_db() -> None:
-    """Create any missing tables and add new nullable columns (safe to call on every start-up)."""
+    """Bring the database to the current schema (safe to call on every start-up).
+
+    Normally through Alembic migrations (app/db/migrate.py); with DB_MIGRATIONS=false (tests) by `create_all` plus the
+    old additive column upgrade.
+    """
+    settings = get_settings()
+    if settings.db_migrations:
+        import asyncio
+
+        from app.db.migrate import migrate
+
+        await asyncio.to_thread(migrate, settings.database_url)
+        return
     async with get_engine().begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(_add_missing_columns)

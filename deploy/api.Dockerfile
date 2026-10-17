@@ -23,6 +23,8 @@ TextCrossEncoder('BAAI/bge-reranker-v2-m3-int8', cache_dir='/models')" || echo "
 
 # 3) Code and data.
 COPY backend/app ./app
+COPY backend/alembic.ini ./alembic.ini
+COPY backend/migrations ./migrations
 COPY backend/eval ./eval
 COPY data/kb_index /app/data/kb_index
 COPY data/kb_sources/sources.csv data/kb_sources/download_status.csv /app/data/kb_sources/

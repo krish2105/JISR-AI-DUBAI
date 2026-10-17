@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api import approvals, audit, auth, channels, collections, demo, governance, impact, kb, runs, team
+from app.api import approvals, audit, auth, buyers, channels, collections, demo, governance, impact, kb, runs, team
 from app.api import settings as settings_api
 from app.config import get_settings
 from app.db.session import get_engine, init_db
@@ -91,6 +91,42 @@ class BearerGuard:
         await self.app(scope, receive, send)
 
 
+class SecurityHeaders:
+    """ASGI middleware: safe default headers on every API response (Phase 20, DECISIONS H2).
+
+    Pure ASGI (not BaseHTTPMiddleware) so streamed responses (SSE) pass through untouched. The interactive API docs
+    (/docs, /redoc) load their own scripts, so they get the same headers minus the strict CSP.
+    """
+
+    STRICT_CSP = b"default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+
+    def __init__(self, app, hsts: bool) -> None:
+        self.app, self.hsts = app, hsts
+
+    async def __call__(self, scope, receive, send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        docs = scope.get("path", "").startswith(("/docs", "/redoc"))
+
+        async def send_with_headers(message) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers") or [])
+                present = {k.lower() for k, _ in headers}
+                extra = [(b"x-content-type-options", b"nosniff"), (b"x-frame-options", b"DENY"),
+                         (b"referrer-policy", b"no-referrer"),
+                         (b"permissions-policy", b"camera=(), microphone=(), geolocation=()")]
+                if not docs:
+                    extra.append((b"content-security-policy", self.STRICT_CSP))
+                if self.hsts:
+                    extra.append((b"strict-transport-security", b"max-age=31536000; includeSubDomains"))
+                headers += [(k, v) for k, v in extra if k not in present]
+                message = {**message, "headers": headers}
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
+
+
 def create_app() -> FastAPI:
     """Build and configure the FastAPI app (a function so tests can create fresh apps)."""
     settings = get_settings()
@@ -101,6 +137,8 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.add_middleware(SecurityHeaders, hsts=settings.app_env == "prod")
+
     # Let the browser dashboard call this API from its own origin(s).
     app.add_middleware(
         CORSMiddleware,
@@ -110,7 +148,7 @@ def create_app() -> FastAPI:
     )
 
     for module in (auth, team, settings_api, runs, approvals, audit, demo, governance, channels, collections,
-                   impact, kb):
+                   impact, kb, buyers):
         app.include_router(module.router)
 
     # A2A: Agent Card at /.well-known/agent-card.json and JSON-RPC at /a2a (buyer agents request quotations).

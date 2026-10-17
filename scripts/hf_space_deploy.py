@@ -25,6 +25,8 @@ INCLUDE = [
     "backend/pyproject.toml",
     "backend/uv.lock",
     "backend/app",
+    "backend/alembic.ini",
+    "backend/migrations",
     "backend/eval",
     "data/kb_index",
     "data/kb_sources/sources.csv",

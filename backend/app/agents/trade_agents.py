@@ -18,13 +18,13 @@ Why this file exists:
     If the knowledge base is not built (CI, fresh checkout) both agents say so and flag "needs human check".
 """
 
-import asyncio
 import re
 from decimal import Decimal
 
 from app.profile import get_business_profile
 from app.rag.agentic import HS_MIN_RELEVANCE, Claim, ground
 from app.rag.citations import find_article, first_chunk_of, resolve
+from app.rag.heavy import run_heavy
 from app.rag.index import index_exists
 from app.rag.ingest_psr import rule_for
 from app.rag.retriever import classify_hs, get_retriever
@@ -143,7 +143,7 @@ async def analyse_duty(rfq, quote: dict) -> dict:
         return {"status": "kb_unavailable", "needs_human_check": True, "lines": [], "max_potential_saving_aed": None,
                 "note": "Knowledge base not built on this server (`make kb`): no cited CEPA analysis possible."}
     try:
-        return await asyncio.to_thread(analyse_duty_sync, rfq, quote)
+        return await run_heavy(analyse_duty_sync, rfq, quote)
     except Exception as exc:          # never let the knowledge base take the whole run down
         return {"status": "kb_error", "needs_human_check": True, "lines": [], "max_potential_saving_aed": None,
                 "note": f"CEPA analysis failed ({type(exc).__name__}); needs human check."}

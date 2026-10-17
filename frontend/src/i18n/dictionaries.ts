@@ -11,7 +11,7 @@ import type { Locale } from "./config";
 
 const en = {
   brand: { name: "Jisr", tagline: "The governed bridge for India–UAE trade" },
-  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff", team: "Team", settings: "Settings", today: "Today" },
+  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff", team: "Team", settings: "Settings", today: "Today", buyers: "Buyers" },
   tariff: {
     title: "Tariff explorer", subtitle: "The UAE tariff (Dubai Customs) with CEPA origin rules (Annex 3B). Search a product to see the path the duty agent takes.",
     search: "Describe the goods, e.g. brass diya lamps", locate: "Locate", chapter: "Chapter", candidates: "Likely headings", top: "top",
@@ -247,6 +247,13 @@ const en = {
       viewer: "Viewer: read-only.",
     } as Record<string, string>,
   },
+  buyers: {
+    title: "Buyers", subtitle: "What Jisr remembers about each buyer: facts and counts, never message text. Contacts are masked here.",
+    empty: "No buyers yet. Buyers appear after their first WhatsApp or A2A enquiry.", contact: "Contact", seen: "Last seen",
+    enquiries: "Enquiries", sent: "Quotes sent", languages: "Languages", signals: "Past risk signals",
+    export: "Export data", erase: "Erase", confirm: "Erase this buyer? Contact details and memory are deleted and message text is scrubbed. Invoices stay for your books. This cannot be undone.",
+    erased: "Erased. {n} enquiry record(s) scrubbed.",
+  },
   inbox: {
     whyYou: "Why this needs you", shortcuts: "Keyboard: J / K move, A approve, R reject, E edit", sorted: "Highest risk and oldest first",
     waiting: "waiting", minutes: "min", hours: "h",
@@ -325,7 +332,7 @@ export type Dictionary = typeof en;
 
 const ar: Dictionary = {
   brand: { name: "جسر", tagline: "الجسر المحوكم للتجارة بين الهند والإمارات" },
-  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة", team: "الفريق", settings: "الإعدادات", today: "اليوم" },
+  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة", team: "الفريق", settings: "الإعدادات", today: "اليوم", buyers: "المشترون" },
   tariff: {
     title: "مستكشف التعرفة", subtitle: "التعرفة الجمركية الإماراتية (جمارك دبي) مع قواعد المنشأ في الاتفاقية (الملحق 3B). ابحث عن منتج لترى المسار الذي يسلكه وكيل الرسوم.",
     search: "صف البضاعة، مثل مصابيح نحاسية", locate: "حدّد الموقع", chapter: "الفصل", candidates: "البنود المرجحة", top: "الأول",
@@ -560,6 +567,13 @@ const ar: Dictionary = {
       auditor: "المدقّق: يقرأ كل شيء ويصدّر سجل التدقيق؛ لا ينفّذ إجراءات.",
       viewer: "المشاهد: قراءة فقط.",
     },
+  },
+  buyers: {
+    title: "المشترون", subtitle: "ما يتذكره جسر عن كل مشترٍ: حقائق وأعداد، لا نصوص الرسائل. جهات الاتصال مقنّعة هنا.",
+    empty: "لا مشترين بعد. يظهر المشترون بعد أول استفسار عبر واتساب أو A2A.", contact: "جهة الاتصال", seen: "آخر ظهور",
+    enquiries: "الاستفسارات", sent: "عروض أُرسلت", languages: "اللغات", signals: "إشارات مخاطر سابقة",
+    export: "تصدير البيانات", erase: "محو", confirm: "محو هذا المشتري؟ تُحذف بيانات الاتصال والذاكرة وتُمسح نصوص الرسائل. تبقى الفواتير لسجلاتك. لا يمكن التراجع.",
+    erased: "تم المحو. مُسح {n} سجل استفسار.",
   },
   inbox: {
     whyYou: "لماذا يحتاج هذا إليك", shortcuts: "لوحة المفاتيح: J / K للتنقل، A للموافقة، R للرفض، E للتحرير", sorted: "الأعلى خطورة والأقدم أولًا",

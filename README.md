@@ -54,6 +54,7 @@ Jisr keeps the human in control and makes every decision traceable to an officia
 | **Bilingual drafts** | English and Arabic replies, with spoken-Arabic quantities understood from voice notes. |
 | **Your business, your data** | Sign up, a five-minute onboarding (products with CSV import, costs, margins, shipping) and settings. Each organisation's quotes use only its own catalogue; changes are audited. |
 | **Governed actions** | Deterministic policy engine, graded autonomy (Never, L0–L3), a kill switch, and an approval inbox. Only a fixed-text acknowledgement can ever be sent without approval. |
+| **Data rights** | Per-buyer export and erasure (contacts masked in lists); invoices kept for the books; the audit chain still verifies after an erasure. |
 | **Auditability** | Hash-chained audit log with a verification endpoint; per-agent "passports" listing purpose, data, models and allowed tools. |
 
 ## Architecture
@@ -123,6 +124,7 @@ Run `make help` for the full list.
 | `make demo` / `make replay` | Live demo with the model / fully offline demo from the recorded cassette |
 | `make kb` | Build the knowledge-base index from the official sources |
 | `make test-postgres` | Backend tests against Postgres 17 + pgvector (after `make db`) |
+| `make migrate` / `make migration m="…"` | Apply database migrations / create one from model changes (Alembic) |
 
 ## Evaluation
 

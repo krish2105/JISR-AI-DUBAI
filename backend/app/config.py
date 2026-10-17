@@ -44,6 +44,8 @@ class Settings(BaseSettings):
 
     # Postgres in Docker for real runs; SQLite file as a zero-setup fallback.
     database_url: str = f"sqlite:///{REPO_ROOT / 'jisr.db'}"
+    # Apply Alembic migrations at start-up (Phase 20). Tests use the faster create_all path (DB_MIGRATIONS=false).
+    db_migrations: bool = True
 
     # Folder for JSONL traces (LLM call log, run events). Never contains raw PII.
     trace_dir: Path = REPO_ROOT / "traces"
@@ -60,6 +62,8 @@ class Settings(BaseSettings):
 
     # Use the local knowledge base (data/kb_index, built by `make kb`). Unit tests switch it off.
     kb_enabled: bool = True
+    # How many CPU-heavy retrieval steps may run at once (each already uses every core). Phase 20 load test.
+    retrieval_concurrency: int = 2
 
     # Exchange rates: "fixed" (demo/tests/replay, deterministic) or "live" (ECB via Frankfurter x AED peg).
     fx_provider: Literal["fixed", "live"] = "fixed"

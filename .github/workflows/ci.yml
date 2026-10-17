@@ -5,6 +5,7 @@
 #   frontend  type-check, lint, production build
 #   eval      `make eval-fast` (test split) on PRs, full `make eval` nightly, then the quality gate.
 #             The gate fails the build on any hard-threshold breach or regression vs eval/baseline.json.
+#   security  pip-audit, npm audit (production) and a gitleaks secret scan of the whole history.
 # Evals run on the offline `fake` model profile, so no secrets are needed. To evaluate real models,
 # add GROQ_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY as repository secrets and set EVAL_PROFILE.
 
@@ -72,3 +73,24 @@ jobs:
           path: |
             backend/eval/results/
             docs/EVAL_REPORT.md
+
+  security:
+    # Phase 20: known-vulnerable dependencies and committed secrets fail the build (DECISIONS H5).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}            # the secret scan reads the whole history
+      - uses: astral-sh/setup-uv@v6
+      - name: Python dependency audit (pip-audit)
+        run: |
+          uv --directory backend export --frozen --no-dev --no-hashes --no-emit-project > requirements-audit.txt
+          uvx pip-audit -r requirements-audit.txt --progress-spinner off
+      - uses: actions/setup-node@v4
+        with: {node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json}
+      - name: npm audit (production dependencies)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

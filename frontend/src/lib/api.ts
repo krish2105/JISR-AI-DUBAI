@@ -203,6 +203,12 @@ export type TradeDocument = {
   notes?: string[]; common_requirements?: (string | null)[]; checksum: string;
 };
 
+export type Buyer = {
+  contact_key: string; channel: string | null; contact: string; name: string | null; first_seen: string; last_seen: string;
+  runs: number; quotes_sent: number; last_incoterm: string | null; last_quote_total_aed: number | null;
+  languages: string[]; risk_signals: string[];
+};
+
 export type AutonomyItem = {
   action_type: string; default: string; level: string; allowed: string[]; locked: boolean; why: string;
 };
@@ -301,6 +307,10 @@ export const api = {
   health: () => call<{ status: string; llm_profile: string; budget?: { fallback_active?: boolean } }>("/health"),
   runs: (limit = 5) =>
     call<{ id: string; status: string; channel: string; sample_id: string | null; created_at: string }[]>(`/runs?limit=${limit}`),
+  // --- Phase 20: buyers and data rights
+  buyers: () => call<Buyer[]>("/buyers"),
+  exportBuyer: (key: string) => call<Record<string, unknown>>(`/buyers/${encodeURIComponent(key)}/export`),
+  eraseBuyer: (key: string) => call<{ erased: string; runs_scrubbed: number }>(`/buyers/${encodeURIComponent(key)}`, { method: "DELETE" }),
   // --- Phase 17: documents and the run's own audit trail
   documents: (runId: string) => call<Record<TradeDocument["kind"], TradeDocument>>(`/runs/${runId}/documents`),
   issueDocument: (runId: string, kind: string) =>
