@@ -20,7 +20,7 @@ from app.api.deps import require
 from app.auth.service import Principal
 from app.db.models import Approval, AuditEntry, Run, RunEventRow
 from app.db.session import session_scope
-from app.profile import get_business_profile
+from app.profile import load_org_profile
 
 router = APIRouter(tags=["impact"])
 
@@ -66,7 +66,7 @@ async def impact(days: int = 30, principal: Principal = Depends(require("runs.re
                                ("clarification" if any(d.get("kind") == "clarification" for d in s.get("drafts", []))
                                 else "quote" if (s.get("quote") or {}).get("lines") else "other")})
     quotes = [r for r in ledger if r["kind"] == "quote"]
-    roi = get_business_profile().roi
+    roi = (await load_org_profile(org_id)).roi
     saved = len(quotes) * max(0.0, roi.manual_minutes_per_quote - roi.review_minutes_per_quote)
     approved = [a for a in approvals if a.status == "approved"]
     return {

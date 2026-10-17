@@ -52,6 +52,7 @@ Jisr keeps the human in control and makes every decision traceable to an officia
 | **Document checks** | Compares invoice, packing list and certificate of origin. Detects nine kinds of mismatch (currency, totals, HS codes, missing declarations and more). |
 | **Buyer trust signals** | Evidence-based signals only (never scores or verdicts), plus a UN sanctions-list name check worded as "possible match, for review". |
 | **Bilingual drafts** | English and Arabic replies, with spoken-Arabic quantities understood from voice notes. |
+| **Your business, your data** | Sign up, a five-minute onboarding (products with CSV import, costs, margins, shipping) and settings. Each organisation's quotes use only its own catalogue; changes are audited. |
 | **Governed actions** | Deterministic policy engine, graded autonomy (Never, L0–L3), a kill switch, and an approval inbox. Only a fixed-text acknowledgement can ever be sent without approval. |
 | **Auditability** | Hash-chained audit log with a verification endpoint; per-agent "passports" listing purpose, data, models and allowed tools. |
 

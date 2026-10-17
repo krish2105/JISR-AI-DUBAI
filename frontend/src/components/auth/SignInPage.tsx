@@ -11,12 +11,12 @@ import { SignInPanel } from "./SignInPanel";
 import { useSession } from "./SessionProvider";
 
 export function SignInPage() {
-  const { status } = useSession();
+  const { status, me } = useSession();
   const { locale, t } = useI18n();
   const router = useRouter();
   useEffect(() => {
-    if (status === "signed-in") router.replace(`/${locale}/demo`);
-  }, [status, locale, router]);
+    if (status === "signed-in") router.replace(`/${locale}/${me?.onboarding && !me.onboarding.done ? "onboarding" : "demo"}`);
+  }, [status, me, locale, router]);
   if (status === "signed-in") return <p className="py-16 text-center text-sm text-ink-3">{t.common.loading}</p>;
   return <SignInPanel />;
 }

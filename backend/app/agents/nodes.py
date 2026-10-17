@@ -30,7 +30,7 @@ from app.agents.memory import recall
 from app.agents.state import PendingAction, RunState
 from app.agents.trade_agents import analyse_duty, build_doc_pack, check_draft_documents
 from app.channels.outbox import KillSwitchEngaged, OutsideServiceWindow, kill_switch_on, send
-from app.db.models import Approval
+from app.db.models import Approval, OrgSettings
 from app.db.session import session_scope
 from app.governance.audit import append_audit
 from app.governance.policy_engine import PolicyContext, get_policy_engine
@@ -406,9 +406,11 @@ async def governance(state: RunState, em: RunEmitter, config: RunnableConfig) ->
     events: list[tuple[str, dict, str]] = []          # (kind, payload, risk) to emit after commit
     held, blocked, done_alone = 0, 0, 0
     async with session_scope() as db:
+        org_settings = await db.get(OrgSettings, state.org_id)
         ctx = PolicyContext(injection_flags=state.injection_flags,
                             buyer_signals=[s["signal"] for s in state.buyer_signals],
-                            kill_switch=await kill_switch_on(db, state.org_id))
+                            kill_switch=await kill_switch_on(db, state.org_id),
+                            autonomy_overrides=(org_settings.autonomy or {}) if org_settings else {})
         for action in state.pending_actions:
             decision = engine.evaluate(action, ctx)
             events.append(("policy_decision",

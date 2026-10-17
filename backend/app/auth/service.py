@@ -29,6 +29,7 @@ from app.db.models import (
     Invoice,
     Membership,
     Organisation,
+    OrgProfile,
     OrgSettings,
     Run,
     RunEventRow,
@@ -37,6 +38,7 @@ from app.db.models import (
 from app.db.session import session_scope
 from app.governance.audit import append_audit
 from app.governance.rbac import ROLES, get_rbac
+from app.profile import blank_profile
 
 log = logging.getLogger("jisr.auth")
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]+\.[^@\s]{2,}$")
@@ -174,6 +176,7 @@ async def signup(email: str, password: str, name: str, org_name: str) -> tuple[s
         await db.flush()
         membership = Membership(user_id=user.id, org_id=org.id, role="owner")
         db.add(membership)
+        db.add(OrgProfile(org_id=org.id, data=blank_profile(org.name).model_dump(mode="json")))   # onboarding next
         await db.flush()
         await append_audit(db, org_id=org.id, actor=f"user:{user.id}", action="auth.signup",
                            details={"role": "owner"})
@@ -237,6 +240,7 @@ async def me(principal: Principal) -> dict:
                                  .where(Membership.user_id == principal.user_id, Membership.status == "active")
                                  .order_by(Membership.id))).all()
         current = await db.get(Organisation, principal.org_id)
+        profile = await db.get(OrgProfile, principal.org_id)
     rbac = get_rbac()
     return {
         "user": {"id": principal.user_id, "email": principal.email, "name": principal.name},
@@ -247,6 +251,8 @@ async def me(principal: Principal) -> dict:
         "role_label": rbac.roles[principal.role]["label"], "role_label_ar": rbac.roles[principal.role]["label_ar"],
         "permissions": rbac.permissions_of(principal.role),
         "orgs": [{"id": o.id, "name": o.name, "role": m.role, "is_sandbox": o.is_sandbox} for m, o in rows],
+        "onboarding": {"done": profile.onboarding_done if profile else True,
+                       "step": profile.onboarding_step if profile else 5},
     }
 
 
@@ -263,7 +269,8 @@ async def purge_expired_sandboxes() -> int:
             await db.execute(delete(RunEventRow).where(RunEventRow.run_id.in_(run_ids)))
             await db.execute(delete(Approval).where(Approval.org_id == org_id))
             await db.execute(delete(Run).where(Run.org_id == org_id))
-            for model in (AuditEntry, OrgSettings, Contact, InboundLog, Invoice, BuyerMemory, Invitation, ApiKey):
+            for model in (AuditEntry, OrgSettings, OrgProfile, Contact, InboundLog, Invoice, BuyerMemory,
+                          Invitation, ApiKey):
                 await db.execute(delete(model).where(model.org_id == org_id))
             user_ids = (await db.scalars(select(Membership.user_id).where(Membership.org_id == org_id))).all()
             await db.execute(delete(Membership).where(Membership.org_id == org_id))

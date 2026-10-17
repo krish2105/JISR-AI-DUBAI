@@ -18,14 +18,16 @@ import { currentTheme, setTheme } from "./theme";
 import { JisrMark } from "./JisrMark";
 
 /** Pages that show organisation data: they need a session (the landing, tariff and privacy pages are public). */
-const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team"];
+const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team", "/settings", "/onboarding"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t, locale } = useI18n();
   const pathname = usePathname() ?? `/${locale}`;
   const rest = pathname.replace(/^\/(en|ar)/, "");                 // path without the language prefix
   const otherLocale = locale === "en" ? "ar" : "en";
-  const { status } = useSession();
+  const { status, me, can } = useSession();
+  const setupPending = status === "signed-in" && me?.onboarding && !me.onboarding.done && can("settings.business")
+    && !rest.startsWith("/onboarding");
   const needsSession = PROTECTED.some((p) => rest.startsWith(p));
 
   const links = [
@@ -37,7 +39,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: `/${locale}/tariff`, label: t.nav.tariff, active: rest.startsWith("/tariff") },
     { href: `/${locale}/impact`, label: t.nav.impact, active: rest.startsWith("/impact") },
     ...(status === "signed-in"
-      ? [{ href: `/${locale}/team`, label: t.nav.team, active: rest.startsWith("/team") }] : []),
+      ? [{ href: `/${locale}/settings`, label: t.nav.settings, active: rest.startsWith("/settings") },
+         { href: `/${locale}/team`, label: t.nav.team, active: rest.startsWith("/team") }] : []),
   ];
 
   return (
@@ -92,6 +95,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </nav>
       </header>
+      {setupPending && me?.onboarding && (
+        <div className="border-b border-accent/30 bg-accent-soft">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2 text-sm text-accent sm:px-6">
+            <span className="flex-1">
+              {t.onboarding.banner.replace("{step}", String(Math.min(me.onboarding.step + 1, 5))).replace("{total}", "5")}
+            </span>
+            <Link href={`/${locale}/onboarding`} className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-ink">
+              {t.onboarding.continue}
+            </Link>
+          </div>
+        </div>
+      )}
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
         {!needsSession || status === "signed-in" ? children
           : status === "loading" ? <p className="py-16 text-center text-sm text-ink-3">{t.common.loading}</p>

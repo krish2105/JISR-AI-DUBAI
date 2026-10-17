@@ -65,6 +65,7 @@ class PolicyContext(BaseModel):
     injection_flags: list[str] = Field(default_factory=list)
     buyer_signals: list[str] = Field(default_factory=list)      # signal names from the Buyer Trust tool
     kill_switch: bool = False                                     # organisation-wide stop for outbound actions
+    autonomy_overrides: dict[str, str] = Field(default_factory=dict)   # per-org, only ever STRICTER (Phase 15)
 
 
 class Decision(BaseModel):
@@ -100,6 +101,18 @@ class PolicyEngine:
         """Autonomy level of an action type (default for unknown types)."""
         return (self.autonomy.get(action_type) or {}).get("level", self.default_level)
 
+    def effective_level(self, action_type: str, overrides: dict[str, str] | None = None) -> Level:
+        """The organisation's level for this action: its override when STRICTER than autonomy.yaml, else the default.
+
+        An override can never loosen a level (an invalid or looser value is ignored), so a settings mistake or a
+        tampered row can only add caution.
+        """
+        default = self.level_for(action_type)
+        wanted = (overrides or {}).get(action_type)
+        if wanted in LEVEL_RANK and LEVEL_RANK[wanted] <= LEVEL_RANK[default]:
+            return wanted                                       # type: ignore[return-value]
+        return default
+
     @staticmethod
     def _matches(rule: Rule, action: PendingAction, ctx: PolicyContext) -> bool:
         """True when every condition in the rule holds for this action and context."""
@@ -128,7 +141,7 @@ class PolicyEngine:
         else:
             effect, risk = self.default_effect, "medium"
             rule_ids, reasons = ["DEFAULT"], ["No rule matched; the safe default applies."]
-        level = self.level_for(action.action_type)
+        level = self.effective_level(action.action_type, ctx.autonomy_overrides)
         cap = self._autonomy_cap(level, effect, risk)
         final = max(effect, cap, key=_STRENGTH.__getitem__)
         if _STRENGTH[cap] > _STRENGTH[effect]:
@@ -148,6 +161,10 @@ class PolicyEngine:
         if level == "L2":
             return "allow" if effect == "allow" and risk == "low" else "require_approval"
         return "allow"                                          # L3: the policies decide
+
+
+# Strictness order of autonomy levels: lower = more caution.
+LEVEL_RANK = {"NEVER": 0, "L0": 1, "L1": 2, "L2": 3, "L3": 4}
 
 
 @lru_cache

@@ -51,7 +51,8 @@ async def _status(org_id: str) -> dict:
         "policies": [{"id": r.id, "description": r.description, "effect": r.effect, "risk": r.risk,
                       "when": r.when.model_dump(exclude_none=True)} for r in engine.rules],
         "default_effect": engine.default_effect,
-        "autonomy": [{"action_type": a, "level": v.get("level"), "why": v.get("why")}
+        "autonomy": [{"action_type": a, "level": engine.effective_level(a, (row.autonomy or {}) if row else {}),
+                      "default": v.get("level"), "why": v.get("why")}
                      for a, v in engine.autonomy.items()],
         "default_level": engine.default_level,
     }

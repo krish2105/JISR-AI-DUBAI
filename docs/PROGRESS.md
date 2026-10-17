@@ -6,6 +6,29 @@ Updated after every phase: what was built, what was tested, what is next.
 > business, hardening, submission v2). Current honest scores and the full gap list: `docs/SCORECARD.md`.
 
 
+## Phase 15 — SaaS core: business profile, onboarding, settings ✅ (2026-10-17)
+
+**Built**
+- **Business profile per organisation** in the database (DECISIONS B1–B3): catalogue, costs, margins, discount tiers,
+  validity, logistics. Runs and collections use the organisation's profile; demo and sandboxes keep the demo profile.
+- **Settings API** (`/settings/...`): profile sections, catalogue add/edit/remove, CSV import (merge/replace, row errors)
+  and export, bounded autonomy (only stricter than `autonomy.yaml`, B4), onboarding progress. RBAC-checked and audited.
+- **Dashboard**: `/onboarding` wizard (business → products with HS hint → pricing → shipping → first test quote),
+  `/settings` (business & pricing, products, shipping, autonomy), a "finish setting up" banner, sign-up lands in
+  onboarding. EN + AR. Team management and the organisation switcher came with Phase 13.
+
+**Tested** (real output)
+- `tests/test_settings.py` (9): blank start, quotes from the organisation's own catalogue and name (and not another's),
+  validation, CSV merge/replace/errors/export, roles, autonomy only stricter (incl. a tampered row), onboarding
+  progress, sandbox privacy and purge. Backend total **345 passed**; ruff, typecheck, lint, build clean.
+- **Browser check**: sign up → onboarding → add "Brass serving tray" (HS suggestion shown, corrected) → pricing →
+  shipping → test enquiry → quote line matched to the new product at AED 30.67/unit, reply signed "Moradabad Brassware
+  Test"; settings tabs render; autonomy shows locked NEVER actions.
+
+**Not done (still in the plan)**: notification preferences, data-retention setting, language preference, explicit
+"transfer ownership" button (possible today by making another member Owner, then changing your own role).
+
+
 ## Phase 13 — Authentication, RBAC, demo lock ✅ (2026-10-17)
 
 **Built**

@@ -166,6 +166,31 @@ export type Me = {
   role: Role; role_label: string; role_label_ar: string;
   permissions: string[];
   orgs: { id: string; name: string; role: Role; is_sandbox: boolean }[];
+  onboarding?: { done: boolean; step: number };
+};
+
+export type CatalogueItem = {
+  name: string; keywords: string[]; materials: string[]; unit_cost_inr: number; kg: number; cbm: number;
+  hs_hint: string | null;
+};
+export type LogisticsSettings = {
+  origin_port: string; inland_freight_inr_per_kg: number; export_clearance_inr: number;
+  ocean_freight_aed_per_cbm: Record<string, number>; min_cbm: number; insurance_pct: number;
+  destination_delivery_aed: number; destination_clearance_aed: number; import_duty_pct: number; import_duty_source: string;
+};
+export type BusinessProfile = {
+  seller_name: string; home_currency: string; quote_currency: string; quote_validity_days: number;
+  default_margin_pct: number; min_margin_pct: number; max_discount_pct: number;
+  volume_discounts: { min_qty: number; pct: number }[]; fx_stub_inr_to_aed: number; catalogue: CatalogueItem[];
+  default_unit_cost_inr: number; default_kg: number; default_cbm: number; logistics: LogisticsSettings;
+  roi: { manual_minutes_per_quote: number; review_minutes_per_quote: number; source: string };
+};
+export type ProfileView = {
+  profile: BusinessProfile; source: "organisation" | "demo";
+  onboarding: { steps: string[]; step: number; done: boolean };
+};
+export type AutonomyItem = {
+  action_type: string; default: string; level: string; allowed: string[]; locked: boolean; why: string;
 };
 export type Session = { token: string; me: Me };
 export type AuthConfig = { demo_mode: boolean; allow_signup: boolean; sandbox_hours: number };
@@ -196,6 +221,15 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** Same as call() for plain-text responses (CSV export). */
+async function callText(path: string): Promise<string> {
+  const token = typeof window !== "undefined" ? getToken() : null;
+  const res = await fetch(`${API_URL}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: "no-store" });
+  if (!res.ok) throw new ApiError(`HTTP ${res.status}`, res.status);
+  return res.text();
+}
+
+const json = (method: string, body?: unknown): RequestInit => ({ method, body: body === undefined ? undefined : JSON.stringify(body) });
 const post = (body?: unknown): RequestInit => ({ method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
 
 export const api = {
@@ -250,6 +284,21 @@ export const api = {
   apiKeys: () => call<ApiKey[]>("/team/api-keys"),
   createApiKey: (name: string) => call<ApiKey & { key: string }>("/team/api-keys", post({ name })),
   revokeApiKey: (id: string) => call<{ ok: boolean }>(`/team/api-keys/${id}`, { method: "DELETE" }),
+  // --- Phase 15: settings and onboarding
+  profile: () => call<ProfileView>("/settings/profile"),
+  patchProfile: (sections: Partial<BusinessProfile>) => call<ProfileView>("/settings/profile", json("PATCH", sections)),
+  addProduct: (item: CatalogueItem) => call<ProfileView>("/settings/catalogue", json("POST", item)),
+  replaceProduct: (name: string, item: CatalogueItem) =>
+    call<ProfileView>(`/settings/catalogue/${encodeURIComponent(name)}`, json("PUT", item)),
+  removeProduct: (name: string) => call<ProfileView>(`/settings/catalogue/${encodeURIComponent(name)}`, { method: "DELETE" }),
+  importCatalogue: (csv: string, mode: "merge" | "replace") =>
+    call<ProfileView & { import: { added: number; updated: number; errors: string[] } }>(
+      "/settings/catalogue/import", json("POST", { csv, mode })),
+  exportCatalogue: () => callText("/settings/catalogue/export"),
+  autonomy: () => call<AutonomyItem[]>("/settings/autonomy"),
+  setAutonomy: (action_type: string, level: string) =>
+    call<AutonomyItem[]>("/settings/autonomy", json("PUT", { action_type, level })),
+  onboardingStep: (step: number, done = false) => call<ProfileView>("/settings/onboarding", json("POST", { step, done })),
   runCollections: () => call<{ drafted: number; reminders: { invoice_id: string; days_overdue: number; tone: string }[] }>(
     "/collections/run", { method: "POST" }),
 };

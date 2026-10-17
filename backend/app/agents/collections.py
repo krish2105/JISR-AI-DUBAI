@@ -17,7 +17,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import select
 
 from app.agents.state import PendingAction
-from app.db.models import Approval, Invoice, Run
+from app.db.models import Approval, Invoice, OrgSettings, Run
 from app.db.session import session_scope
 from app.governance.audit import append_audit
 from app.governance.policy_engine import PolicyContext, get_policy_engine
@@ -83,10 +83,19 @@ async def seed_demo_invoices(org_id: str = "demo", today: datetime | None = None
 
 async def run_collections(org_id: str, today: datetime | None = None, actor: str = "collections") -> list[dict]:
     """Draft reminders for overdue open invoices and queue them for approval through the policy engine."""
+    from app.profile import load_org_profile, using_profile
+
+    with using_profile(await load_org_profile(org_id)):          # reminders are signed with the org's name
+        return await _run_collections(org_id, today, actor)
+
+
+async def _run_collections(org_id: str, today: datetime | None, actor: str) -> list[dict]:
     today = today or datetime.now(UTC)
     engine = get_policy_engine()
     created = []
     async with session_scope() as db:
+        settings_row = await db.get(OrgSettings, org_id)
+        overrides = (settings_row.autonomy or {}) if settings_row else {}
         invoices = (await db.scalars(select(Invoice).where(Invoice.org_id == org_id, Invoice.status == "open")
                                      .order_by(Invoice.due_on))).all()
         for inv in invoices:
@@ -104,7 +113,7 @@ async def run_collections(org_id: str, today: datetime | None = None, actor: str
                 requested_by="collections", reason=f"Invoice {number} is {days} days overdue.",
                 evidence=[f"due {inv.due_on.date().isoformat()}", f"AED {inv.amount_aed:,.2f}",
                           "no bank details in text"])
-            decision = engine.evaluate(action, PolicyContext())
+            decision = engine.evaluate(action, PolicyContext(autonomy_overrides=overrides))
             risk = "high" if tone_for(days) == "final" else decision.risk      # over 30 days: owner should call
             run_id = f"run_{uuid.uuid4().hex[:12]}"
             note = f"[collections check] {number}"

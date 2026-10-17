@@ -136,6 +136,24 @@ class OrgSettings(Base):
     kill_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    # Per-organisation autonomy overrides {action_type: level}; only STRICTER than autonomy.yaml (Phase 15).
+    autonomy: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
+class OrgProfile(Base):
+    """An organisation's business profile (catalogue, costs, pricing policy, logistics) and onboarding progress.
+
+    Organisations without a row (the demo organisation and demo sandboxes) use the synthetic demo profile.
+    """
+
+    __tablename__ = "org_profiles"
+
+    org_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    data: Mapped[dict] = mapped_column(JSON)                          # a validated BusinessProfile
+    onboarding_step: Mapped[int] = mapped_column(Integer, default=0)
+    onboarding_done: Mapped[bool] = mapped_column(default=False)
+    updated_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
 
 
 class Contact(Base):
