@@ -3,7 +3,7 @@
 # Policies decide the RISK of an action (policies.yaml); this file decides WHO may act.
 # The server checks every route against this table; the dashboard only hides buttons for convenience.
 # Changing a line here needs a DECISIONS entry and the rbac eval suite must stay at 1.00.
-# 7 roles x 21 permissions (Phase 20 added buyers.read / buyers.erase, DECISIONS H4).
+# 7 roles x 22 permissions (Phase 20 added buyers.read / buyers.erase, DECISIONS H4; Phase 14 ops.read).
 
 roles:
   owner:      {label: Owner,      label_ar: المالك,      rank: 7}
@@ -36,6 +36,7 @@ permissions:
   api_keys.manage:                 [owner, admin]
   buyers.read:                     [owner, admin, approver, operator, accountant, auditor]   # Phase 20
   buyers.erase:                    [owner, admin]                    # data-subject erasure (audited)
+  ops.read:                        [owner, admin]                    # operations metrics (Phase 14)
 
 # Minimum permission to approve, by the policy engine's risk (separation of "how risky" from "who decides").
 approval_by_risk:

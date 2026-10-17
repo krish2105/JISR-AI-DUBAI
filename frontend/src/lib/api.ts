@@ -203,6 +203,15 @@ export type TradeDocument = {
   notes?: string[]; common_requirements?: (string | null)[]; checksum: string;
 };
 
+export type OpsMetrics = {
+  days: number; llm_profile: string; runs: number; by_status: Record<string, number>;
+  per_day: Record<string, { runs: number; tokens: number; cost_usd: number }>;
+  agent_seconds: { p50: number | null; p95: number | null }; error_events: number; error_rate: number;
+  cost: { total_usd: number; per_quote_usd: number | null; prices_as_of: string };
+  approvals: { pending: number; oldest_minutes: number | null };
+  budget: { daily_token_budget: number; used_today: number; fallback_active: boolean };
+};
+
 export type Buyer = {
   contact_key: string; channel: string | null; contact: string; name: string | null; first_seen: string; last_seen: string;
   runs: number; quotes_sent: number; last_incoterm: string | null; last_quote_total_aed: number | null;
@@ -307,6 +316,7 @@ export const api = {
   health: () => call<{ status: string; llm_profile: string; budget?: { fallback_active?: boolean } }>("/health"),
   runs: (limit = 5) =>
     call<{ id: string; status: string; channel: string; sample_id: string | null; created_at: string }[]>(`/runs?limit=${limit}`),
+  opsMetrics: (days = 7) => call<OpsMetrics>(`/ops/metrics?days=${days}`),
   // --- Phase 20: buyers and data rights
   buyers: () => call<Buyer[]>("/buyers"),
   exportBuyer: (key: string) => call<Record<string, unknown>>(`/buyers/${encodeURIComponent(key)}/export`),

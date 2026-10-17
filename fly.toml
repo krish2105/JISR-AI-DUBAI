@@ -28,7 +28,7 @@ primary_region = "bom"                 # Mumbai: close to both India and the UAE
     grace_period = "60s"
     interval = "30s"
     method = "GET"
-    path = "/health"
+    path = "/health/ready"            # 200 once the database answers and the models are warm (Phase 14)
     timeout = "5s"
 
 [[vm]]

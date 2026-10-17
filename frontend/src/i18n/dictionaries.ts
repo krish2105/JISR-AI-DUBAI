@@ -11,7 +11,7 @@ import type { Locale } from "./config";
 
 const en = {
   brand: { name: "Jisr", tagline: "The governed bridge for India–UAE trade" },
-  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff", team: "Team", settings: "Settings", today: "Today", buyers: "Buyers" },
+  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff", team: "Team", settings: "Settings", today: "Today", buyers: "Buyers", ops: "Operations" },
   tariff: {
     title: "Tariff explorer", subtitle: "The UAE tariff (Dubai Customs) with CEPA origin rules (Annex 3B). Search a product to see the path the duty agent takes.",
     search: "Describe the goods, e.g. brass diya lamps", locate: "Locate", chapter: "Chapter", candidates: "Likely headings", top: "top",
@@ -247,6 +247,13 @@ const en = {
       viewer: "Viewer: read-only.",
     } as Record<string, string>,
   },
+  ops: {
+    title: "Operations", subtitle: "How the service runs for your organisation: volume, speed, errors and what the AI models cost. Computed from your own run records.",
+    runs: "Enquiries", p50: "Agent time p50", p95: "Agent time p95", errors: "Error rate", cost: "Model cost", perQuote: "Cost per quote",
+    pending: "Waiting approvals", oldest: "oldest", budget: "Daily token budget", used: "used today", fallback: "Budget used up: offline model answering",
+    profile: "Model profile", prices: "Prices as of", perDay: "Per day", day: "Day", tokens: "Tokens", none: "No enquiries in this period.",
+    unlimited: "no limit",
+  },
   buyers: {
     title: "Buyers", subtitle: "What Jisr remembers about each buyer: facts and counts, never message text. Contacts are masked here.",
     empty: "No buyers yet. Buyers appear after their first WhatsApp or A2A enquiry.", contact: "Contact", seen: "Last seen",
@@ -332,7 +339,7 @@ export type Dictionary = typeof en;
 
 const ar: Dictionary = {
   brand: { name: "جسر", tagline: "الجسر المحوكم للتجارة بين الهند والإمارات" },
-  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة", team: "الفريق", settings: "الإعدادات", today: "اليوم", buyers: "المشترون" },
+  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة", team: "الفريق", settings: "الإعدادات", today: "اليوم", buyers: "المشترون", ops: "التشغيل" },
   tariff: {
     title: "مستكشف التعرفة", subtitle: "التعرفة الجمركية الإماراتية (جمارك دبي) مع قواعد المنشأ في الاتفاقية (الملحق 3B). ابحث عن منتج لترى المسار الذي يسلكه وكيل الرسوم.",
     search: "صف البضاعة، مثل مصابيح نحاسية", locate: "حدّد الموقع", chapter: "الفصل", candidates: "البنود المرجحة", top: "الأول",
@@ -567,6 +574,13 @@ const ar: Dictionary = {
       auditor: "المدقّق: يقرأ كل شيء ويصدّر سجل التدقيق؛ لا ينفّذ إجراءات.",
       viewer: "المشاهد: قراءة فقط.",
     },
+  },
+  ops: {
+    title: "التشغيل", subtitle: "كيف تعمل الخدمة لمؤسستك: الحجم والسرعة والأخطاء وتكلفة نماذج الذكاء الاصطناعي. محسوبة من سجلات تشغيلك.",
+    runs: "الاستفسارات", p50: "زمن الوكلاء p50", p95: "زمن الوكلاء p95", errors: "معدل الأخطاء", cost: "تكلفة النماذج", perQuote: "التكلفة لكل عرض",
+    pending: "موافقات منتظرة", oldest: "الأقدم", budget: "ميزانية الرموز اليومية", used: "مستخدم اليوم", fallback: "نفدت الميزانية: النموذج دون اتصال يجيب",
+    profile: "ملف النماذج", prices: "الأسعار بتاريخ", perDay: "يوميًا", day: "اليوم", tokens: "الرموز", none: "لا استفسارات في هذه الفترة.",
+    unlimited: "بلا حد",
   },
   buyers: {
     title: "المشترون", subtitle: "ما يتذكره جسر عن كل مشترٍ: حقائق وأعداد، لا نصوص الرسائل. جهات الاتصال مقنّعة هنا.",

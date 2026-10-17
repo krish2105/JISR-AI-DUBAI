@@ -28,6 +28,7 @@ from app.db.models import Approval, Run
 from app.db.session import session_scope
 from app.governance.audit import append_audit
 from app.governance.rbac import Forbidden, check_approval, get_rbac
+from app.llm.usage import tracking_run
 from app.profile import load_org_profile, using_profile
 from app.runs.emitter import RunEmitter, emit
 from app.security.redactor import redact
@@ -83,9 +84,10 @@ async def execute_run(run_id: str, redaction_counts: dict | None = None) -> RunS
 
     emitter = RunEmitter(run_id, delay_ms=settings.demo_step_delay_ms)
     config = {"configurable": {"emitter": emitter, "redaction_counts": redaction_counts or {}}}
+    usage: dict = {}
     try:
-        with using_profile(await load_org_profile(state.org_id)):     # the organisation's catalogue and prices
-            result = await build_graph().ainvoke(state, config=config)
+        with using_profile(await load_org_profile(state.org_id)), tracking_run() as usage:
+            result = await build_graph().ainvoke(state, config=config)     # the org's catalogue; tokens counted
         final = RunState.model_validate(result)
     except Exception as exc:  # no silent failure: record it, show it, escalate to a human
         await emit(run_id, "system", "error", {"message": f"{type(exc).__name__}: {exc}",
@@ -94,7 +96,7 @@ async def execute_run(run_id: str, redaction_counts: dict | None = None) -> RunS
 
     async with session_scope() as db:
         run = await db.get(Run, run_id)
-        run.state = final.model_dump(mode="json")
+        run.state = {**final.model_dump(mode="json"), "usage": usage}
         run.status = final.status
     await remember_run(final.org_id, final.contact_key, final.model_dump(mode="json"))
     if final.status != "needs_approval":

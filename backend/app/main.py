@@ -17,13 +17,15 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app import __version__
-from app.api import approvals, audit, auth, buyers, channels, collections, demo, governance, impact, kb, runs, team
+from app.api import approvals, audit, auth, buyers, channels, collections, demo, governance, impact, kb, ops, runs, team
 from app.api import settings as settings_api
 from app.config import get_settings
 from app.db.session import get_engine, init_db
 from app.llm.router import get_router
+from app.observability import RequestContext, configure_logging
 
 
 @asynccontextmanager
@@ -35,6 +37,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     signing_secret()                      # production refuses to start without AUTH_SECRET (Phase 13)
     await init_db()
     await purge_expired_sandboxes()
+    app.state.warm = not get_settings().warmup
+    if get_settings().warmup:              # load the retrieval models before real traffic (Phase 14)
+        import asyncio
+
+        from app.observability import warm_up_models
+
+        async def _warm() -> None:
+            try:
+                await asyncio.to_thread(warm_up_models)
+            finally:
+                app.state.warm = True
+
+        app.state.warm_task = asyncio.create_task(_warm())
     if getattr(app.state, "mcp", None) is not None:          # the MCP HTTP transport needs its session manager
         async with app.state.mcp.session_manager.run():
             await _seed_demo()
@@ -137,7 +152,9 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    configure_logging(settings.log_format)
     app.add_middleware(SecurityHeaders, hsts=settings.app_env == "prod")
+    app.add_middleware(RequestContext)
 
     # Let the browser dashboard call this API from its own origin(s).
     app.add_middleware(
@@ -148,7 +165,7 @@ def create_app() -> FastAPI:
     )
 
     for module in (auth, team, settings_api, runs, approvals, audit, demo, governance, channels, collections,
-                   impact, kb, buyers):
+                   impact, kb, buyers, ops):
         app.include_router(module.router)
 
     # A2A: Agent Card at /.well-known/agent-card.json and JSON-RPC at /a2a (buyer agents request quotations).
@@ -170,6 +187,26 @@ def create_app() -> FastAPI:
                                            transport_security=security)
         app.state.mcp = mcp
         app.mount("/mcp", BearerGuard(mcp_http, settings.mcp_token))
+
+    @app.get("/health/live", tags=["system"])
+    def live() -> dict:
+        """Liveness: the process answers (restart it if this fails)."""
+        return {"status": "ok"}
+
+    @app.get("/health/ready", tags=["system"])
+    async def ready() -> JSONResponse:
+        """Readiness: database reachable and models warm (send traffic only when this is 200)."""
+        from sqlalchemy import text
+
+        checks = {"database": False, "models_warm": bool(getattr(app.state, "warm", True))}
+        try:
+            async with get_engine().connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            checks["database"] = True
+        except Exception:  # noqa: BLE001 - any failure means "not ready"
+            pass
+        ok = all(checks.values())
+        return JSONResponse({"status": "ready" if ok else "not_ready", **checks}, status_code=200 if ok else 503)
 
     @app.get("/health", tags=["system"])
     def health() -> dict:

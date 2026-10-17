@@ -6,6 +6,21 @@ Updated after every phase: what was built, what was tested, what is next.
 > business, hardening, submission v2). Current honest scores and the full gap list: `docs/SCORECARD.md`.
 
 
+## Phase 14 (part) — Operations readiness ✅ (2026-10-17)
+
+**Built** (everything that does not need the founder's host or API key): request IDs + JSON request logs without
+query strings, `/health/live` and `/health/ready`, start-up model warm-up, Fly check on readiness, uvicorn access log
+off in the image (DECISIONS P1); per-run token and cost accounting at published prices, `cost_per_quote_usd` in the
+e2e eval (P2); `/ops/metrics` + Operations page for owners/admins (P3).
+
+**Tested**: `tests/test_ops.py` (5: exact pricing and free offline answers, run usage recorded, probes and request
+ids, no query string in JSON logs, ops metrics and its role check). Backend **358 passed** (SQLite) / **359**
+(Postgres). Browser: Operations page renders for a sandbox owner.
+
+**Waiting on the founder**: host (Fly card or HF PRO), Neon string, `ANTHROPIC_API_KEY`. Then: `fly deploy`,
+`EVAL_PROFILE=prod make eval` for the Claude numbers and the measured cost per quote, `LLM_PROFILE=prod make record`.
+
+
 ## Phase 20 (part) — Hardening ✅ (2026-10-17)
 
 **Built**: Alembic migrations with legacy adoption (H1); security headers on API and dashboard (H2); database-backed

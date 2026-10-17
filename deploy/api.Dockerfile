@@ -33,5 +33,7 @@ COPY data/synthetic /app/data/synthetic
 COPY replay /app/replay
 
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live')"
+# JSON logs from the app (request id, path without query string); uvicorn's access log would print stream tokens.
+ENV LOG_FORMAT=json WARMUP=true
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--no-access-log"]

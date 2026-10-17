@@ -1,0 +1,14 @@
+# pricing.yaml — published per-million-token prices used to compute cost per quote (Phase 14).
+# Source: Anthropic first-party API rates as listed in the Claude API reference (model table cached 2026-10-06).
+# Re-check before quoting any cost; record a change in docs/DECISIONS.md. Offline models cost nothing.
+# Claude Haiku 5.5: prices are for prompts up to 100K tokens ($0.50 / $2.50 beyond); Jisr prompts are far smaller.
+as_of: "2026-10-06"
+currency: USD
+models:
+  claude-opus-5-5:   {input_per_mtok: 4.00, output_per_mtok: 20.00}
+  claude-sonnet-5-5: {input_per_mtok: 2.00, output_per_mtok: 10.00}
+  claude-haiku-5-5:  {input_per_mtok: 0.10, output_per_mtok: 0.50}
+  # Models the server-side refusal fallback ("default" mode) may route to; same source and date.
+  claude-opus-5:     {input_per_mtok: 5.00, output_per_mtok: 25.00}
+  claude-opus-4-8:   {input_per_mtok: 5.00, output_per_mtok: 25.00}
+  claude-sonnet-5:   {input_per_mtok: 2.00, output_per_mtok: 10.00}

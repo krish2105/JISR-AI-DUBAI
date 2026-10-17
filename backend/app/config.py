@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     kb_enabled: bool = True
     # How many CPU-heavy retrieval steps may run at once (each already uses every core). Phase 20 load test.
     retrieval_concurrency: int = 2
+    # Operations (Phase 14): JSON logs for log stores; load the retrieval models at start-up (production).
+    log_format: Literal["text", "json"] = "text"
+    warmup: bool = False
 
     # Exchange rates: "fixed" (demo/tests/replay, deterministic) or "live" (ECB via Frankfurter x AED peg).
     fx_provider: Literal["fixed", "live"] = "fixed"

@@ -212,6 +212,8 @@ Copy [.env.example](.env.example) to `.env` (done by `make setup`). The key sett
 | `DEMO_MODE` / `SANDBOX_HOURS` | "Try the demo" sandboxes and how long they live | `true` / `24` |
 | `ALLOW_SIGNUP` | Anyone may create an organisation (otherwise invitation only) | `true` |
 | `MCP_TOKEN` | Enables the `/mcp/` endpoint (bearer token) | unset |
+| `LOG_FORMAT` / `WARMUP` | JSON request logs (no query strings) / load the retrieval models at start-up | `text` / `false` (`json` / `true` in the container) |
+| `RETRIEVAL_CONCURRENCY` | How many CPU-heavy retrieval steps run at once | `2` |
 | `PUBLIC_RUNS_PER_HOUR` | Per-visitor run limit on the hosted demo | `20` |
 | `LLM_DAILY_TOKEN_BUDGET` | Daily model budget; past it, answers come from the labelled offline model | `2000000` |
 

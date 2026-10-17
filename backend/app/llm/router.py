@@ -437,6 +437,9 @@ class LLMRouter:
         if getattr(self, "_budget_day", None) != today:
             self._budget_day, self._budget_used = today, 0
         self._budget_used += (resp.input_tokens or 0) + (resp.output_tokens or 0)
+        from app.llm.usage import record  # per-run tokens and cost (Phase 14)
+
+        record(resp.model or "", resp.input_tokens or 0, resp.output_tokens or 0)
 
     def _over_budget(self) -> bool:
         """True when a daily token budget is set and today's usage reached it."""

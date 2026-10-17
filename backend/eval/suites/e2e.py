@@ -3,7 +3,8 @@ e2e.py — Suite: end-to-end runs of normal enquiries through the whole agent gr
 
 task_success for one enquiry = the run reaches `needs_approval`, the quote has at least one line,
 and the reply draft is in the buyer's language (mixed enquiries may be answered in EN or AR).
-Also reports latency (p50/p95 seconds, demo pacing switched off) and steps per run.
+Also reports latency (p50/p95 seconds, demo pacing switched off), steps per run, and the measured model
+cost and tokens per enquiry (Phase 14; zero on the offline profile, real on `prod`).
 Phase 9 adds the trajectory suite (correct tools, recovery, expected key steps).
 """
 
@@ -66,7 +67,7 @@ async def run(ctx: EvalContext) -> SuiteResult:
     rows = load("enquiries", ctx)
     if ctx.fast:
         rows = rows[:20]
-    successes, latencies, steps = 0, [], []
+    successes, latencies, steps, costs, tokens = 0, [], [], [], []
     failures, by_lang = [], {}
     for row in rows:
         started = time.perf_counter()
@@ -78,6 +79,9 @@ async def run(ctx: EvalContext) -> SuiteResult:
             steps.append(await db.scalar(select(func.count()).select_from(RunEventRow)
                                          .where(RunEventRow.run_id == run_id, RunEventRow.kind == "agent_finished")))
         lines = (run.state.get("quote") or {}).get("lines", [])
+        usage = run.state.get("usage") or {}
+        costs.append(usage.get("cost_usd", 0.0))
+        tokens.append(usage.get("input_tokens", 0) + usage.get("output_tokens", 0))
         draft_lang = approval.payload.get("language") if approval else None
         wanted = {"en", "ar"} if row["language"] == "mixed" else {row["language"]}
         ok = run.status == "needs_approval" and bool(lines) and draft_lang in wanted
@@ -93,6 +97,9 @@ async def run(ctx: EvalContext) -> SuiteResult:
     metrics = {"task_success_rate": successes / n,
                "voice_task_success_rate": voice_ok / voice_n if voice_n else 0.0,
                "latency_p50_s": statistics.median(latencies) if latencies else 0,
-               "latency_p95_s": _pct(latencies, 0.95), "steps_mean": statistics.mean(steps) if steps else 0}
+               "latency_p95_s": _pct(latencies, 0.95), "steps_mean": statistics.mean(steps) if steps else 0,
+               # Measured model cost per enquiry at published prices (app/llm/pricing.yaml); 0 on offline models.
+               "cost_per_quote_usd": statistics.mean(costs) if costs else 0.0,
+               "tokens_per_quote": statistics.mean(tokens) if tokens else 0.0}
     slices = {f"lang={k}": {"task_success_rate": v[0] / v[1]} for k, v in sorted(by_lang.items())}
     return SuiteResult("e2e", len(rows), metrics, slices, failures)
