@@ -33,6 +33,9 @@ from app.db.models import Approval, Run, RunEventRow
 from app.db.session import session_scope
 from app.demo.samples import get_sample
 from app.events import TERMINAL_KINDS, RunEvent, bus
+from app.governance.audit import append_audit
+from app.outputs.documents import KINDS, build_documents
+from app.profile import load_org_profile
 from app.runs.service import create_run
 
 router = APIRouter(prefix="/runs", tags=["runs"])
@@ -173,6 +176,46 @@ async def stream_token(run_id: str, principal: Principal = Depends(require("runs
         if run is None or run.org_id != principal.org_id:
             raise HTTPException(404, "Run not found")
     return {"token": issue_stream_token(principal.user_id, principal.org_id, run_id)}
+
+
+async def _run_and_approval(run_id: str, org_id: str) -> tuple[Run, bool]:
+    async with session_scope() as db:
+        run = await db.get(Run, run_id)
+        if run is None or run.org_id != org_id:
+            raise HTTPException(404, "Run not found")
+        approved = run.status == "sent" or bool(await db.scalar(
+            select(Approval.id).where(Approval.run_id == run_id, Approval.status == "approved",
+                                      Approval.action_type.in_(["send_message", "send_documents"])).limit(1)))
+    return run, approved
+
+
+@router.get("/{run_id}/documents")
+async def documents(run_id: str, principal: Principal = Depends(require("runs.read"))) -> dict:
+    """Quotation, proforma invoice, packing list and CEPA origin checklist (DRAFT until the reply is approved)."""
+    run, approved = await _run_and_approval(run_id, principal.org_id)
+    profile = await load_org_profile(principal.org_id)
+    return build_documents(run_id=run.id, state=run.state, profile=profile, created_at=run.created_at,
+                           approved=approved)
+
+
+@router.post("/{run_id}/documents/{kind}/issue")
+async def issue_document(run_id: str, kind: str, principal: Principal = Depends(current_principal)) -> dict:
+    """Record that a FINAL document was issued: its number and checksum go into the audit chain."""
+    if kind not in KINDS:
+        raise HTTPException(404, "Unknown document")
+    if not (principal.can("drafts.edit") or principal.can("invoices.manage")):
+        raise HTTPException(403, "Your role cannot issue documents.")
+    run, approved = await _run_and_approval(run_id, principal.org_id)
+    if not approved:
+        raise HTTPException(409, "Approve the reply first: only approved data becomes a final document.")
+    doc = build_documents(run_id=run.id, state=run.state, profile=await load_org_profile(principal.org_id),
+                          created_at=run.created_at, approved=True)[kind]
+    if not doc["available"]:
+        raise HTTPException(409, doc["reason"])
+    async with session_scope() as db:
+        await append_audit(db, org_id=principal.org_id, actor=principal.actor, action="document.issued",
+                           run_id=run_id, details={"kind": kind, "number": doc["number"], "sha256": doc["checksum"]})
+    return {"kind": kind, "number": doc["number"], "checksum": doc["checksum"]}
 
 
 def parse_sse(text: str) -> list[dict]:

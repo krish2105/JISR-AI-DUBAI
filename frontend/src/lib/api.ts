@@ -189,6 +189,20 @@ export type ProfileView = {
   profile: BusinessProfile; source: "organisation" | "demo";
   onboarding: { steps: string[]; step: number; done: boolean };
 };
+export type DocLine = {
+  description: string; quantity?: number; unit?: string; unit_price?: number; amount?: number; hs_code?: string | null;
+  gross_kg?: number | null; hs_candidates?: (string | undefined)[]; rule?: string | null; rule_ref?: string | null;
+  evidence_needed?: string[]; needs_human_check?: boolean; catalogue_match?: boolean;
+};
+export type TradeDocument = {
+  kind: "quotation" | "proforma_invoice" | "packing_list" | "origin_checklist"; title: string; title_ar: string;
+  number: string; status: "draft" | "final"; date: string; run_id: string; available: boolean; reason?: string;
+  seller: { name: string; country: string; port_of_loading: string }; buyer: { name: string; country: string };
+  lines?: DocLine[]; charges?: { description: string; amount: number }[];
+  totals?: Record<string, number | string | null>; terms?: Record<string, string | number | boolean | null>;
+  notes?: string[]; common_requirements?: (string | null)[]; checksum: string;
+};
+
 export type AutonomyItem = {
   action_type: string; default: string; level: string; allowed: string[]; locked: boolean; why: string;
 };
@@ -284,6 +298,11 @@ export const api = {
   apiKeys: () => call<ApiKey[]>("/team/api-keys"),
   createApiKey: (name: string) => call<ApiKey & { key: string }>("/team/api-keys", post({ name })),
   revokeApiKey: (id: string) => call<{ ok: boolean }>(`/team/api-keys/${id}`, { method: "DELETE" }),
+  // --- Phase 17: documents and the run's own audit trail
+  documents: (runId: string) => call<Record<TradeDocument["kind"], TradeDocument>>(`/runs/${runId}/documents`),
+  issueDocument: (runId: string, kind: string) =>
+    call<{ kind: string; number: string; checksum: string }>(`/runs/${runId}/documents/${kind}/issue`, { method: "POST" }),
+  runAudit: (runId: string) => call<AuditEntry[]>(`/audit?run_id=${encodeURIComponent(runId)}&limit=200`),
   // --- Phase 15: settings and onboarding
   profile: () => call<ProfileView>("/settings/profile"),
   patchProfile: (sections: Partial<BusinessProfile>) => call<ProfileView>("/settings/profile", json("PATCH", sections)),

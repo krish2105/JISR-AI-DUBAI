@@ -18,7 +18,7 @@ import { currentTheme, setTheme } from "./theme";
 import { JisrMark } from "./JisrMark";
 
 /** Pages that show organisation data: they need a session (the landing, tariff and privacy pages are public). */
-const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team", "/settings", "/onboarding"];
+const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team", "/settings", "/onboarding", "/run", "/print"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t, locale } = useI18n();
@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-md print:hidden">
         <nav className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:px-6">
           <Link href={`/${locale}`} className="flex items-center gap-2.5 me-4 shrink-0" aria-label={t.brand.name}>
             <JisrMark className="h-8 w-8" />
@@ -96,7 +96,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
       {setupPending && me?.onboarding && (
-        <div className="border-b border-accent/30 bg-accent-soft">
+        <div className="border-b border-accent/30 bg-accent-soft print:hidden">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2 text-sm text-accent sm:px-6">
             <span className="flex-1">
               {t.onboarding.banner.replace("{step}", String(Math.min(me.onboarding.step + 1, 5))).replace("{total}", "5")}
@@ -112,7 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           : status === "loading" ? <p className="py-16 text-center text-sm text-ink-3">{t.common.loading}</p>
           : <SignInPanel title={t.auth.gateTitle} />}
       </main>
-      <footer className="border-t border-line py-4 text-center text-xs text-ink-3">
+      <footer className="border-t border-line py-4 text-center text-xs text-ink-3 print:hidden">
         {t.brand.name} · {t.brand.tagline} ·{" "}
         <Link href={`/${locale}/privacy`} className="underline-offset-4 hover:underline">{t.privacy.link}</Link>
       </footer>

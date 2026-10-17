@@ -6,6 +6,23 @@ Updated after every phase: what was built, what was tested, what is next.
 > business, hardening, submission v2). Current honest scores and the full gap list: `docs/SCORECARD.md`.
 
 
+## Phase 17 (part) — Documents and the enquiry page ✅ (2026-10-17)
+
+**Built**
+- `app/outputs/documents.py` + `GET /runs/{id}/documents`, `POST /runs/{id}/documents/{kind}/issue`: quotation,
+  proforma invoice, packing list, CEPA origin checklist from stored run data only; DRAFT until approved; issuing
+  records number + SHA-256 in the audit chain (DECISIONS O1–O2). `GET /audit?run_id=` for one enquiry's trail.
+- Dashboard: `/run?id=` (results, timeline, documents with print/issue, audit trail), `/print?run=&doc=` bilingual A4
+  layout with DRAFT watermark and checksum footer (O3–O4); "Open full record" on every approval card.
+
+**Tested**: `tests/test_documents.py` (3: draft→final, totals equal the quote, checksum in the audit, roles, isolation,
+runs without a quote, checksum sensitivity). Browser: draft quotation printed with watermark; after approval all four
+documents final; "Issue final" recorded the checksum.
+
+**Not done (Phase 17 remainder)**: email channel, uploaded-document extraction (needs a vision model: after the
+Claude key), notifications, WhatsApp templates.
+
+
 ## Phase 15 — SaaS core: business profile, onboarding, settings ✅ (2026-10-17)
 
 **Built**

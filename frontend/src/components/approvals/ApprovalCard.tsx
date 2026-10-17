@@ -9,6 +9,7 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check, Pencil, X } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { ApiError, api, type Approval } from "@/lib/api";
@@ -16,7 +17,7 @@ import { Badge, Button, Card, RiskBadge } from "@/components/ui/primitives";
 import { useCan } from "@/components/auth/SessionProvider";
 
 export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDecided?: (a: Approval) => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [text, setText] = useState(approval.payload.text ?? "");
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -55,6 +56,9 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
         <Badge tone="neutral" title={t.approvals.rule}>
           <bdi>{current.rule_id}</bdi>
         </Badge>
+        <Link href={`/${locale}/run?id=${encodeURIComponent(current.run_id)}`} className="text-xs text-accent hover:underline">
+          {t.runDetail.open}
+        </Link>
       </div>
 
       <div className="space-y-3 px-4 py-3 text-sm">

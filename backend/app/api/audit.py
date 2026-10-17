@@ -18,11 +18,14 @@ router = APIRouter(prefix="/audit", tags=["audit"])
 
 
 @router.get("")
-async def list_audit(limit: int = 50, principal: Principal = Depends(require("audit.read"))) -> list[dict]:
-    """Latest audit entries for the caller's organisation."""
+async def list_audit(limit: int = 50, run_id: str | None = None,
+                     principal: Principal = Depends(require("audit.read"))) -> list[dict]:
+    """Latest audit entries for the caller's organisation (optionally for one run)."""
+    query = select(AuditEntry).where(AuditEntry.org_id == principal.org_id)
+    if run_id:
+        query = query.where(AuditEntry.run_id == run_id)
     async with session_scope() as db:
-        rows = (await db.scalars(select(AuditEntry).where(AuditEntry.org_id == principal.org_id)
-                                 .order_by(AuditEntry.id.desc()).limit(min(limit, 500)))).all()
+        rows = (await db.scalars(query.order_by(AuditEntry.id.desc()).limit(min(limit, 500)))).all()
     return [{"id": e.id, "ts": e.ts.isoformat(), "actor": e.actor, "action": e.action, "run_id": e.run_id,
              "details": e.details, "hash": e.hash, "prev_hash": e.prev_hash} for e in rows]
 
