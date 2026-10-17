@@ -7,7 +7,7 @@ BACKEND := backend
 UV := uv --directory $(BACKEND)
 
 
-.PHONY: migrate migration
+.PHONY: migrate migration pilot
 .PHONY: sanctions kb help setup test test-backend test-postgres test-frontend lint fmt run db up down data e2e eval eval-fast eval-gate eval-baseline demo replay record build clean
 
 help: ## Show this list of commands
@@ -40,6 +40,10 @@ fmt: ## Auto-fix code style
 
 run: ## Start only the API on http://localhost:8000 (auto-reloads on code changes)
 	$(UV) run uvicorn app.main:app --reload --port 8000
+
+pilot: ## Pilot: anonymise data/pilot_raw/enquiries.csv, then score it in shadow mode (docs/pilot/README.md)
+	$(UV) run python ../scripts/pilot_prepare.py
+	$(UV) run python -m eval.run --suite pilot --no-report
 
 migrate: ## Apply database migrations to DATABASE_URL (the API also does this at start-up)
 	$(UV) run alembic upgrade head

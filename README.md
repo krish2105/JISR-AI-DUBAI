@@ -124,6 +124,7 @@ Run `make help` for the full list.
 | `make demo` / `make replay` | Live demo with the model / fully offline demo from the recorded cassette |
 | `make kb` | Build the knowledge-base index from the official sources |
 | `make test-postgres` | Backend tests against Postgres 17 + pgvector (after `make db`) |
+| `make pilot` | Anonymise real past enquiries and score them in shadow mode against the owner's labels ([docs/pilot](docs/pilot/README.md)) |
 | `make migrate` / `make migration m="…"` | Apply database migrations / create one from model changes (Alembic) |
 
 ## Evaluation

@@ -19,6 +19,7 @@ out/
 jisr.db*
 traces/
 data/pilot_raw/
+data/pilot/
 data/kb_sources/*
 !data/kb_sources/README.md
 !data/kb_sources/sources.csv

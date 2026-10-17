@@ -6,6 +6,19 @@ Updated after every phase: what was built, what was tested, what is next.
 > business, hardening, submission v2). Current honest scores and the full gap list: `docs/SCORECARD.md`.
 
 
+## Phase 18 (kit) — Pilot tooling ✅ (2026-10-17) · pilot itself: waiting on the business's data
+
+**Built**: `scripts/pilot_prepare.py` (anonymise with the Jisr redactor, refuse leaks, dev/test split), `pilot` eval
+suite (shadow mode, owner-label scoring, quote delta, minutes saved), `make pilot`, `docs/pilot/` (README, label sheet,
+baseline interview, adviser review, interviews, LOI template, report skeleton) (DECISIONS L1–L2).
+
+**Tested**: `tests/test_pilot.py` (2: anonymisation + labels + stable split; suite on a two-enquiry pilot: task success
+1.0, items F1 ≥ 0.8, Incoterm 1.0, owner minutes, nothing sent; empty data reported as n=0). Report and gate handle an
+empty pilot result.
+
+**Needs the founder**: the 30–50 labelled past enquiries, the baseline interview, the adviser, 5 interviews and LOIs.
+
+
 ## Phase 14 (part) — Operations readiness ✅ (2026-10-17)
 
 **Built** (everything that does not need the founder's host or API key): request IDs + JSON request logs without
