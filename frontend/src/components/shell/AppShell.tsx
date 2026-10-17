@@ -11,14 +11,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon, Sun, Languages } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
+import { SignInPanel } from "@/components/auth/SignInPanel";
+import { useSession } from "@/components/auth/SessionProvider";
+import { UserMenu } from "@/components/auth/UserMenu";
 import { currentTheme, setTheme } from "./theme";
 import { JisrMark } from "./JisrMark";
+
+/** Pages that show organisation data: they need a session (the landing, tariff and privacy pages are public). */
+const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t, locale } = useI18n();
   const pathname = usePathname() ?? `/${locale}`;
   const rest = pathname.replace(/^\/(en|ar)/, "");                 // path without the language prefix
   const otherLocale = locale === "en" ? "ar" : "en";
+  const { status } = useSession();
+  const needsSession = PROTECTED.some((p) => rest.startsWith(p));
 
   const links = [
     { href: `/${locale}`, label: t.nav.home, active: rest === "" },
@@ -28,6 +36,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: `/${locale}/governance`, label: t.nav.governance, active: rest.startsWith("/governance") },
     { href: `/${locale}/tariff`, label: t.nav.tariff, active: rest.startsWith("/tariff") },
     { href: `/${locale}/impact`, label: t.nav.impact, active: rest.startsWith("/impact") },
+    ...(status === "signed-in"
+      ? [{ href: `/${locale}/team`, label: t.nav.team, active: rest.startsWith("/team") }] : []),
   ];
 
   return (
@@ -63,6 +73,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span lang={otherLocale}>{t.lang.switchLabel}</span>
           </Link>
 
+          <UserMenu />
+
           <button
             type="button"
             onClick={() => setTheme(currentTheme() === "dark" ? "light" : "dark")}
@@ -80,7 +92,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </nav>
       </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+        {!needsSession || status === "signed-in" ? children
+          : status === "loading" ? <p className="py-16 text-center text-sm text-ink-3">{t.common.loading}</p>
+          : <SignInPanel title={t.auth.gateTitle} />}
+      </main>
       <footer className="border-t border-line py-4 text-center text-xs text-ink-3">
         {t.brand.name} · {t.brand.tagline} ·{" "}
         <Link href={`/${locale}/privacy`} className="underline-offset-4 hover:underline">{t.privacy.link}</Link>

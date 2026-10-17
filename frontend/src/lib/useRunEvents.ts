@@ -4,7 +4,8 @@
  * useRunEvents.ts — Subscribe to a run's live event stream (Server-Sent Events).
  *
  * Why: the timeline, the agent graph (and later the 3D graph) all render from the same
- * ordered list of events. This hook opens an EventSource, appends events in sequence order
+ * ordered list of events. This hook gets a short stream token (EventSource cannot send the session header),
+ * opens an EventSource, appends events in sequence order
  * (ignoring duplicates after a reconnect), and closes when the run is `done`.
  */
 
@@ -21,7 +22,15 @@ export function useRunEvents(runId: string | null): RunStream {
 
   useEffect(() => {
     if (!runId) return;
-    const source = new EventSource(api.eventsUrl(runId));
+    let source: EventSource | null = null;
+    let cancelled = false;
+    api.eventsUrl(runId).then((url) => {
+      if (cancelled) return;
+      source = new EventSource(url);
+      attach(source);
+    }).catch(() => setStream((s) => (s.runId === runId ? { ...s, connected: false } : s)));
+
+    function attach(source: EventSource) {
 
     source.onopen = () => setStream((s) => (s.runId === runId ? { ...s, connected: true } : s));
     source.onmessage = (message) => {
@@ -37,8 +46,12 @@ export function useRunEvents(runId: string | null): RunStream {
     };
     // EventSource retries on its own (sending Last-Event-ID); we only mark the connection state.
     source.onerror = () => setStream((s) => (s.runId === runId ? { ...s, connected: false } : s));
+    }
 
-    return () => source.close();
+    return () => {
+      cancelled = true;
+      source?.close();
+    };
   }, [runId]);
 
   return stream.runId === runId ? stream : EMPTY;

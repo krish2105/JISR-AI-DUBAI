@@ -14,7 +14,7 @@ primary_region = "bom"                 # Mumbai: close to both India and the UAE
   PUBLIC_RUNS_PER_HOUR = "20"          # no-login demo: per visitor IP
   LLM_DAILY_TOKEN_BUDGET = "2000000"   # past this, answers come from the offline model (labelled), never an error
   TRACE_DIR = "/tmp/traces"
-  # Secrets (fly secrets set ...): ANTHROPIC_API_KEY, DATABASE_URL (Neon), CORS_ORIGINS, MCP_TOKEN,
+  # Secrets (fly secrets set ...): AUTH_SECRET (required), ANTHROPIC_API_KEY, DATABASE_URL (Neon), CORS_ORIGINS, MCP_TOKEN,
   # WHATSAPP_* (optional), MCP_HOST
 
 [http_service]

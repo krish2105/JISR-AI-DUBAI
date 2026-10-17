@@ -41,10 +41,10 @@ Out of scope:
 
 These are documented, deliberate gaps on the road to a production system, not undisclosed flaws:
 
-- **No authentication yet.** The organisation is taken from an optional `X-Org-Id` header. Anyone who can reach the API
-  can act as any organisation. The hosted demo is public and uses synthetic data only. Authentication, role-based
-  access and a demo lock are planned in [docs/PLAN_95.md](docs/PLAN_95.md) (Phase 13) and are a precondition for real
-  customer data.
+- **Accounts are new.** Sign-in, roles and the demo sandbox arrived in Phase 13 (DECISIONS S9–S16). Passwords use
+  scrypt; tokens are short-lived bearer tokens kept in the browser's local storage (S10), so a cross-site scripting bug
+  would expose a session: please report any you find. Email verification, password reset and multi-factor sign-in are
+  not built yet.
 - **Data.** All data in the repository and the demo is synthetic or public. Do not send real personal data to the demo.
 - **Model providers.** Free-tier model profiles are restricted to synthetic data by code (`LLM_PROFILE=dev`); real data
   is only allowed with a paid, no-training provider.
@@ -54,6 +54,10 @@ These are documented, deliberate gaps on the road to a production system, not un
 
 - Deterministic policy engine with autonomy levels; bank details, payment instructions and marking invoices paid are
   never allowed (`backend/app/governance/`).
+- Sign-in with scrypt-hashed passwords and short HS256 tokens; the role is re-read on every request; production refuses
+  to start without `AUTH_SECRET`. Every route checks a permission from `backend/app/governance/rbac.yaml` (7 roles);
+  high-risk approvals need the Owner, with a four-eyes rule for the person who started the run.
+- Demo visitors get a private, expiring sandbox that can never reach real WhatsApp.
 - Every outbound message passes a single outbox that re-checks the kill switch and approval.
 - Hash-chained audit log; `/audit/verify` recomputes the chain and reports the first tampered row.
 - PII redaction before any model call, with a tripwire in the model router that refuses remaining identifiers.

@@ -9,6 +9,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi>=0.115",           # web framework for the API
     "uvicorn[standard]>=0.30",  # server that runs FastAPI
+    "pyjwt>=2.10",              # signed access tokens (Phase 13, DECISIONS S9)
     "pydantic>=2.8",            # typed data models
     "pydantic-settings>=2.4",   # reads settings from environment variables / .env
     "pyyaml>=6.0",              # reads LLM profiles and (later) policy YAML files
@@ -52,6 +53,10 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI dependencies are declared as argument defaults by design.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Header", "fastapi.Query", "app.api.deps.require"]
 
 [tool.ruff.lint.per-file-ignores]
 # Synthetic data files contain long literal messages; wrapping them would change the test data.

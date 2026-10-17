@@ -1,0 +1,41 @@
+# rbac.yaml — who may do what, per organisation (Phase 13, docs/PLAN_95.md §13b, DECISIONS S9).
+#
+# Policies decide the RISK of an action (policies.yaml); this file decides WHO may act.
+# The server checks every route against this table; the dashboard only hides buttons for convenience.
+# Changing a line here needs a DECISIONS entry and the rbac eval suite must stay at 1.00.
+
+roles:
+  owner:      {label: Owner,      label_ar: المالك,      rank: 7}
+  admin:      {label: Admin,      label_ar: مسؤول,       rank: 6}
+  approver:   {label: Approver,   label_ar: معتمِد,      rank: 5}
+  operator:   {label: Operator,   label_ar: مشغّل,       rank: 4}
+  accountant: {label: Accountant, label_ar: محاسب,       rank: 3}
+  auditor:    {label: Auditor,    label_ar: مدقّق,       rank: 2}
+  viewer:     {label: Viewer,     label_ar: مُشاهد,      rank: 1}
+
+permissions:
+  runs.create:                     [owner, admin, approver, operator]
+  runs.read:                       [owner, admin, approver, operator, accountant, auditor, viewer]
+  drafts.edit:                     [owner, admin, approver, operator]
+  approvals.decide:                [owner, admin, approver]          # low and medium risk
+  approvals.decide_high:           [owner]                           # high risk: owner only
+  approvals.decide_collections:    [owner, admin, accountant]        # payment reminders (never bank details)
+  governance.read:                 [owner, admin, approver, operator, accountant, auditor, viewer]
+  governance.kill_switch.engage:   [owner, admin, approver, operator, accountant]   # anyone who works may stop it
+  governance.kill_switch.release:  [owner, admin]
+  governance.policies.edit:        [owner, admin]
+  settings.business:               [owner, admin]
+  team.read:                       [owner, admin, approver, operator, accountant, auditor, viewer]
+  team.manage:                     [owner, admin]                    # admins cannot touch owners (checked in code)
+  billing.manage:                  [owner]
+  collections.run:                 [owner, admin, accountant]
+  invoices.manage:                 [owner, admin, accountant]
+  audit.read:                      [owner, admin, approver, operator, accountant, auditor, viewer]
+  audit.export:                    [owner, admin, auditor]
+  api_keys.manage:                 [owner, admin]
+
+# Minimum permission to approve, by the policy engine's risk (separation of "how risky" from "who decides").
+approval_by_risk:
+  low: approvals.decide
+  medium: approvals.decide
+  high: approvals.decide_high

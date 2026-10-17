@@ -44,6 +44,12 @@ def whatsapp_client() -> WhatsAppClient | None:
     return _client
 
 
+def _is_sandbox(org_id: str) -> bool:
+    from app.auth.service import is_sandbox_org
+
+    return is_sandbox_org(org_id)
+
+
 def set_whatsapp_client(client: WhatsAppClient | None) -> None:
     """Tests inject a client with a mocked transport."""
     global _client
@@ -73,7 +79,8 @@ async def service_window_open(db: AsyncSession, run_id: str | None) -> bool:
     """False only when the reply would go to real WhatsApp and the buyer's 24 h window has closed."""
     run = await db.get(Run, run_id) if run_id else None
     contact = await db.get(Contact, run.contact_key) if run is not None and run.contact_key else None
-    if whatsapp_client() is None or contact is None or contact.channel != "whatsapp":
+    if whatsapp_client() is None or contact is None or contact.channel != "whatsapp" or \
+            (run is not None and _is_sandbox(run.org_id)):
         return True
     return within_service_window(contact.last_inbound_at)
 
@@ -90,7 +97,7 @@ async def send(db: AsyncSession, *, org_id: str, run_id: str, action_type: str, 
             "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()[:16], "autonomous": autonomous}
     run = await db.get(Run, run_id) if run_id else None
     contact = await db.get(Contact, run.contact_key) if run is not None and run.contact_key else None
-    client = whatsapp_client()
+    client = None if _is_sandbox(org_id) else whatsapp_client()     # demo sandboxes never reach real WhatsApp
     if contact is not None and contact.channel == "a2a":           # a buyer's agent: complete its A2A task
         from app.interop.a2a_server import deliver
 

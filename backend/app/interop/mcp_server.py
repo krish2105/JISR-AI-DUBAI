@@ -15,6 +15,7 @@ SDK: official `mcp` Python SDK 2.x (`MCPServer`, formerly FastMCP).
 """
 
 import asyncio
+from contextvars import ContextVar
 
 from mcp.server.mcpserver import MCPServer
 from mcp.types import ToolAnnotations
@@ -23,6 +24,15 @@ from app.config import get_settings
 from app.db.session import init_db, session_scope
 from app.governance.audit import append_audit
 from app.governance.passports import check_tool
+
+# The organisation an MCP request acts for, set by the /mcp guard from the caller's key (Phase 13).
+MCP_ORG: ContextVar[str | None] = ContextVar("mcp_org", default=None)
+
+
+def _org() -> str:
+    """The calling key's organisation (stdio mode: the default organisation)."""
+    return MCP_ORG.get() or get_settings().default_org_id
+
 
 READ_ONLY = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
 
@@ -41,7 +51,7 @@ async def _audit(tool: str, details: dict) -> None:
     """Every MCP call is checked against the passport and recorded in the audit chain."""
     check_tool("mcp", tool)
     async with session_scope() as db:
-        await append_audit(db, org_id=get_settings().default_org_id, actor="mcp", action=f"mcp.{tool}",
+        await append_audit(db, org_id=_org(), actor="mcp", action=f"mcp.{tool}",
                            details=details)
 
 
@@ -58,7 +68,7 @@ async def analyse_enquiry(message: str) -> dict:
     from app.runs.service import create_run
 
     await _audit("analyse_enquiry", {"chars": len(message)})
-    run_id = await create_run(message=message[:8000], channel="form", background=False)
+    run_id = await create_run(message=message[:8000], channel="form", org_id=_org(), background=False)
     async with session_scope() as db:
         run = await db.get(Run, run_id)
         approvals = (await db.scalars(select(Approval).where(Approval.run_id == run_id))).all()
@@ -149,7 +159,7 @@ async def list_pending_approvals() -> list[dict]:
 
     await _audit("list_pending_approvals", {})
     async with session_scope() as db:
-        rows = (await db.scalars(select(Approval).where(Approval.org_id == get_settings().default_org_id,
+        rows = (await db.scalars(select(Approval).where(Approval.org_id == _org(),
                                                         Approval.status == "pending")
                                  .order_by(Approval.created_at.desc()).limit(20))).all()
     return [{"approval_id": a.id, "title": a.title, "risk": a.risk, "rules": a.rule_id,
@@ -159,10 +169,10 @@ async def list_pending_approvals() -> list[dict]:
 @mcp.tool(annotations=READ_ONLY)
 async def governance_status() -> dict:
     """The kill switch, the autonomy level of every action type and the policy rules (read only)."""
-    from app.api.governance import governance_status as status
+    from app.api.governance import _status as status
 
     await _audit("governance_status", {})
-    return await status(get_settings().default_org_id)
+    return await status(_org())
 
 
 async def _main() -> None:

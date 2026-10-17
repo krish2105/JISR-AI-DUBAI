@@ -16,7 +16,8 @@ from statistics import median
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
-from app.api.deps import org_id_header
+from app.api.deps import require
+from app.auth.service import Principal
 from app.db.models import Approval, AuditEntry, Run, RunEventRow
 from app.db.session import session_scope
 from app.profile import get_business_profile
@@ -25,8 +26,9 @@ router = APIRouter(tags=["impact"])
 
 
 @router.get("/impact")
-async def impact(days: int = 30, org_id: str = Depends(org_id_header)) -> dict:
+async def impact(days: int = 30, principal: Principal = Depends(require("runs.read"))) -> dict:
     """Summary and ledger for the last N days."""
+    org_id = principal.org_id
     since = datetime.now(UTC) - timedelta(days=max(1, min(days, 365)))
     async with session_scope() as db:
         runs = (await db.scalars(select(Run).where(Run.org_id == org_id, Run.created_at >= since)

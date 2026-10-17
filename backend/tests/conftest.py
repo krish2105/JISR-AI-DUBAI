@@ -17,10 +17,12 @@ import pytest
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.agents.graph import build_graph
+from app.api.ratelimit import reset_limits
 from app.config import get_settings
 from app.db.models import Base
 from app.db.session import get_engine, init_db, reset_engine_cache, to_async_url
 from app.governance.policy_engine import get_policy_engine
+from app.governance.rbac import get_rbac
 from app.llm.router import get_router
 from app.profile import get_business_profile
 
@@ -38,9 +40,10 @@ async def _reset_postgres(url: str) -> None:
 
 def _clear_caches() -> None:
     """Forget every cached singleton."""
-    for cached in (get_settings, get_router, get_policy_engine, get_business_profile, build_graph):
+    for cached in (get_settings, get_router, get_policy_engine, get_business_profile, build_graph, get_rbac):
         cached.cache_clear()
     reset_engine_cache()
+    reset_limits()
 
 
 @pytest.fixture(autouse=True)
@@ -56,6 +59,7 @@ def isolated_env(monkeypatch, tmp_path):
         asyncio.run(_reset_postgres(TEST_DATABASE_URL))
     monkeypatch.setenv("DEMO_STEP_DELAY_MS", "0")
     monkeypatch.setenv("KB_ENABLED", "false")       # unit tests never depend on the local knowledge base
+    monkeypatch.setenv("LOGIN_ATTEMPTS_PER_MINUTE", "0")   # the login limit is tested on its own
     _clear_caches()
     yield
     _clear_caches()

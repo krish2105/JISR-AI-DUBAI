@@ -1,0 +1,42 @@
+# rbac_scenarios.yaml — who may do what, written as an exporter would state the rules (docs/PLAN_95.md §13b),
+# NOT generated from app/governance/rbac.yaml. The `rbac` eval suite plays every row through the real HTTP API
+# with real signed tokens. expect: allow | deny.
+#
+# kind: decide    -> approve a held reply of `risk` (reminder: a payment reminder; own: the approver started the run;
+#                    override: written four-eyes reason)
+# kind: route     -> call `method path` with `body`
+# kind: cross_org -> try to read another organisation's run (must always be denied)
+
+- {id: r01, kind: decide, role: owner,      risk: high,   expect: allow, why: "the owner decides high-risk replies"}
+- {id: r02, kind: decide, role: admin,      risk: high,   expect: deny,  why: "high risk is owner-only"}
+- {id: r03, kind: decide, role: approver,   risk: high,   expect: deny,  why: "high risk is owner-only"}
+- {id: r04, kind: decide, role: approver,   risk: medium, expect: allow, why: "sales lead approves normal quotes"}
+- {id: r05, kind: decide, role: approver,   risk: low,    expect: allow, why: "sales lead approves low-risk replies"}
+- {id: r06, kind: decide, role: operator,   risk: low,    expect: deny,  why: "operators prepare, they do not approve"}
+- {id: r07, kind: decide, role: accountant, risk: medium, expect: deny,  why: "finance does not approve quotes"}
+- {id: r08, kind: decide, role: accountant, risk: medium, reminder: true, expect: allow, why: "finance approves payment reminders"}
+- {id: r09, kind: decide, role: accountant, risk: high,   reminder: true, expect: deny, why: "a final reminder needs the owner"}
+- {id: r10, kind: decide, role: auditor,    risk: low,    expect: deny,  why: "auditors only read"}
+- {id: r11, kind: decide, role: viewer,     risk: low,    expect: deny,  why: "viewers (judges, guests) only read"}
+- {id: r12, kind: decide, role: owner,      risk: high,   own: true, expect: deny, why: "four-eyes: not your own high-risk run"}
+- {id: r13, kind: decide, role: owner,      risk: high,   own: true, override: "Solo exporter, buyer verified by phone", expect: allow, why: "solo owner may override with a written reason"}
+- {id: r14, kind: decide, role: owner,      risk: medium, own: true, expect: allow, why: "four-eyes is for high risk only"}
+- {id: r15, kind: route, role: operator,   method: POST, path: /governance/kill-switch, body: {engaged: true}, expect: allow, why: "anyone working may stop everything"}
+- {id: r16, kind: route, role: accountant, method: POST, path: /governance/kill-switch, body: {engaged: true}, expect: allow, why: "anyone working may stop everything"}
+- {id: r17, kind: route, role: viewer,     method: POST, path: /governance/kill-switch, body: {engaged: true}, expect: deny,  why: "guests cannot touch controls"}
+- {id: r18, kind: route, role: approver,   method: POST, path: /governance/kill-switch, body: {engaged: false}, expect: deny, why: "restarting needs owner or admin"}
+- {id: r19, kind: route, role: admin,      method: POST, path: /governance/kill-switch, body: {engaged: false}, expect: allow, why: "admin may restart"}
+- {id: r20, kind: route, role: operator,   method: POST, path: /runs, body: {message: "We need 100 brass lamps"}, expect: allow, why: "operators run enquiries"}
+- {id: r21, kind: route, role: accountant, method: POST, path: /runs, body: {message: "We need 100 brass lamps"}, expect: deny, why: "finance does not run sales enquiries"}
+- {id: r22, kind: route, role: viewer,     method: GET,  path: /runs, expect: allow, why: "viewers can look"}
+- {id: r23, kind: route, role: auditor,    method: GET,  path: /audit/export, expect: allow, why: "auditors export the audit log"}
+- {id: r24, kind: route, role: operator,   method: GET,  path: /audit/export, expect: deny,  why: "export is for owner, admin, auditor"}
+- {id: r25, kind: route, role: admin,      method: POST, path: /team/invitations, body: {email: "new.sales@example.com", role: operator}, expect: allow, why: "admins build the team"}
+- {id: r26, kind: route, role: admin,      method: POST, path: /team/invitations, body: {email: "co.owner@example.com", role: owner}, expect: deny, why: "only owners create owners"}
+- {id: r27, kind: route, role: approver,   method: POST, path: /team/invitations, body: {email: "friend@example.com", role: viewer}, expect: deny, why: "approvers do not manage the team"}
+- {id: r28, kind: route, role: accountant, method: POST, path: /collections/run, expect: allow, why: "finance runs collections"}
+- {id: r29, kind: route, role: operator,   method: POST, path: /collections/run, expect: deny,  why: "sales does not chase payments"}
+- {id: r30, kind: route, role: admin,      method: POST, path: /team/api-keys, body: {name: "Claude Desktop"}, expect: allow, why: "admins connect assistants"}
+- {id: r31, kind: route, role: approver,   method: POST, path: /team/api-keys, body: {name: "Claude Desktop"}, expect: deny, why: "keys are for owner and admin"}
+- {id: r32, kind: cross_org, role: owner, expect: deny, why: "nobody sees another organisation's data"}
+- {id: r33, kind: cross_org, role: viewer, expect: deny, why: "nobody sees another organisation's data"}

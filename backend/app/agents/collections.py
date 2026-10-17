@@ -57,13 +57,14 @@ def tone_for(days_overdue: int) -> str:
 def reminder_text(invoice: Invoice, days_overdue: int) -> str:
     """The reminder in the buyer's language, always with the bank-safety line, never with bank details."""
     t = TEXT.get(invoice.language, TEXT["en"])
-    body = t[tone_for(days_overdue)].format(buyer=invoice.buyer_name, inv=invoice.id, amount=invoice.amount_aed,
+    body = t[tone_for(days_overdue)].format(buyer=invoice.buyer_name, inv=invoice.number or invoice.id,
+                                            amount=invoice.amount_aed,
                                             due=invoice.due_on.date().isoformat(), days=days_overdue)
     return f"{body}\n\n{t['safety']}\n— {get_business_profile().seller_name}"
 
 
 async def seed_demo_invoices(org_id: str = "demo", today: datetime | None = None) -> int:
-    """Three SYNTHETIC open invoices for the demo organisation (idempotent)."""
+    """Three SYNTHETIC open invoices for a demo or sandbox organisation (idempotent)."""
     today = today or datetime.now(UTC)
     demo = [("INV-2026-031", "Bayt Al Hadaya Trading LLC", "en", 14712.50, 40, 10),
             ("INV-2026-034", "مؤسسة الواحة للهدايا", "ar", 22180.00, 75, 45),
@@ -71,8 +72,10 @@ async def seed_demo_invoices(org_id: str = "demo", today: datetime | None = None
     added = 0
     async with session_scope() as db:
         for inv_id, buyer, lang, amount, issued_ago, overdue in demo:
-            if await db.get(Invoice, inv_id) is None:
-                db.add(Invoice(id=inv_id, org_id=org_id, buyer_name=buyer, language=lang, amount_aed=amount,
+            row_id = inv_id if org_id == "demo" else f"{org_id}-{inv_id}"   # ids are unique across orgs
+            if await db.get(Invoice, row_id) is None:
+                db.add(Invoice(id=row_id, org_id=org_id, number=inv_id, buyer_name=buyer, language=lang,
+                               amount_aed=amount,
                                issued_on=today - timedelta(days=issued_ago), due_on=today - timedelta(days=overdue)))
                 added += 1
     return added
@@ -91,19 +94,20 @@ async def run_collections(org_id: str, today: datetime | None = None, actor: str
             if days <= 0 or (inv.last_reminder_at and today - inv.last_reminder_at < REMIND_EVERY):
                 continue
             text = reminder_text(inv, days)
-            title = f"Payment reminder {inv.id} ({days} days overdue, {inv.language.upper()})"
+            number = inv.number or inv.id
+            title = f"Payment reminder {number} ({days} days overdue, {inv.language.upper()})"
             action = PendingAction(
                 action_type="send_message", title=title,
                 payload={"text": text, "language": inv.language, "channel": "whatsapp",
                          "kind": "collection_reminder", "invoice_id": inv.id, "days_overdue": days,
                          "tone": tone_for(days)},
-                requested_by="collections", reason=f"Invoice {inv.id} is {days} days overdue.",
+                requested_by="collections", reason=f"Invoice {number} is {days} days overdue.",
                 evidence=[f"due {inv.due_on.date().isoformat()}", f"AED {inv.amount_aed:,.2f}",
                           "no bank details in text"])
             decision = engine.evaluate(action, PolicyContext())
             risk = "high" if tone_for(days) == "final" else decision.risk      # over 30 days: owner should call
             run_id = f"run_{uuid.uuid4().hex[:12]}"
-            note = f"[collections check] {inv.id}"
+            note = f"[collections check] {number}"
             db.add(Run(id=run_id, org_id=org_id, status="needs_approval", channel="whatsapp",
                        sample_id="collections", raw_redacted=note, contact_key=inv.contact_key,
                        state={"run_id": run_id, "org_id": org_id, "raw_message_redacted": note,
@@ -118,6 +122,6 @@ async def run_collections(org_id: str, today: datetime | None = None, actor: str
             await append_audit(db, org_id=org_id, actor=actor, action="collections.reminder_drafted", run_id=run_id,
                                details={"invoice_id": inv.id, "days_overdue": days, "approval_id": approval.id,
                                         "rule_ids": decision.rule_ids, "effect": decision.effect})
-            created.append({"invoice_id": inv.id, "days_overdue": days, "tone": tone_for(days), "run_id": run_id,
+            created.append({"invoice_id": number, "days_overdue": days, "tone": tone_for(days), "run_id": run_id,
                             "approval_id": approval.id, "effect": decision.effect, "risk": risk})
     return created

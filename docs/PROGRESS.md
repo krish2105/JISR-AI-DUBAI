@@ -6,6 +6,46 @@ Updated after every phase: what was built, what was tested, what is next.
 > business, hardening, submission v2). Current honest scores and the full gap list: `docs/SCORECARD.md`.
 
 
+## Phase 13 — Authentication, RBAC, demo lock ✅ (2026-10-17)
+
+**Built**
+- **Identity** (`backend/app/auth/`): users, organisations, memberships, invitations, API keys; scrypt passwords; HS256
+  access tokens whose role is re-read on every request; sign-out everywhere; failed and successful logins audited;
+  per-IP limit on sign-in attempts. Production refuses to start without `AUTH_SECRET` (DECISIONS S9–S10).
+- **RBAC** (`app/governance/rbac.yaml` + `rbac.py`): 7 roles x 19 permissions on every route; approvals by risk
+  (high = owner only), accountant for payment reminders, `drafts.edit`, kill switch engage/release split, admins cannot
+  touch owners, last owner protected, **four-eyes** with an audited override (S11–S12).
+- **Demo lock**: one-click private sandbox per visitor (synthetic data, 24 h, never real WhatsApp, deleted with all its
+  rows on expiry) (S13). Organisation-scoped MCP keys (S14). Invitations by fragment link (S15). Audit export for
+  auditors (`GET /audit/export`). The `X-Org-Id` header is gone outside tests.
+- **Dashboard**: sign-in screen (demo first, sign-in, create organisation), user menu (organisation, role, sandbox
+  expiry, switch organisation, sign out / everywhere), `/team` (members, roles, invitations, assistant keys),
+  `/invite#token`, buttons hidden or disabled with the reason ("Only the owner can decide high-risk actions"),
+  four-eyes override prompt, audit export button. EN + AR.
+
+**Tested** (real output)
+- `tests/test_rbac.py`: 50 tests (role x route matrix over 19 routes, role x risk on approve and reject, accountant,
+  drafts, four-eyes, isolation, sessions, invitations, two organisations, sandboxes incl. expiry purge and no real
+  WhatsApp, stream tokens, API keys). Backend total **336 passed**; ruff clean.
+- New eval suite `rbac`: **33/33**, unsafe allows 0 (hard gates 1.00 / 0.00).
+- Frontend: typecheck, lint and production build clean.
+- **Browser check**: protected page shows the sign-in screen → demo sandbox → English sample run streams live (stream
+  token) → approve → audit shows `user:usr_…` with chain verified and Export button; Arabic RTL sign-in; a Viewer sees
+  the draft with Approve/Reject disabled and the reason, and no kill-switch control; an invitation link accepted as
+  Accountant → "Your role (Accountant) cannot do this." on the demo page.
+
+**Bugs found and fixed**
+1. Failed logins were not audited: the audit row was written in the transaction the error rolled back. Now written in
+   its own transaction.
+2. The `[token]` invitation route broke the static build (dynamic segment under Next 16 prerendering); moved the token
+   to the URL fragment (S15).
+3. Protected pages triggered Next's instant-navigation validator because they render only after sign-in;
+   `export const instant = false` on those six pages.
+4. Sandbox invoices would have collided (global invoice ids); ids are now organisation-prefixed with a display number.
+
+**Next: Phase 14** (deploy + real Claude + operations): needs the founder's host choice and an Anthropic key.
+
+
 ## Phase 12 — Submission pack ✅ (2026-10-10)
 
 **Built**

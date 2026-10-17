@@ -11,8 +11,9 @@
 import { useState } from "react";
 import { Check, Pencil, X } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
-import { api, type Approval } from "@/lib/api";
+import { ApiError, api, type Approval } from "@/lib/api";
 import { Badge, Button, Card, RiskBadge } from "@/components/ui/primitives";
+import { useCan } from "@/components/auth/SessionProvider";
 
 export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDecided?: (a: Approval) => void }) {
   const { t } = useI18n();
@@ -21,6 +22,10 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState(approval);
+  const [fourEyes, setFourEyes] = useState(false);                // the server asked for a written override
+  const [override, setOverride] = useState("");
+  const canEdit = useCan("drafts.edit");
+  const canDecide = current.can_decide ?? true;                    // older API without the flag: let the server decide
   const draftDir = approval.payload.language === "ar" ? "rtl" : "ltr";
 
   async function decide(kind: "approve" | "reject") {
@@ -28,11 +33,15 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
     setError(null);
     try {
       const edited = text !== (approval.payload.text ?? "") ? text : undefined;
-      const result = kind === "approve" ? await api.approve(current.id, { edited_text: edited }) : await api.reject(current.id);
+      const result = kind === "approve"
+        ? await api.approve(current.id, { edited_text: edited, override_reason: fourEyes ? override : undefined })
+        : await api.reject(current.id);
       setCurrent(result);
+      setFourEyes(false);
       onDecided?.(result);
     } catch (e) {
-      setError((e as Error).message);
+      if (e instanceof ApiError && e.status === 403 && e.message.includes("Four-eyes")) setFourEyes(true);
+      else setError((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -64,7 +73,7 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
           <div>
             <div className="mb-1 flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wide text-ink-3">{t.demo.result.draft}</span>
-              {current.status === "pending" && (
+              {current.status === "pending" && canEdit && canDecide && (
                 <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setEditing((v) => !v)}>
                   <Pencil className="h-3.5 w-3.5" aria-hidden /> {t.demo.result.edit}
                 </Button>
@@ -86,18 +95,35 @@ export function ApprovalCard({ approval, onDecided }: { approval: Approval; onDe
           </div>
         )}
 
-        {error && <p className="text-risk">{error}</p>}
+        {fourEyes && current.status === "pending" && (
+          <div className="space-y-2 rounded-lg border border-warn/40 bg-warn-soft p-3">
+            <p className="font-medium text-warn">{t.auth.fourEyesTitle}</p>
+            <p className="text-ink-2">{t.auth.fourEyesBody}</p>
+            <textarea value={override} onChange={(e) => setOverride(e.target.value)} rows={2} dir="auto"
+              aria-label={t.auth.fourEyesReason} placeholder={t.auth.fourEyesReason}
+              className="w-full rounded-lg border border-line bg-surface p-2 text-sm text-ink" />
+            <Button disabled={busy || override.trim().length < 10} onClick={() => decide("approve")}>
+              {t.auth.fourEyesConfirm}
+            </Button>
+          </div>
+        )}
+        {error && <p className="text-risk" dir="auto">{error}</p>}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-line bg-muted/50 px-4 py-3">
         {current.status === "pending" ? (
           <>
-            <Button onClick={() => decide("approve")} disabled={busy}>
+            <Button onClick={() => decide("approve")} disabled={busy || !canDecide || fourEyes}>
               <Check className="h-4 w-4" aria-hidden /> {t.demo.result.approve}
             </Button>
-            <Button variant="secondary" onClick={() => decide("reject")} disabled={busy}>
+            <Button variant="secondary" onClick={() => decide("reject")} disabled={busy || !canDecide}>
               <X className="h-4 w-4" aria-hidden /> {t.demo.result.reject}
             </Button>
+            {!canDecide && (
+              <span className="text-xs text-ink-3">
+                {current.approver_role === "owner" ? t.auth.ownerOnly : t.auth.approverOnly}
+              </span>
+            )}
           </>
         ) : (
           <Badge tone={current.status === "approved" ? "ok" : "neutral"} className="px-3 py-1 text-sm">

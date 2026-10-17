@@ -76,3 +76,21 @@ Source of truth: [`backend/app/agents/state.py`](../backend/app/agents/state.py)
 - `backend/app/governance/passports.yaml`: Agent Passports; tool calls outside an agent's list are refused by `RunEmitter` (event `blocked`, rule `PASSPORT`).
 - `backend/app/channels/outbox.py`: the single outbound path (approved and autonomous actions); re-checks the kill switch.
 - Audit chain: `hash = sha256(canonical_json(org_id, ts, actor, action, run_id, details, prev_hash))`, per organisation, starting from `GENESIS`.
+
+## Phase 13 additions: authentication and access (additive)
+
+Every business route now requires `Authorization: Bearer <access token>` (401 without; 403 when the role lacks the
+permission, with the reason in `detail`). The organisation comes from the token; `X-Org-Id` is ignored outside tests.
+
+| Route | Permission | Notes |
+|---|---|---|
+| `GET /auth/config` | public | `{demo_mode, allow_signup, sandbox_hours}` |
+| `POST /auth/signup` · `POST /auth/login` · `POST /auth/demo` · `POST /auth/invitations/accept` | public, rate-limited | return `{token, me}` |
+| `GET /auth/me` · `POST /auth/switch` · `POST /auth/logout-all` | signed in | `me = {user, org{id,name,is_sandbox,expires_at}, role, role_label(_ar), permissions[], orgs[]}` |
+| `GET /auth/invitations/{token}` | public | `{org_name, email, role, has_account}` |
+| `POST /runs/{id}/stream-token` | `runs.read` | `{token}` for `GET /runs/{id}/events?st=` (EventSource) |
+| `GET /audit/export` | `audit.export` | whole chain + verification |
+| `/team/members` · `/team/invitations` · `/team/api-keys` | `team.read` / `team.manage` / `api_keys.manage` | see `backend/app/api/team.py` |
+
+Approvals gain `approver_role` (`owner` | `approver`) and `can_decide` (for the caller); `POST /approvals/{id}/approve`
+accepts `override_reason` (four-eyes, high risk). Invoices gain `number` (display number). Runs gain `created_by`.

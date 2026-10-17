@@ -19,7 +19,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
+from app.api.deps import require
 from app.api.ratelimit import limit_runs
+from app.auth.service import Principal
 from app.channels.inbound import handle_inbound
 from app.channels.outbox import whatsapp_client
 from app.channels.whatsapp import parse_webhook, sign, verify_signature
@@ -53,15 +55,18 @@ async def verify_webhook(mode: str = Query("", alias="hub.mode"), token: str = Q
 
 async def process_payload(raw: bytes, signature: str | None, secret: str, *, source: str,
                           audio: bytes | None = None, mime_type: str | None = None, wait: bool = False,
-                          run_in_background: bool = True) -> list[dict]:
-    """Verify, parse and hand every message to the inbound handler. Shared by the webhook and the simulator."""
+                          run_in_background: bool = True, org_id: str | None = None) -> list[dict]:
+    """Verify, parse and hand every message to the inbound handler. Shared by the webhook and the simulator.
+
+    Real webhooks go to WHATSAPP_ORG_ID; the simulator passes the signed-in user's organisation.
+    """
     if not verify_signature(raw, signature, secret):
         async with session_scope() as db:
-            await append_audit(db, org_id=get_settings().whatsapp_org_id, actor="channel:whatsapp",
+            await append_audit(db, org_id=org_id or get_settings().whatsapp_org_id, actor="channel:whatsapp",
                                action="webhook.rejected_signature", details={"source": source, "bytes": len(raw)})
         raise HTTPException(401, "invalid signature")
     messages = parse_webhook(json.loads(raw))
-    org_id = get_settings().whatsapp_org_id
+    org_id = org_id or get_settings().whatsapp_org_id
     results = []
     for msg in messages:
         job = handle_inbound(msg, org_id=org_id, source=source, audio=audio, mime_type=mime_type,  # type: ignore[arg-type]
@@ -97,7 +102,8 @@ class SimulateBody(BaseModel):
 
 
 @router.post("/simulate", dependencies=[Depends(limit_runs)])
-async def simulate(body: SimulateBody, sync: bool = False) -> dict:
+async def simulate(body: SimulateBody, sync: bool = False,
+                   principal: Principal = Depends(require("runs.create"))) -> dict:
     """Build a webhook payload like Meta's, sign it, and process it through the same code as real deliveries."""
     if not body.text and not body.voice_sample:
         raise HTTPException(422, "text or voice_sample is required")
@@ -120,7 +126,7 @@ async def simulate(body: SimulateBody, sync: bool = False) -> dict:
     secret = get_settings().simulator_secret
     # Returns as soon as the run exists (the dashboard then follows it live); ?sync=true waits for the agents (tests).
     results = await process_payload(raw, sign(raw, secret), secret, source="simulator", audio=audio, mime_type=mime,
-                                    wait=True, run_in_background=not sync)
+                                    wait=True, run_in_background=not sync, org_id=principal.org_id)
     return results[0]
 
 

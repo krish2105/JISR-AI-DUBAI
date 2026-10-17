@@ -33,3 +33,26 @@ def limit_runs(request: Request) -> None:
     if len(hits) >= limit:
         raise HTTPException(429, f"Demo limit: {limit} runs per hour from one address. Please try again later.")
     hits.append(now)
+
+
+_login_hits: dict[str, deque] = defaultdict(deque)
+LOGIN_WINDOW = 60.0
+
+
+def limit_logins(request: Request) -> None:
+    """FastAPI dependency: 429 after too many sign-in or sign-up attempts from one IP in a minute (slows guessing)."""
+    limit = get_settings().login_attempts_per_minute
+    if not limit:
+        return
+    now, hits = time.monotonic(), _login_hits[client_ip(request)]
+    while hits and now - hits[0] > LOGIN_WINDOW:
+        hits.popleft()
+    if len(hits) >= limit:
+        raise HTTPException(429, "Too many attempts. Please wait a minute and try again.")
+    hits.append(now)
+
+
+def reset_limits() -> None:
+    """Forget every counter (tests)."""
+    _hits.clear()
+    _login_hits.clear()

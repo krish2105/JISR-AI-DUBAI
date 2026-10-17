@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { BadgeCheck, Bot, Power, ShieldAlert } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useCan, useSession } from "@/components/auth/SessionProvider";
 import { api, type AutonomousLog, type Governance, type Passport } from "@/lib/api";
 import { Badge, Button, Card, CardHeader, RiskBadge } from "@/components/ui/primitives";
 
@@ -18,7 +19,7 @@ const EFFECT_TONE = { allow: "ok", require_approval: "warn", block: "risk" } as 
 const LEVEL_TONE: Record<string, "risk" | "warn" | "ok" | "neutral"> = { NEVER: "risk", L0: "risk", L1: "warn", L2: "ok", L3: "ok" };
 
 export function GovernancePanel() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const g = t.governance;
   const [gov, setGov] = useState<Governance | null>(null);
   const [auto, setAuto] = useState<AutonomousLog | null>(null);
@@ -33,10 +34,13 @@ export function GovernancePanel() {
   }, [t.common.error]);
   useEffect(load, [load]);
 
+  const { me } = useSession();
+  const canEngage = useCan("governance.kill_switch.engage");
+  const canRelease = useCan("governance.kill_switch.release");
   const toggle = (engaged: boolean) => {
     api.killSwitch(engaged, engaged ? reason || "manual stop" : undefined)
       .then((next) => { setGov(next); setReason(""); load(); })
-      .catch(() => setError(t.common.error));
+      .catch((e) => setError((e as Error).message || t.common.error));
   };
 
   return (
@@ -55,14 +59,19 @@ export function GovernancePanel() {
             {gov?.kill_switch ? (
               <>
                 <p className="text-ink-2" dir="auto">{gov.kill_reason} · <bdi>{gov.updated_by}</bdi></p>
-                <Button onClick={() => toggle(false)}>{g.release}</Button>
+                {canRelease ? <Button onClick={() => toggle(false)}>{g.release}</Button>
+                  : <p className="text-xs text-ink-3">{t.auth.releaseOnly}</p>}
               </>
-            ) : (
+            ) : canEngage ? (
               <div className="flex flex-wrap gap-2">
                 <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={g.reason} aria-label={g.reason}
                   className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm" />
                 <Button variant="danger" onClick={() => toggle(true)}><ShieldAlert className="h-4 w-4" aria-hidden />{g.engage}</Button>
               </div>
+            ) : (
+              <p className="text-xs text-ink-3">
+                {t.auth.noPermission.replace("{role}", (locale === "ar" ? me?.role_label_ar : me?.role_label) ?? "")}
+              </p>
             )}
           </div>
         </Card>

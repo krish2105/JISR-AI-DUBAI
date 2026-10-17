@@ -18,6 +18,7 @@ import { setUrlParam, useUrlParam } from "@/lib/useUrlParam";
 import { Badge, Button, Card, CardHeader, cx } from "@/components/ui/primitives";
 import dynamic from "next/dynamic";
 import { use3D } from "@/components/three/use3D";
+import { useSession } from "@/components/auth/SessionProvider";
 import { ViewToggle } from "@/components/three/ViewToggle";
 import { AgentGraph2D } from "./AgentGraph2D";
 
@@ -42,6 +43,8 @@ export function DemoConsole() {
   const runId = useUrlParam("run");                       // the URL is the source of truth
   const [custom, setCustom] = useState("");
   const [starting, setStarting] = useState(false);
+  const { can, me } = useSession();
+  const canRun = can("runs.create");
   const [error, setError] = useState<string | null>(null);
   const stream = useRunEvents(runId);
   const view = useMemo(() => deriveRunView(stream.events), [stream.events]);
@@ -91,12 +94,17 @@ export function DemoConsole() {
 
         <Card>
           <CardHeader title={t.demo.samples} />
+          {!canRun && me && (
+            <p className="px-3 pt-3 text-xs text-ink-3">
+              {t.auth.noPermission.replace("{role}", locale === "ar" ? me.role_label_ar : me.role_label)}
+            </p>
+          )}
           <div className="space-y-2 p-3">
             {samples.map((s) => (
               <button
                 key={s.id}
                 type="button"
-                disabled={starting || running}
+                disabled={!canRun || starting || running}
                 onClick={() => start({ sample_id: s.id })}
                 className={cx(
                   "w-full rounded-xl border px-3 py-2.5 text-start text-sm transition disabled:opacity-50",
@@ -123,7 +131,7 @@ export function DemoConsole() {
                 <div key={v.name} className="space-y-1.5 rounded-xl border border-line p-2.5">
                   <p className="text-sm font-medium text-ink">{v.language === "ar" ? t.demo.voiceArabic : t.demo.voiceEnglish}</p>
                   <audio controls preload="none" src={`${API_URL}${v.audio_url}`} className="h-8 w-full" />
-                  <Button variant="secondary" className="w-full" disabled={starting || running} onClick={() => sendVoice(v.name)}>
+                  <Button variant="secondary" className="w-full" disabled={!canRun || starting || running} onClick={() => sendVoice(v.name)}>
                     <Mic className="h-4 w-4" aria-hidden /> {t.demo.sendVoice}
                   </Button>
                 </div>
@@ -144,7 +152,7 @@ export function DemoConsole() {
               rows={4}
               className="w-full rounded-lg border border-line bg-muted p-2.5 text-sm text-ink placeholder:text-ink-3"
             />
-            <Button className="w-full" disabled={!custom.trim() || starting || running} onClick={() => start({ message: custom })}>
+            <Button className="w-full" disabled={!canRun || !custom.trim() || starting || running} onClick={() => start({ message: custom })}>
               <Play className="h-4 w-4" aria-hidden /> {t.demo.runCustom}
             </Button>
           </div>

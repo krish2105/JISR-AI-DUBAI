@@ -18,7 +18,7 @@ import tempfile
 import time
 from pathlib import Path
 
-SUITES = ["pricing", "security", "extraction", "docs", "trust", "governance", "redteam", "e2e", "trajectory",
+SUITES = ["pricing", "security", "extraction", "docs", "trust", "governance", "rbac", "redteam", "e2e", "trajectory",
           "retrieval"]
 
 

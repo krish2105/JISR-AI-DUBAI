@@ -34,6 +34,7 @@ Detail and reasoning: `docs/DEPLOY.md`. Secrets (database URL, keys) you type yo
 4. Set the secrets (one command; replace the values; generate the token with `openssl rand -hex 32`):
    ```bash
    fly secrets set --app jisr-ai-api \
+     AUTH_SECRET='<64 hex chars from openssl rand -hex 32>' \
      DATABASE_URL='postgresql+psycopg://...' \
      CORS_ORIGINS='https://jisr-ai-eta.vercel.app' \
      MCP_TOKEN='<64 hex chars from openssl rand -hex 32>' \
@@ -45,7 +46,8 @@ Detail and reasoning: `docs/DEPLOY.md`. Secrets (database URL, keys) you type yo
    ```bash
    fly deploy --app jisr-ai-api
    ```
-6. Check it: https://jisr-ai-api.fly.dev/health . Expect `status: ok`, `llm_profile: fake` (offline model, free).
+6. Check it: https://jisr-ai-api.fly.dev/health . Expect `status: ok`, `llm_profile: fake` (offline model, free). If the machine keeps restarting, check that
+   `AUTH_SECRET` is set (`fly logs`).
    Logs if needed: `fly logs --app jisr-ai-api`.
 
 ## 3. Connect the dashboard: Vercel
@@ -109,6 +111,7 @@ Used when Fly needs a card. Same image, 2 vCPU / 16 GB RAM, sleeps after ~48 h w
    ```
 3. Space -> Settings -> **Variables and secrets**:
    - Secret `DATABASE_URL` = the Neon pooled string (as copied; the backend adds `+psycopg`).
+   - Secret `AUTH_SECRET` = `openssl rand -hex 32` (required: the API will not start without it in production).
    - Secret `MCP_TOKEN` = `openssl rand -hex 32`.
    - Variables `CORS_ORIGINS=https://jisr-ai-eta.vercel.app`, `MCP_HOST=<user>-jisr-ai-api.hf.space`,
      `PUBLIC_BASE_URL=https://<user>-jisr-ai-api.hf.space`.

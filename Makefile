@@ -65,8 +65,8 @@ eval-fast: ## Quick evaluation on the test split (what CI runs on every change),
 	$(UV) run python -m eval.run --fast
 	$(UV) run python -m eval.gate
 
-e2e: ## End-to-end checks, offline (fake model, no keys): full agent graph, trajectories, governance, security
-	$(UV) run python -m eval.run --suite e2e,trajectory,governance,security --fast --no-report
+e2e: ## End-to-end checks, offline (fake model, no keys): full agent graph, trajectories, governance, roles, security
+	$(UV) run python -m eval.run --suite e2e,trajectory,governance,rbac,security --fast --no-report
 
 eval-gate: ## Only re-check the latest results against thresholds and the baseline
 	$(UV) run python -m eval.gate

@@ -103,7 +103,8 @@ make demo      # API on :8000 and dashboard on :3000; opens http://localhost:300
 No API keys are needed: the default `fake` model is deterministic and offline. To run the whole demo without any
 network at all, use `make replay`.
 
-In the demo, run an English or Arabic enquiry and watch the agent graph and timeline. Approve the draft in
+Open the dashboard and choose **Start my demo sandbox**: you get a private organisation with synthetic data, as its
+Owner, for 24 hours. Run an English or Arabic enquiry and watch the agent graph and timeline. Approve the draft in
 `/approvals` (it is sent through the simulator). Run the hostile sample to see the policy engine block a bank-detail
 change. `/audit` shows the hash-chain check. The top bar toggles theme and language.
 
@@ -137,6 +138,7 @@ Latest full run: commit `1a0adc7`, profile `fake`, dataset `synthetic-v4`. Gate:
 | Red team | Attack success rate (30 attacks) | 0.000 |
 | Trajectories | Pass rate over 50 scenarios × 3 runs | 1.000 |
 | Governance | Scenario pass rate / unsafe-allow rate | 1.000 / 0.000 |
+| Access control (RBAC) | Scenario pass rate / unsafe-allow rate (33 scenarios) | 1.000 / 0.000 |
 | End to end | Task success / voice-note task success | 1.000 / 1.000 |
 | Retrieval (official sources) | Grounded claims / numbers verbatim | 1.000 / 1.000 |
 | Retrieval | Recall@5 (plain / agentic) | 0.725 / 0.825 |
@@ -159,8 +161,13 @@ report.
 - **Privacy**: personal identifiers are redacted before any model call; models see only masked text. Free-tier model
   profiles are limited to synthetic data by code.
 
-Security reporting and the limitations of the current demo are in [SECURITY.md](SECURITY.md). Notably, **the public
-demo has no authentication yet**; role-based access is planned before any real customer data is used.
+- **Accounts and roles**: sign-in with scrypt-hashed passwords and short-lived tokens; seven roles (Owner, Admin,
+  Approver, Operator, Accountant, Auditor, Viewer) checked on every route from
+  [backend/app/governance/rbac.yaml](backend/app/governance/rbac.yaml). The policy engine decides how risky an action
+  is; RBAC decides who may approve it (high risk: Owner only, with a four-eyes rule). Measured by the `rbac` eval suite.
+- **Demo lock**: each visitor gets a private sandbox that expires and can never message real buyers.
+
+Security reporting and current limitations are in [SECURITY.md](SECURITY.md).
 
 ## Knowledge base
 
@@ -198,6 +205,9 @@ Copy [.env.example](.env.example) to `.env` (done by `make setup`). The key sett
 | `ANTHROPIC_API_KEY` | Claude API key, used only by the `prod` profile | unset |
 | `DATABASE_URL` | SQLite by default; Postgres (`postgresql+psycopg://…`) in production | local SQLite |
 | `CORS_ORIGINS` | Comma-separated dashboard origins allowed to call the API | `http://localhost:3000` |
+| `AUTH_SECRET` | Signs access tokens; **required in production** (32+ random characters) | dev-only fixed value |
+| `DEMO_MODE` / `SANDBOX_HOURS` | "Try the demo" sandboxes and how long they live | `true` / `24` |
+| `ALLOW_SIGNUP` | Anyone may create an organisation (otherwise invitation only) | `true` |
 | `MCP_TOKEN` | Enables the `/mcp/` endpoint (bearer token) | unset |
 | `PUBLIC_RUNS_PER_HOUR` | Per-visitor run limit on the hosted demo | `20` |
 | `LLM_DAILY_TOKEN_BUDGET` | Daily model budget; past it, answers come from the labelled offline model | `2000000` |
@@ -212,15 +222,16 @@ The API image is built from the repository root by [deploy/api.Dockerfile](deplo
 
 ## Status and limitations
 
-**Status.** Phases 0–12 of the plan are complete: the vertical slice, data and evaluation, retrieval, the document and
-trust agents, governance, channels, interoperability, the dashboard and the submission pack. The plan for the next
+**Status.** Phases 0–13 are complete: the vertical slice, data and evaluation, retrieval, the document and trust
+agents, governance, channels, interoperability, the dashboard, the submission pack, and accounts with role-based
+access and demo sandboxes. The plan for the next
 phases is in [docs/PLAN_95.md](docs/PLAN_95.md).
 
 **Limitations, stated plainly.**
 
 - Evaluation uses **synthetic data** and the offline model. Real Claude runs, real enquiries and a pilot are not yet
   done. Each report says so.
-- The public demo is **not yet authenticated** (see [SECURITY.md](SECURITY.md)).
+- Accounts have no email verification, password reset or multi-factor sign-in yet (see [SECURITY.md](SECURITY.md)).
 - Savings are estimates ("up to"), not official preferential-rate figures.
 - HS labels need review by a customs adviser before any real use.
 - This software gives trade information for review. It is not legal, customs or financial advice.

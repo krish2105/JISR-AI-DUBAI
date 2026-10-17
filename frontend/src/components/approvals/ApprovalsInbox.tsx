@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useI18n } from "@/i18n/I18nProvider";
 import { api, type Approval } from "@/lib/api";
 import { Button } from "@/components/ui/primitives";
+import { useCan } from "@/components/auth/SessionProvider";
 import { ApprovalCard } from "./ApprovalCard";
 
 export function ApprovalsInbox() {
@@ -18,6 +19,7 @@ export function ApprovalsInbox() {
 
   // Fetch data; state is only set in the promise callbacks (never synchronously in an effect).
   const [collections, setCollections] = useState<number | null>(null);
+  const canCollect = useCan("collections.run");
   const load = useCallback(() => {
     api.approvals("all").then(setItems).catch(() => setError(t.common.error));
   }, [t.common.error]);
@@ -34,7 +36,7 @@ export function ApprovalsInbox() {
           <h1 className="text-2xl font-semibold tracking-tight">{t.approvals.title}</h1>
           <p className="mt-1 text-sm text-ink-2">{t.approvals.subtitle}</p>
         </div>
-        <div className="text-end">
+        {canCollect && <div className="text-end">
           <Button variant="secondary" onClick={() => api.runCollections()
             .then((r) => { setCollections(r.drafted); load(); })
             .catch(() => setError(t.common.error))}>
@@ -43,7 +45,7 @@ export function ApprovalsInbox() {
           {collections !== null && (
             <p className="mt-1 text-xs text-ink-3"><bdi>{collections}</bdi> {t.approvals.collectionsDone}</p>
           )}
-        </div>
+        </div>}
       </div>
 
       {error && (

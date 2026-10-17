@@ -16,7 +16,7 @@ Prerequisites: `fly` CLI, logged in; the knowledge base built locally (`make kb`
 fly launch --no-deploy --copy-config        # keeps fly.toml; pick an app name, then edit `app` in fly.toml
 ```
 ```bash
-fly secrets set ANTHROPIC_API_KEY=... DATABASE_URL=... CORS_ORIGINS=https://<your-vercel-domain> MCP_TOKEN=<long random> MCP_HOST=<app>.fly.dev
+fly secrets set AUTH_SECRET=$(openssl rand -hex 32) ANTHROPIC_API_KEY=... DATABASE_URL=... CORS_ORIGINS=https://<your-vercel-domain> MCP_TOKEN=<long random> MCP_HOST=<app>.fly.dev
 ```
 ```bash
 fly deploy

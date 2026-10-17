@@ -11,6 +11,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { notFound } from "next/navigation";
+import { SessionProvider } from "@/components/auth/SessionProvider";
 import { AppShell } from "@/components/shell/AppShell";
 import { InlineScript } from "@/components/shell/InlineScript";
 import { THEME_BOOT_SCRIPT } from "@/components/shell/theme";
@@ -54,7 +55,9 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
       </head>
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={lang}>
-          <AppShell>{children}</AppShell>
+          <SessionProvider>
+            <AppShell>{children}</AppShell>
+          </SessionProvider>
         </I18nProvider>
       </body>
     </html>

@@ -83,8 +83,20 @@ class Settings(BaseSettings):
 
     # MCP server over HTTP (Phase 10). Empty token = not mounted (stdio mode still works locally).
     mcp_token: str = ""
+    mcp_http: bool = False                     # serve /mcp/ for organisations' own API keys even without MCP_TOKEN
     mcp_host: str = "127.0.0.1"                # public host name when deployed (DNS-rebinding protection)
     public_base_url: str = "http://localhost:8000"   # advertised in the A2A Agent Card
+
+    # Authentication and access control (Phase 13, DECISIONS S9). AUTH_SECRET signs access tokens (HS256); it MUST be
+    # set to a long random value in prod (the app refuses to start without it). Dev and tests use a fixed local secret.
+    auth_secret: str = ""
+    access_token_hours: float = 12.0
+    allow_signup: bool = True                  # anyone may create an organisation (they become its Owner)
+    # Hosted demo: "Try the demo" gives each visitor a private sandbox organisation (cloned demo data, deleted after
+    # SANDBOX_HOURS). Sandboxes can never reach real WhatsApp.
+    demo_mode: bool = True
+    sandbox_hours: float = 24.0
+    login_attempts_per_minute: int = 10        # per client IP, for /auth/login and /auth/signup
 
     # Allowed browser origins for the dashboard (comma-separated in the env var).
     cors_origins: str = "http://localhost:3000"

@@ -12,6 +12,7 @@ import { ShieldCheck, ShieldX } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { api, type AuditEntry, type ChainReport } from "@/lib/api";
 import { Badge, Button, Card } from "@/components/ui/primitives";
+import { useCan } from "@/components/auth/SessionProvider";
 
 export function AuditLog() {
   const { t } = useI18n();
@@ -30,6 +31,7 @@ export function AuditLog() {
   }, [t.common.error]);
 
   useEffect(load, [load]);
+  const canExport = useCan("audit.export");
 
   return (
     <div className="space-y-6">
@@ -38,6 +40,14 @@ export function AuditLog() {
           <h1 className="text-2xl font-semibold tracking-tight">{t.audit.title}</h1>
           <p className="mt-1 text-sm text-ink-2">{t.audit.subtitle}</p>
         </div>
+        {canExport && (
+          <Button variant="secondary" onClick={() => api.auditExport().then((data) => {
+            const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+            const link = Object.assign(document.createElement("a"), { href: url, download: `jisr-audit-${data.org_id}.json` });
+            link.click();
+            URL.revokeObjectURL(url);
+          }).catch((e) => setError((e as Error).message))}>{t.audit.export}</Button>
+        )}
         {chain && (
           <Badge tone={chain.ok ? "ok" : "risk"} className="px-3 py-1.5 text-sm">
             {chain.ok ? <ShieldCheck className="h-4 w-4" aria-hidden /> : <ShieldX className="h-4 w-4" aria-hidden />}

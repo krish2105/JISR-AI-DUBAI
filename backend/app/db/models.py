@@ -69,6 +69,7 @@ class Run(Base):
     raw_redacted: Mapped[str] = mapped_column(Text)        # never the unredacted message
     contact_key: Mapped[str | None] = mapped_column(String(64), nullable=True)   # who to reply to (Phase 8)
     state: Mapped[dict] = mapped_column(JSON, default=dict)  # latest RunState as JSON
+    created_by: Mapped[str | None] = mapped_column(String(40), nullable=True)    # user id (four-eyes, Phase 13)
 
 
 class RunEventRow(Base):
@@ -170,6 +171,7 @@ class Invoice(Base):
 
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
     org_id: Mapped[str] = mapped_column(String(40), index=True)
+    number: Mapped[str | None] = mapped_column(String(40), nullable=True)   # shown to people (id is unique per org)
     buyer_name: Mapped[str] = mapped_column(String(160))
     contact_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
     language: Mapped[str] = mapped_column(String(5), default="en")
@@ -199,3 +201,80 @@ class BuyerMemory(Base):
     last_quote_total_aed: Mapped[float | None] = mapped_column(nullable=True)
     languages: Mapped[list] = mapped_column(JSON, default=list)
     risk_signals: Mapped[list] = mapped_column(JSON, default=list)      # high-risk signal names ever raised
+
+
+# --- Identity and access (Phase 13) -------------------------------------------------------------------------------
+
+
+class User(Base):
+    """A person who signs in. Passwords are stored only as salted scrypt hashes."""
+
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True)     # lower-cased
+    name: Mapped[str] = mapped_column(String(120), default="")
+    password_hash: Mapped[str | None] = mapped_column(String(200), nullable=True)  # None for demo visitors
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    session_version: Mapped[int] = mapped_column(Integer, default=1)    # bumped by "sign out everywhere"
+    is_demo: Mapped[bool] = mapped_column(default=False)
+
+
+class Organisation(Base):
+    """An exporter's workspace. Every business row carries its `org_id`."""
+
+    __tablename__ = "organisations"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    name: Mapped[str] = mapped_column(String(160))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    is_sandbox: Mapped[bool] = mapped_column(default=False)
+    expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)   # sandboxes only
+
+
+class Membership(Base):
+    """A user's role in one organisation (a user may belong to several, with different roles)."""
+
+    __tablename__ = "memberships"
+    __table_args__ = (UniqueConstraint("user_id", "org_id", name="uq_membership_user_org"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organisations.id"), index=True)
+    role: Mapped[str] = mapped_column(String(20))            # owner|admin|approver|operator|accountant|auditor|viewer
+    status: Mapped[str] = mapped_column(String(20), default="active")   # active|removed
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class Invitation(Base):
+    """An invitation link for a new team member. Only the SHA-256 of the token is stored."""
+
+    __tablename__ = "invitations"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organisations.id"), index=True)
+    email: Mapped[str] = mapped_column(String(254))
+    role: Mapped[str] = mapped_column(String(20))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    invited_by: Mapped[str] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    accepted_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class ApiKey(Base):
+    """A machine credential (MCP client) scoped to one organisation. Shown once; only its SHA-256 is stored."""
+
+    __tablename__ = "api_keys"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organisations.id"), index=True)
+    name: Mapped[str] = mapped_column(String(80))
+    kind: Mapped[str] = mapped_column(String(10))            # mcp (A2A stays open to buyers' agents, DECISIONS S9)
+    prefix: Mapped[str] = mapped_column(String(16))          # first characters, to recognise a key in the list
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_by: Mapped[str] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)

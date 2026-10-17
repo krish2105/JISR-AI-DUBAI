@@ -5,6 +5,10 @@ runs.py — API routes for runs and their live event stream.
     GET  /runs                  list recent runs of the caller's organisation
     GET  /runs/{id}             one run: status, state, approvals
     GET  /runs/{id}/events      Server-Sent Events: past events, then live ones, until `done`
+    POST /runs/{id}/stream-token  a 30-minute token for that run's events (EventSource cannot send headers)
+
+Access (Phase 13): starting a run needs `runs.create`; reading needs `runs.read`; the organisation always comes
+from the verified token, so another organisation's run is simply "not found".
 
 SSE in one paragraph (beginner notes):
     The browser opens one long HTTP request (EventSource). The server writes lines like
@@ -16,13 +20,15 @@ import asyncio
 import json
 from collections.abc import AsyncIterator
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from app.api.deps import org_id_header
+from app.api.deps import UNAUTHORISED, current_principal, require
 from app.api.ratelimit import limit_runs
+from app.auth.service import AuthError, Principal, principal_for_stream
+from app.auth.tokens import issue_stream_token
 from app.db.models import Approval, Run, RunEventRow
 from app.db.session import session_scope
 from app.demo.samples import get_sample
@@ -42,7 +48,7 @@ class CreateRunRequest(BaseModel):
 
 
 @router.post("", status_code=201, dependencies=[Depends(limit_runs)])
-async def start_run(body: CreateRunRequest, org_id: str = Depends(org_id_header)) -> dict:
+async def start_run(body: CreateRunRequest, principal: Principal = Depends(require("runs.create"))) -> dict:
     """Create a run and start the agents in the background; returns the run id at once."""
     message, channel = body.message, body.channel
     if body.sample_id:
@@ -52,26 +58,27 @@ async def start_run(body: CreateRunRequest, org_id: str = Depends(org_id_header)
         message, channel = sample.message, sample.channel
     if not message or not message.strip():
         raise HTTPException(422, "Provide a message or a sample_id")
-    run_id = await create_run(message=message, channel=channel, org_id=org_id, sample_id=body.sample_id)
+    run_id = await create_run(message=message, channel=channel, org_id=principal.org_id, sample_id=body.sample_id,
+                              created_by=principal.user_id)
     return {"run_id": run_id}
 
 
 @router.get("")
-async def list_runs(limit: int = 20, org_id: str = Depends(org_id_header)) -> list[dict]:
+async def list_runs(limit: int = 20, principal: Principal = Depends(require("runs.read"))) -> list[dict]:
     """Most recent runs first."""
     async with session_scope() as db:
-        rows = (await db.scalars(select(Run).where(Run.org_id == org_id)
+        rows = (await db.scalars(select(Run).where(Run.org_id == principal.org_id)
                                  .order_by(Run.created_at.desc()).limit(min(limit, 100)))).all()
     return [{"id": r.id, "status": r.status, "channel": r.channel, "sample_id": r.sample_id,
              "created_at": r.created_at.isoformat()} for r in rows]
 
 
 @router.get("/{run_id}")
-async def get_run(run_id: str, org_id: str = Depends(org_id_header)) -> dict:
+async def get_run(run_id: str, principal: Principal = Depends(require("runs.read"))) -> dict:
     """Full detail of one run (404 if it belongs to another organisation)."""
     async with session_scope() as db:
         run = await db.get(Run, run_id)
-        if run is None or run.org_id != org_id:
+        if run is None or run.org_id != principal.org_id:
             raise HTTPException(404, "Run not found")
         approvals = (await db.scalars(select(Approval).where(Approval.run_id == run_id))).all()
     return {
@@ -126,24 +133,46 @@ async def run_events(
     run_id: str,
     after: int = 0,
     last_event_id: str | None = Header(default=None),
-    org_id: str = Depends(org_id_header),
+    st: str | None = Query(default=None, description="stream token from POST /runs/{id}/stream-token"),
+    authorization: str | None = Header(default=None),
+    x_org_id: str | None = Header(default=None),
 ) -> StreamingResponse:
     """Server-Sent Events stream of a run's events (history first, then live).
 
     Browsers reconnect automatically and send `Last-Event-ID`; we resume after it so a
-    dropped connection never duplicates or loses steps.
+    dropped connection never duplicates or loses steps. Auth: a stream token (`?st=`, for EventSource) or the
+    usual bearer header.
     """
+    if st:
+        try:
+            principal = await principal_for_stream(st, run_id)
+        except AuthError as exc:
+            raise HTTPException(401, str(exc), headers=UNAUTHORISED) from exc
+    else:
+        principal = await current_principal(authorization, x_org_id)
+    if not principal.can("runs.read"):
+        raise HTTPException(403, "Your role does not allow reading runs.")
     if last_event_id and last_event_id.isdigit():
         after = max(after, int(last_event_id))
     async with session_scope() as db:
         run = await db.get(Run, run_id)
-        if run is None or run.org_id != org_id:
+        if run is None or run.org_id != principal.org_id:
             raise HTTPException(404, "Run not found")
     return StreamingResponse(
         event_stream(run_id, after),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},   # stop proxies buffering
     )
+
+
+@router.post("/{run_id}/stream-token")
+async def stream_token(run_id: str, principal: Principal = Depends(require("runs.read"))) -> dict:
+    """A short token that lets the browser's EventSource open this run's live events."""
+    async with session_scope() as db:
+        run = await db.get(Run, run_id)
+        if run is None or run.org_id != principal.org_id:
+            raise HTTPException(404, "Run not found")
+    return {"token": issue_stream_token(principal.user_id, principal.org_id, run_id)}
 
 
 def parse_sse(text: str) -> list[dict]:
