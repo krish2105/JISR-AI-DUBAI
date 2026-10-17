@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from app.api.deps import http_errors, require
 from app.auth import service
 from app.auth.service import Principal
+from app.billing.service import check_seat
 
 router = APIRouter(prefix="/team", tags=["team"])
 
@@ -51,6 +52,7 @@ async def members(principal: Principal = Depends(require("team.read"))) -> list[
 async def invite(body: InviteBody, principal: Principal = Depends(require("team.manage"))) -> dict:
     _no_sandbox(principal)
     with http_errors():
+        await check_seat(principal.org_id)                     # plan seats (Phase 19)
         return await service.invite(principal, body.email, body.role)
 
 

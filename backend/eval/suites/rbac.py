@@ -25,7 +25,7 @@ async def _org() -> tuple[str, dict[str, str], dict[str, str]]:
     org_id = f"org_{uuid.uuid4().hex[:12]}"
     tokens, users = {}, {}
     async with session_scope() as db:
-        db.add(Organisation(id=org_id, name="Eval exports"))
+        db.add(Organisation(id=org_id, name="Eval exports", plan="growth"))  # 10 seats: one member per role
         await db.flush()
         for role in ROLES:
             user = User(id=f"usr_{uuid.uuid4().hex[:12]}", email=f"{role}-{uuid.uuid4().hex[:8]}@eval.invalid")

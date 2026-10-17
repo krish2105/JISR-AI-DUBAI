@@ -1,0 +1,44 @@
+# plans.yaml — pricing HYPOTHESIS for Indian SME exporters (Phase 19, DECISIONS M1). To be validated in the pilot
+# and the five interviews; prices shown on the pricing page with that label. INR is the billing currency (customers are
+# Indian exporters); AED is shown for reference at the demo rate. Quotas reset on the 1st of each month (UTC).
+#
+# quotes_per_month: enquiries Jisr processes (runs); seats: members incl. pending invitations.
+plans:
+  trial:
+    name: Trial
+    price_inr_month: 0
+    quotes_per_month: 25
+    seats: 2
+    features: [quotes, cepa, documents_check, approvals, audit]
+    note: "14 days, then choose a plan"
+  starter:
+    name: Starter
+    price_inr_month: 4999
+    quotes_per_month: 150
+    seats: 3
+    features: [quotes, cepa, documents_check, approvals, audit, printable_documents, whatsapp]
+  growth:
+    name: Growth
+    price_inr_month: 14999
+    quotes_per_month: 750
+    seats: 10
+    features: [quotes, cepa, documents_check, approvals, audit, printable_documents, whatsapp, team_roles, mcp, a2a,
+               collections, buyer_data_rights]
+  design_partner:
+    name: Design partner
+    price_inr_month: 0
+    quotes_per_month: 1000
+    seats: 10
+    features: [quotes, cepa, documents_check, approvals, audit, printable_documents, whatsapp, team_roles, mcp, a2a,
+               collections, buyer_data_rights]
+    note: "pilot exporters with a signed letter of intent"
+    public: false
+  sandbox:
+    name: Demo sandbox
+    price_inr_month: 0
+    quotes_per_month: 40
+    seats: 1
+    features: [quotes, cepa, documents_check, approvals, audit, printable_documents]
+    public: false
+default_plan: trial
+inr_to_aed_reference: 0.044

@@ -25,6 +25,7 @@ from app.auth.service import (
     Principal,
     principal_from_token,
 )
+from app.billing.service import QuotaExceeded
 from app.config import get_settings
 from app.governance.rbac import Forbidden, get_rbac
 
@@ -82,3 +83,5 @@ def http_errors() -> Iterator[None]:
         raise HTTPException(409, str(exc)) from exc
     except (BadRequest, WeakPassword) as exc:
         raise HTTPException(422, str(exc)) from exc
+    except QuotaExceeded as exc:
+        raise HTTPException(402, str(exc)) from exc

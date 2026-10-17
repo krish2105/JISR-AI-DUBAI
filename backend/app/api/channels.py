@@ -19,9 +19,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
-from app.api.deps import require
+from app.api.deps import http_errors, require
 from app.api.ratelimit import limit_runs
 from app.auth.service import Principal
+from app.billing.service import check_quote_quota
 from app.channels.inbound import handle_inbound
 from app.channels.outbox import whatsapp_client
 from app.channels.whatsapp import parse_webhook, sign, verify_signature
@@ -107,6 +108,9 @@ async def simulate(body: SimulateBody, sync: bool = False,
     """Build a webhook payload like Meta's, sign it, and process it through the same code as real deliveries."""
     if not body.text and not body.voice_sample:
         raise HTTPException(422, "text or voice_sample is required")
+    with http_errors():
+        await check_quote_quota(principal.org_id)              # simulated messages count like dashboard enquiries
+
     message: dict = {"from": body.sender, "id": f"wamid.SIM{uuid.uuid4().hex[:20]}", "timestamp": str(int(time.time()))}
     audio = mime = None
     if body.voice_sample:

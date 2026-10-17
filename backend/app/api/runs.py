@@ -25,10 +25,11 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from app.api.deps import UNAUTHORISED, current_principal, require
+from app.api.deps import UNAUTHORISED, current_principal, http_errors, require
 from app.api.ratelimit import limit_runs
 from app.auth.service import AuthError, Principal, principal_for_stream
 from app.auth.tokens import issue_stream_token
+from app.billing.service import check_quote_quota
 from app.db.models import Approval, Run, RunEventRow
 from app.db.session import session_scope
 from app.demo.samples import get_sample
@@ -61,6 +62,8 @@ async def start_run(body: CreateRunRequest, principal: Principal = Depends(requi
         message, channel = sample.message, sample.channel
     if not message or not message.strip():
         raise HTTPException(422, "Provide a message or a sample_id")
+    with http_errors():
+        await check_quote_quota(principal.org_id)              # plan quota (Phase 19)
     run_id = await create_run(message=message, channel=channel, org_id=principal.org_id, sample_id=body.sample_id,
                               created_by=principal.user_id)
     return {"run_id": run_id}

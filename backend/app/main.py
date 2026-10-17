@@ -20,7 +20,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import __version__
-from app.api import approvals, audit, auth, buyers, channels, collections, demo, governance, impact, kb, ops, runs, team
+from app.api import (
+    approvals,
+    audit,
+    auth,
+    billing,
+    buyers,
+    channels,
+    collections,
+    demo,
+    governance,
+    impact,
+    kb,
+    ops,
+    runs,
+    team,
+)
 from app.api import settings as settings_api
 from app.config import get_settings
 from app.db.session import get_engine, init_db
@@ -165,7 +180,7 @@ def create_app() -> FastAPI:
     )
 
     for module in (auth, team, settings_api, runs, approvals, audit, demo, governance, channels, collections,
-                   impact, kb, buyers, ops):
+                   impact, kb, buyers, ops, billing):
         app.include_router(module.router)
 
     # A2A: Agent Card at /.well-known/agent-card.json and JSON-RPC at /a2a (buyer agents request quotations).

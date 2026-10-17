@@ -248,6 +248,7 @@ class Organisation(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     is_sandbox: Mapped[bool] = mapped_column(default=False)
     expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)   # sandboxes only
+    plan: Mapped[str | None] = mapped_column(String(30), nullable=True)                # billing plan key (Phase 19)
 
 
 class Membership(Base):

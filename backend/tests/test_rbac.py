@@ -40,7 +40,7 @@ async def make_org(roles=ROLES) -> tuple[str, dict[str, str], dict[str, str]]:
     org_id = f"org_{uuid.uuid4().hex[:12]}"
     tokens, users = {}, {}
     async with session_scope() as db:
-        db.add(Organisation(id=org_id, name="Test exports"))
+        db.add(Organisation(id=org_id, name="Test exports", plan="growth"))  # 10 seats: one member per role
         await db.flush()
         for role in roles:
             user = User(
