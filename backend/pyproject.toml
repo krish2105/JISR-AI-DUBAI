@@ -68,3 +68,9 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.Header", "fastapi.Query", 
 "app/rag/ingest_psr.py" = ["E501"]
 "app/rag/agentic.py" = ["E501"]
 "tests/test_rag.py" = ["E501"]   # fixture passages are quoted official wording
+
+[tool.uv]
+# Security (2026-10-28): filelock < 4.2.1 has published vulnerabilities and an upstream dependency still caps it
+# below 4. The 4.x API used by huggingface-hub (FileLock / SoftFileLock) is unchanged; verified by the test suite and a
+# real model load (DECISIONS H7). Remove once the upstream cap is lifted.
+override-dependencies = ["filelock>=4.2.1"]
