@@ -1,0 +1,61 @@
+{
+  "plans": {
+    "trial": {
+      "name": "Trial",
+      "price_inr_month": 0,
+      "quotes_per_month": 25,
+      "seats": 2,
+      "features": [
+        "quotes",
+        "cepa",
+        "documents_check",
+        "approvals",
+        "audit"
+      ],
+      "note": "14 days, then choose a plan",
+      "price_aed_month_reference": 0
+    },
+    "starter": {
+      "name": "Starter",
+      "price_inr_month": 4999,
+      "quotes_per_month": 150,
+      "seats": 3,
+      "features": [
+        "quotes",
+        "cepa",
+        "documents_check",
+        "approvals",
+        "audit",
+        "printable_documents",
+        "whatsapp"
+      ],
+      "note": null,
+      "price_aed_month_reference": 220
+    },
+    "growth": {
+      "name": "Growth",
+      "price_inr_month": 14999,
+      "quotes_per_month": 750,
+      "seats": 10,
+      "features": [
+        "quotes",
+        "cepa",
+        "documents_check",
+        "approvals",
+        "audit",
+        "printable_documents",
+        "whatsapp",
+        "team_roles",
+        "mcp",
+        "a2a",
+        "collections",
+        "buyer_data_rights"
+      ],
+      "note": null,
+      "price_aed_month_reference": 660
+    }
+  },
+  "currency": "INR",
+  "status": "hypothesis: to be validated in the pilot",
+  "test_mode": true
+}

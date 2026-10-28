@@ -1,16 +1,18 @@
 "use client";
 
 /**
- * AppShell.tsx — Top navigation bar (brand, page links, language and theme toggles) + page frame.
+ * AppShell.tsx — Page frame: top bar (brand, language, user menu, theme) and, once signed in, a left sidebar with
+ * role-aware navigation (Phase 16). Visitors who are not signed in keep a short top bar.
  *
- * Why: the same frame on every page, so the theme toggle and the language switch are always
- * one click away (judges will try both). Links keep the current language prefix.
+ * Why: the same frame on every page, so the theme toggle and the language switch are always one click away (judges
+ * will try both). The sidebar keeps a dozen destinations readable; on phones it becomes a "Menu" drawer.
+ * Links keep the current language prefix; logical CSS properties make the sidebar sit on the right in Arabic.
  */
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, Languages } from "lucide-react";
+import { Languages, Menu, Moon, Sun } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { SignInPanel } from "@/components/auth/SignInPanel";
 import { useSession } from "@/components/auth/SessionProvider";
@@ -19,8 +21,12 @@ import { api } from "@/lib/api";
 import { currentTheme, setTheme } from "./theme";
 import { JisrMark } from "./JisrMark";
 
-/** Pages that show organisation data: they need a session (the landing, tariff and privacy pages are public). */
-const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team", "/settings", "/onboarding", "/run", "/print", "/today", "/buyers", "/ops"];
+/** Pages that show organisation data: they need a session (landing, tariff, pricing, terms, privacy are public). */
+const PROTECTED = ["/demo", "/approvals", "/audit", "/governance", "/impact", "/team", "/settings", "/onboarding", "/run",
+  "/print", "/today", "/buyers", "/ops"];
+
+type NavLink = { href: string; label: string; active: boolean; badge?: number };
+type NavGroup = { label: string; links: NavLink[] };
 
 /** Pending approvals for the badge, refreshed every 30 s while signed in. */
 function usePendingCount(enabled: boolean): number {
@@ -36,61 +42,92 @@ function usePendingCount(enabled: boolean): number {
   return enabled ? count : 0;
 }
 
+/** One navigation link (pill in the top bar, row in the sidebar), with the optional approvals badge. */
+function NavItem({ link, row, waitingLabel }: { link: NavLink; row?: boolean; waitingLabel: string }) {
+  return (
+    <Link
+      href={link.href}
+      aria-current={link.active ? "page" : undefined}
+      className={`flex items-center whitespace-nowrap text-sm transition-colors ${row ? "rounded-lg px-3 py-2" : "rounded-full px-3 py-1.5"} ${
+        link.active ? "bg-accent-soft font-medium text-accent" : "text-ink-2 hover:bg-muted hover:text-ink"
+      }`}
+    >
+      <span className="flex-1">{link.label}</span>
+      {!!link.badge && (
+        <span className="ms-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-risk px-1.5 text-[10px] font-semibold text-white"
+          aria-label={`${link.badge} ${waitingLabel}`}>
+          <bdi>{link.badge}</bdi>
+        </span>
+      )}
+    </Link>
+  );
+}
+
+/** The grouped sidebar list (also used inside the phone drawer). */
+function SidebarGroups({ groups, waitingLabel }: { groups: NavGroup[]; waitingLabel: string }) {
+  return (
+    <nav className="space-y-5">
+      {groups.map((group) => (
+        <div key={group.label}>
+          <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wide text-ink-3">{group.label}</p>
+          <div className="space-y-0.5">
+            {group.links.map((link) => <NavItem key={link.href} link={link} row waitingLabel={waitingLabel} />)}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t, locale } = useI18n();
   const pathname = usePathname() ?? `/${locale}`;
   const rest = pathname.replace(/^\/(en|ar)/, "");                 // path without the language prefix
   const otherLocale = locale === "en" ? "ar" : "en";
   const { status, me, can } = useSession();
-  const pendingCount = usePendingCount(status === "signed-in" && can("runs.read"));
-  const setupPending = status === "signed-in" && me?.onboarding && !me.onboarding.done && can("settings.business")
+  const signedIn = status === "signed-in";
+  const pendingCount = usePendingCount(signedIn && can("runs.read"));
+  const setupPending = signedIn && me?.onboarding && !me.onboarding.done && can("settings.business")
     && !rest.startsWith("/onboarding");
   const needsSession = PROTECTED.some((p) => rest.startsWith(p));
+  const link = (path: string, label: string, extra: Partial<NavLink> = {}): NavLink =>
+    ({ href: `/${locale}${path}`, label, active: path === "" ? rest === "" : rest.startsWith(path), ...extra });
 
-  const links = [
-    { href: `/${locale}`, label: t.nav.home, active: rest === "" },
-    { href: `/${locale}/demo`, label: t.nav.demo, active: rest.startsWith("/demo") },
-    { href: `/${locale}/approvals`, label: t.nav.approvals, active: rest.startsWith("/approvals") },
-    { href: `/${locale}/audit`, label: t.nav.audit, active: rest.startsWith("/audit") },
-    { href: `/${locale}/governance`, label: t.nav.governance, active: rest.startsWith("/governance") },
-    { href: `/${locale}/tariff`, label: t.nav.tariff, active: rest.startsWith("/tariff") },
-    { href: `/${locale}/impact`, label: t.nav.impact, active: rest.startsWith("/impact") },
-    ...(status === "signed-in"
-      ? [{ href: `/${locale}/today`, label: t.nav.today, active: rest.startsWith("/today") },
-         ...(can("buyers.read") ? [{ href: `/${locale}/buyers`, label: t.nav.buyers, active: rest.startsWith("/buyers") }] : []),
-         ...(can("ops.read") ? [{ href: `/${locale}/ops`, label: t.nav.ops, active: rest.startsWith("/ops") }] : []),
-         { href: `/${locale}/settings`, label: t.nav.settings, active: rest.startsWith("/settings") },
-         { href: `/${locale}/team`, label: t.nav.team, active: rest.startsWith("/team") }] : []),
+  // Public top links for visitors; the full, role-aware set lives in the sidebar once signed in.
+  const publicLinks = [link("", t.nav.home), link("/demo", t.nav.demo), link("/tariff", t.nav.tariff),
+    link("/pricing", t.nav.pricing)];
+  const groups: NavGroup[] = [
+    { label: t.nav.groups.work, links: [link("/today", t.nav.today), link("/demo", t.nav.demo),
+      link("/approvals", t.nav.approvals, { badge: pendingCount }),
+      ...(can("buyers.read") ? [link("/buyers", t.nav.buyers)] : [])] },
+    { label: t.nav.groups.trade, links: [link("/tariff", t.nav.tariff), link("/impact", t.nav.impact)] },
+    { label: t.nav.groups.control, links: [link("/governance", t.nav.governance), link("/audit", t.nav.audit),
+      ...(can("ops.read") ? [link("/ops", t.nav.ops)] : [])] },
+    { label: t.nav.groups.org, links: [link("/settings", t.nav.settings), link("/team", t.nav.team)] },
   ];
 
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-md print:hidden">
-        <nav className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:px-6">
-          <Link href={`/${locale}`} className="flex items-center gap-2.5 me-4 shrink-0" aria-label={t.brand.name}>
+        <div className="mx-auto flex h-16 max-w-[90rem] items-center gap-2 px-4 sm:px-6">
+          {signedIn && (
+            <details className="relative lg:hidden">
+              <summary className="flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-full border border-line px-3 text-sm text-ink-2"
+                aria-label={t.nav.menu}>
+                <Menu className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">{t.nav.menu}</span>
+              </summary>
+              <div className="absolute start-0 z-50 mt-2 max-h-[75vh] w-64 overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-3 shadow-card">
+                <SidebarGroups groups={groups} waitingLabel={t.inbox.waiting} />
+              </div>
+            </details>
+          )}
+          <Link href={`/${locale}`} className="me-4 flex shrink-0 items-center gap-2.5" aria-label={t.brand.name}>
             <JisrMark className="h-8 w-8" />
             <span className="text-lg font-semibold tracking-tight">{t.brand.name}</span>
           </Link>
 
           <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={link.active ? "page" : undefined}
-                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors ${
-                  link.active ? "bg-accent-soft text-accent font-medium" : "text-ink-2 hover:bg-muted hover:text-ink"
-                }`}
-              >
-                {link.label}
-                {link.href.endsWith("/approvals") && pendingCount > 0 && (
-                  <span className="ms-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-risk px-1.5 text-[10px] font-semibold text-white"
-                    aria-label={`${pendingCount} ${t.inbox.waiting}`}>
-                    <bdi>{pendingCount}</bdi>
-                  </span>
-                )}
-              </Link>
-            ))}
+            {!signedIn && publicLinks.map((l) => <NavItem key={l.href} link={l} waitingLabel={t.inbox.waiting} />)}
           </div>
 
           <Link
@@ -119,11 +156,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="sr-only">{t.theme.toLight}</span>
             </span>
           </button>
-        </nav>
+        </div>
       </header>
       {setupPending && me?.onboarding && (
         <div className="border-b border-accent/30 bg-accent-soft print:hidden">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2 text-sm text-accent sm:px-6">
+          <div className="mx-auto flex max-w-[90rem] flex-wrap items-center gap-3 px-4 py-2 text-sm text-accent sm:px-6">
             <span className="flex-1">
               {t.onboarding.banner.replace("{step}", String(Math.min(me.onboarding.step + 1, 5))).replace("{total}", "5")}
             </span>
@@ -133,14 +170,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-        {!needsSession || status === "signed-in" ? children
-          : status === "loading" ? <p className="py-16 text-center text-sm text-ink-3">{t.common.loading}</p>
-          : <SignInPanel title={t.auth.gateTitle} />}
-      </main>
+      <div className="mx-auto flex w-full max-w-[90rem] flex-1">
+        {signedIn && (
+          <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-56 shrink-0 overflow-y-auto border-e border-line px-3 py-6 lg:block print:hidden">
+            <SidebarGroups groups={groups} waitingLabel={t.inbox.waiting} />
+          </aside>
+        )}
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8">
+          {!needsSession || signedIn ? children
+            : status === "loading" ? <p className="py-16 text-center text-sm text-ink-3">{t.common.loading}</p>
+            : <SignInPanel title={t.auth.gateTitle} />}
+        </main>
+      </div>
       <footer className="border-t border-line py-4 text-center text-xs text-ink-3 print:hidden">
         {t.brand.name} · {t.brand.tagline} ·{" "}
-        <Link href={`/${locale}/privacy`} className="underline-offset-4 hover:underline">{t.privacy.link}</Link>
+        <Link href={`/${locale}/privacy`} className="underline-offset-4 hover:underline">{t.privacy.link}</Link> ·{" "}
+        <Link href={`/${locale}/pricing`} className="underline-offset-4 hover:underline">{t.nav.pricing}</Link> ·{" "}
+        <Link href={`/${locale}/terms`} className="underline-offset-4 hover:underline">{t.nav.terms}</Link>
       </footer>
     </>
   );

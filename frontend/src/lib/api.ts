@@ -203,6 +203,11 @@ export type TradeDocument = {
   notes?: string[]; common_requirements?: (string | null)[]; checksum: string;
 };
 
+export type BillingUsage = {
+  plan: string; plan_name: string; price_inr_month: number; features: string[]; period_start: string;
+  quotes: { used: number; limit: number }; seats: { used: number; limit: number }; test_mode: boolean;
+};
+
 export type OpsMetrics = {
   days: number; llm_profile: string; runs: number; by_status: Record<string, number>;
   per_day: Record<string, { runs: number; tokens: number; cost_usd: number }>;
@@ -316,6 +321,8 @@ export const api = {
   health: () => call<{ status: string; llm_profile: string; budget?: { fallback_active?: boolean } }>("/health"),
   runs: (limit = 5) =>
     call<{ id: string; status: string; channel: string; sample_id: string | null; created_at: string }[]>(`/runs?limit=${limit}`),
+  billing: () => call<BillingUsage>("/billing"),
+  changePlan: (plan: string) => call<BillingUsage>("/billing/plan", json("POST", { plan })),
   opsMetrics: (days = 7) => call<OpsMetrics>(`/ops/metrics?days=${days}`),
   // --- Phase 20: buyers and data rights
   buyers: () => call<Buyer[]>("/buyers"),

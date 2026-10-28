@@ -105,3 +105,14 @@ async def test_sandboxes_have_a_fixed_plan(client):
     usage = (await client.get("/billing", headers=h)).json()
     assert usage["plan"] == "sandbox" and usage["quotes"]["limit"] == 40
     assert (await client.post("/billing/plan", headers=h, json={"plan": "growth"})).status_code == 403
+
+
+def test_pricing_page_data_matches_the_plans():
+    """frontend/src/data/plans.json is what the static pricing page shows: it must equal GET /billing/plans."""
+    import json
+    from pathlib import Path
+
+    from app.api.billing import plans
+
+    page = json.loads((Path(__file__).resolve().parents[2] / "frontend/src/data/plans.json").read_text("utf-8"))
+    assert page == plans(), "Regenerate frontend/src/data/plans.json from plans.yaml (see docs/business)"

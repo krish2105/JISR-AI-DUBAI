@@ -11,11 +11,12 @@ import { api, type AutonomyItem, type ProfileView } from "@/lib/api";
 import { Card, cx } from "@/components/ui/primitives";
 import { useCan } from "@/components/auth/SessionProvider";
 import { AutonomyTable } from "./AutonomyTable";
+import { BillingTab } from "./BillingTab";
 import { BusinessForm } from "./BusinessForm";
 import { CatalogueEditor } from "./CatalogueEditor";
 import { LogisticsForm } from "./LogisticsForm";
 
-const TABS = ["business", "catalogue", "logistics", "autonomy"] as const;
+const TABS = ["business", "catalogue", "logistics", "autonomy", "billing"] as const;
 
 export function SettingsPanel() {
   const { t } = useI18n();
@@ -74,6 +75,7 @@ export function SettingsPanel() {
             <LogisticsForm logistics={view.profile.logistics} disabled={!canEdit}
               onSave={(logistics) => save(api.patchProfile({ logistics: logistics as ProfileView["profile"]["logistics"] }))} />
           )}
+          {tab === "billing" && <BillingTab />}
           {tab === "autonomy" && (
             <AutonomyTable items={autonomy} disabled={!canPolicy} onChanged={(items) => { setAutonomy(items); setNotice({ ok: true, text: s.saved }); }}
               onError={(text) => setNotice({ ok: false, text })} />

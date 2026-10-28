@@ -11,7 +11,8 @@ import type { Locale } from "./config";
 
 const en = {
   brand: { name: "Jisr", tagline: "The governed bridge for India–UAE trade" },
-  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff", team: "Team", settings: "Settings", today: "Today", buyers: "Buyers", ops: "Operations" },
+  nav: { home: "Overview", demo: "Live demo", approvals: "Approvals", audit: "Audit log", governance: "Governance", impact: "Impact", tariff: "Tariff", team: "Team", settings: "Settings", today: "Today", buyers: "Buyers", ops: "Operations", pricing: "Pricing", terms: "Terms",
+    groups: { work: "Work", trade: "Trade knowledge", control: "Control", org: "Organisation" }, menu: "Menu" },
   tariff: {
     title: "Tariff explorer", subtitle: "The UAE tariff (Dubai Customs) with CEPA origin rules (Annex 3B). Search a product to see the path the duty agent takes.",
     search: "Describe the goods, e.g. brass diya lamps", locate: "Locate", chapter: "Chapter", candidates: "Likely headings", top: "top",
@@ -247,6 +248,33 @@ const en = {
       viewer: "Viewer: read-only.",
     } as Record<string, string>,
   },
+  pricing: {
+    title: "Pricing", subtitle: "Simple monthly plans for Indian exporters selling to the UAE and the Gulf. Every plan keeps you in control: nothing is sent without your approval.",
+    hypothesis: "Pilot pricing: these prices are a hypothesis we are testing with our first exporters. Payments are not live yet.",
+    perMonth: "/ month", free: "Free", quotes: "enquiries a month", seats: "team seats", start: "Start free trial", demo: "Try the demo first",
+    features: { quotes: "Quotes in INR and AED", cepa: "CEPA duty analysis with citations", documents_check: "Document consistency check", approvals: "Approval inbox", audit: "Hash-chained audit log",
+      printable_documents: "Quotation, proforma, packing list (PDF)", whatsapp: "WhatsApp channel", team_roles: "Team roles and four-eyes approvals", mcp: "Assistant access (MCP)",
+      a2a: "Buyer-agent quotes (A2A)", collections: "Payment reminders", buyer_data_rights: "Buyer data export and erasure" } as Record<string, string>,
+    faq: "Questions", q1: "Do you ever send a message without me?", a1: "Only a fixed-text \"we received your enquiry\" acknowledgement, and only if you leave that on. Quotes, documents and anything about payment always wait for you.",
+    q2: "What happens at the limit?", a2: "New enquiries from the dashboard pause until the 1st of next month or an upgrade. Messages from your buyers are never dropped.",
+    q3: "Where is my data?", a3: "In your organisation only. Models see masked text, never your buyers' contact details. You can export or erase any buyer's data.",
+    aed: "≈ AED",
+  },
+  billing: {
+    title: "Plan and usage", testMode: "Test mode: changing plan records it but takes no payment.", current: "Current plan", usage: "This month",
+    enquiries: "Enquiries", seats: "Seats", change: "Switch to", ownerOnly: "Only the owner can change the plan.", resets: "Resets on the 1st of each month (UTC).",
+  },
+  terms: {
+    title: "Terms of service (draft)",
+    draft: "Draft for the pilot. Not legal advice; to be reviewed by counsel before paid plans go live.",
+    sections: [
+      { h: "1. The service", items: ["Jisr prepares quotations, CEPA duty analyses, document checks and reply drafts for exporters.", "You decide what is sent. Jisr never changes bank details, payment instructions or payment status."] },
+      { h: "2. Your responsibilities", items: ["Check every quote, HS code and document before sending; Jisr gives trade information for review, not legal, customs or financial advice.", "Keep sign-in details safe and give each person the least role they need."] },
+      { h: "3. Your data", items: ["You own your data. We process it to provide the service, as described on the Data protection page.", "You can export or erase a buyer's data at any time; audit records are kept as evidence."] },
+      { h: "4. Plans and changes", items: ["Pilot prices may change with 30 days' notice. Test-mode plans take no payment.", "Either side may end the service with 30 days' notice; you can export your data first."] },
+      { h: "5. Liability", items: ["The service is provided with care but without warranty that every analysis is correct; liability is limited to fees paid in the last 12 months, where the law allows."] },
+    ],
+  },
   ops: {
     title: "Operations", subtitle: "How the service runs for your organisation: volume, speed, errors and what the AI models cost. Computed from your own run records.",
     runs: "Enquiries", p50: "Agent time p50", p95: "Agent time p95", errors: "Error rate", cost: "Model cost", perQuote: "Cost per quote",
@@ -301,7 +329,7 @@ const en = {
     title: "Settings", subtitle: "Your business as Jisr sees it: products, costs, prices, shipping and how much Jisr may do alone. Every change is recorded in the audit log.",
     demoNote: "This sandbox uses the demo business. Changes stay in your sandbox.",
     readOnly: "Your role can view these settings but not change them.",
-    tabs: { business: "Business & pricing", catalogue: "Products", logistics: "Shipping", autonomy: "Autonomy" } as Record<string, string>,
+    tabs: { business: "Business & pricing", catalogue: "Products", logistics: "Shipping", autonomy: "Autonomy", billing: "Plan & usage" } as Record<string, string>,
     save: "Save", saved: "Saved", cancel: "Cancel", add: "Add product", edit: "Edit", remove: "Remove",
     sellerName: "Business name (signs every reply)", validity: "Quote valid for (days)", margin: "Default margin %",
     minMargin: "Minimum margin % (below needs the owner)", maxDiscount: "Largest discount % without the owner",
@@ -339,7 +367,8 @@ export type Dictionary = typeof en;
 
 const ar: Dictionary = {
   brand: { name: "جسر", tagline: "الجسر المحوكم للتجارة بين الهند والإمارات" },
-  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة", team: "الفريق", settings: "الإعدادات", today: "اليوم", buyers: "المشترون", ops: "التشغيل" },
+  nav: { home: "نظرة عامة", demo: "عرض مباشر", approvals: "الموافقات", audit: "سجل التدقيق", governance: "الحوكمة", impact: "الأثر", tariff: "التعرفة", team: "الفريق", settings: "الإعدادات", today: "اليوم", buyers: "المشترون", ops: "التشغيل", pricing: "الأسعار", terms: "الشروط",
+    groups: { work: "العمل", trade: "المعرفة التجارية", control: "التحكم", org: "المؤسسة" }, menu: "القائمة" },
   tariff: {
     title: "مستكشف التعرفة", subtitle: "التعرفة الجمركية الإماراتية (جمارك دبي) مع قواعد المنشأ في الاتفاقية (الملحق 3B). ابحث عن منتج لترى المسار الذي يسلكه وكيل الرسوم.",
     search: "صف البضاعة، مثل مصابيح نحاسية", locate: "حدّد الموقع", chapter: "الفصل", candidates: "البنود المرجحة", top: "الأول",
@@ -575,6 +604,33 @@ const ar: Dictionary = {
       viewer: "المشاهد: قراءة فقط.",
     },
   },
+  pricing: {
+    title: "الأسعار", subtitle: "خطط شهرية بسيطة للمصدّرين الهنود إلى الإمارات والخليج. كل خطة تُبقيك متحكمًا: لا يُرسل شيء دون موافقتك.",
+    hypothesis: "أسعار تجريبية: هذه الأسعار فرضية نختبرها مع أول المصدّرين. المدفوعات غير مفعّلة بعد.",
+    perMonth: "/ شهريًا", free: "مجاني", quotes: "استفسار شهريًا", seats: "مقاعد للفريق", start: "ابدأ التجربة المجانية", demo: "جرّب العرض أولًا",
+    features: { quotes: "عروض أسعار بالروبية والدرهم", cepa: "تحليل رسوم سيبا مع المراجع", documents_check: "فحص اتساق المستندات", approvals: "صندوق الموافقات", audit: "سجل تدقيق متسلسل",
+      printable_documents: "عرض السعر والفاتورة المبدئية وقائمة التعبئة (PDF)", whatsapp: "قناة واتساب", team_roles: "أدوار الفريق وموافقة العينين الأربع", mcp: "وصول المساعدين (MCP)",
+      a2a: "عروض لوكلاء المشترين (A2A)", collections: "تذكيرات الدفع", buyer_data_rights: "تصدير بيانات المشتري ومحوها" },
+    faq: "أسئلة", q1: "هل ترسلون رسالة دون علمي؟", a1: "فقط إقرار ثابت النص «استلمنا استفسارك»، وإن أبقيته مفعّلًا. عروض الأسعار والمستندات وكل ما يخص الدفع ينتظر موافقتك دائمًا.",
+    q2: "ماذا يحدث عند بلوغ الحد؟", a2: "تتوقف الاستفسارات الجديدة من لوحة التحكم حتى أول الشهر التالي أو الترقية. رسائل مشتريك لا تُهمل أبدًا.",
+    q3: "أين بياناتي؟", a3: "داخل مؤسستك فقط. ترى النماذج نصًا مقنّعًا، لا بيانات اتصال مشتريك. يمكنك تصدير بيانات أي مشترٍ أو محوها.",
+    aed: "≈ درهم",
+  },
+  billing: {
+    title: "الخطة والاستخدام", testMode: "وضع الاختبار: تغيير الخطة يُسجَّل دون أي دفع.", current: "الخطة الحالية", usage: "هذا الشهر",
+    enquiries: "الاستفسارات", seats: "المقاعد", change: "التحويل إلى", ownerOnly: "المالك وحده يغيّر الخطة.", resets: "يُعاد الحساب أول كل شهر (UTC).",
+  },
+  terms: {
+    title: "شروط الخدمة (مسودة)",
+    draft: "مسودة لفترة التجربة. ليست استشارة قانونية؛ تُراجع قانونيًا قبل تفعيل الخطط المدفوعة.",
+    sections: [
+      { h: "1. الخدمة", items: ["يعدّ جسر عروض الأسعار وتحليلات رسوم سيبا وفحص المستندات ومسودات الردود للمصدّرين.", "أنت من يقرر ما يُرسل. لا يغيّر جسر أبدًا بيانات البنك أو تعليمات الدفع أو حالة الدفع."] },
+      { h: "2. مسؤولياتك", items: ["راجع كل عرض ورمز ومستند قبل الإرسال؛ يقدّم جسر معلومات تجارية للمراجعة، لا استشارة قانونية أو جمركية أو مالية.", "احفظ بيانات الدخول وامنح كل شخص أقل دور يحتاجه."] },
+      { h: "3. بياناتك", items: ["بياناتك ملكك. نعالجها لتقديم الخدمة كما في صفحة حماية البيانات.", "يمكنك تصدير بيانات أي مشترٍ أو محوها في أي وقت؛ تُحفظ سجلات التدقيق دليلًا."] },
+      { h: "4. الخطط والتغييرات", items: ["قد تتغير الأسعار التجريبية بإشعار مدته 30 يومًا. خطط وضع الاختبار بلا دفع.", "لأي طرف إنهاء الخدمة بإشعار 30 يومًا؛ يمكنك تصدير بياناتك أولًا."] },
+      { h: "5. المسؤولية", items: ["تُقدَّم الخدمة بعناية دون ضمان صحة كل تحليل؛ تقتصر المسؤولية على الرسوم المدفوعة في آخر 12 شهرًا حيث يسمح القانون."] },
+    ],
+  },
   ops: {
     title: "التشغيل", subtitle: "كيف تعمل الخدمة لمؤسستك: الحجم والسرعة والأخطاء وتكلفة نماذج الذكاء الاصطناعي. محسوبة من سجلات تشغيلك.",
     runs: "الاستفسارات", p50: "زمن الوكلاء p50", p95: "زمن الوكلاء p95", errors: "معدل الأخطاء", cost: "تكلفة النماذج", perQuote: "التكلفة لكل عرض",
@@ -629,7 +685,7 @@ const ar: Dictionary = {
     title: "الإعدادات", subtitle: "نشاطك التجاري كما يراه جسر: المنتجات والتكاليف والأسعار والشحن ومقدار ما يفعله جسر وحده. يُسجَّل كل تغيير في سجل التدقيق.",
     demoNote: "تستخدم هذه البيئة التجريبية النشاط التجريبي. تبقى التغييرات داخل بيئتك.",
     readOnly: "يمكن لدورك عرض هذه الإعدادات دون تغييرها.",
-    tabs: { business: "النشاط والتسعير", catalogue: "المنتجات", logistics: "الشحن", autonomy: "الاستقلالية" },
+    tabs: { business: "النشاط والتسعير", catalogue: "المنتجات", logistics: "الشحن", autonomy: "الاستقلالية", billing: "الخطة والاستخدام" },
     save: "حفظ", saved: "تم الحفظ", cancel: "إلغاء", add: "إضافة منتج", edit: "تعديل", remove: "إزالة",
     sellerName: "اسم النشاط (يوقّع كل رد)", validity: "صلاحية العرض (أيام)", margin: "هامش الربح الافتراضي %",
     minMargin: "أدنى هامش % (ما دونه يحتاج المالك)", maxDiscount: "أكبر خصم % دون المالك",
